@@ -54,33 +54,69 @@ the server component for the Tus protocol that will handle the low-level details
 of the file uploading process.
 
 Install Metador using `poetry install`, if you use poetry,
-or use `pip install --user .` if you use pip.
+or use `pip install --user .` if you use pip (as usual, using a `venv` is recommended).
 
 ## Usage
 
-1. Prepare a Metador configuration file where you should at least set a correct `tusd`
-   endpoint, assign some JSON schemas to filename patterns, and configure authentication
-   (if you want it). You can start with the default configuration: `metador-cli
-   default-conf > metador.toml`
+### I want to see it in action, now!
 
-1. Run `tusd` as you desire (you can keep the default settings for testing or internal
-   use) with the argument `-hooks-http "http://localhost:8000$(metador-cli hook-route)"`.
-   Adapt the host and port accordingly, if you serve metador under a different address.
+Ensure that tusd and Metador are installed
+and that the `tusd` and `metador-cli` scripts are on your path.
 
-2. Run Metador with your configuration. If you run `tusd` with default settings, this will
-   be an URL like `http://localhost:1080/files/`. Adapt the host and port accordingly, if
-   you serve `tusd` under a different address.
+Run `tusd` like this: `tusd -hooks-http "$(metador-cli tusd-hook-url)"`
 
-Make sure that:
+Run Metador like this: `metador-cli run`
 
-1. The provided `tusd` endpoint is accessible from the client side.
+Navigate to `http://localhost:8000/` in your browser.
 
-2. The passed hook endpoint of Metador is accessible from `tusd`.
 
-3. The file upload directory of `tusd` is accessible (read + write) by Metador.
+### I want to deploy Metador properly!
 
-The `metador-cli` utility provides commands that should help you with configuration.
+For serious deployment into an existing infrastructure, some more steps are required:
+
+* prepare JSON Schemas for the metadata you want to collect for the files.
+
+* think about the way how both `tusd` and Metador will be visible to the outside world.
+  I cannot give you assistance with your specific setup that might involve e.g. Apache
+  or nginx to serve both applications.
+
+   However your setup might be, you need to make sure that:
+
+   1. both `tusd` and Metador are accessible from the client side (notice that by default
+      they run on two different ports, unless you mask that with route rewriting and
+      forwarding).
+
+   2. The passed hook endpoint URL of Metador is accessible by `tusd`.
+
+   3. The file upload directory of `tusd` is accessible (read + write) by Metador.
+
+* Use `metador-cli default-conf > metador.toml` to get a copy of the default config file,
+  add your JSON schemas (TODO: explain how) and
+  at least change the `metadir.site` and `tusd.endpoint` entries according to your
+  planned setup (you will probably at least change the domain, and maybe the ports).
+  You can delete everything in your config that you do not want to override.
+
+* *Optional:* For ORCID integration, you need access to the ORCID public API.
+
+  Follow instructions given e.g. 
+  [here](https://info.orcid.org/documentation/integration-guide/registering-a-public-api-client/)
+  As redirect URL you should register the value you get from `metador-cli orcid-redir-url`.
+  Afterwards, fill out the `orcid` section of your Metadir configuration accordingly.
+
+* Run `tusd` as required with your setup, passing 
+  `-hooks-http "$(metador-cli tusd-hook-url)"` as argument.
+
+* Run Metador with your configuration: `metador-cli run --conf YOUR_CONFIG_FILE`
+
 
 ## Copyright and Licence
 
 See [LICENSE](./LICENSE).
+
+## Acknowledgements
+
+Built using FastAPI, typer, pydantic, tusd, uppy, milligram
+
+Checked using pytest, pre-commit, black, flake8, mypy
+
+Packaged using poetry

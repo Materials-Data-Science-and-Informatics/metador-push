@@ -6,8 +6,10 @@ authors = ["Anton Pirogov <a.pirogov@fz-juelich.de>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fastapi = {extras = ["all"], version = "^0.65.1"}
 typer = "^0.3.2"
+fastapi = {extras = ["all"], version = "^0.65.1"}
+python-multipart = "^0.0.5"
+httpx = "^0.18.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

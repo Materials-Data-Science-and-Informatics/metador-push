@@ -8,8 +8,34 @@
 # It depends on the -base-path of tusd and the way you proxy/route/serve requests to it.
 endpoint = 'http://localhost:1080/files/'
 
+################
+
+[metador]
+# Site where metador is served (without trailing slash)
+site = 'http://localhost:8000'
+# The hook route where tusd shall send events
+tusd-hook-route = '/tusd-events'
+# The redirection route where the user is forwarded to from ORCID (if enabled)
+orcid-auth-route = '/orcid-auth'
+
+################
+
+[orcid]
+# Enable ORCID support
+enabled = true
+# You need to get API credentials for your Metador instance in your ORCID account. See:
+# https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/#Get_some_client_credentials
+client_id = 'APP-68XT5VS292V6BXMO'
+client_secret = '8ee39b96-992a-4b80-93b6-f2b1496ec0f3'
+
+# if true, uses the sandbox servers (only useful as Metador developer)
+sandbox = true
+
+################
+
 [uvicorn]
 # The host and port used by uvicorn for binding.
 # These are only respected if you launch your application using `metador-cli run`.
 host = '0.0.0.0'
 port = 8000
+
