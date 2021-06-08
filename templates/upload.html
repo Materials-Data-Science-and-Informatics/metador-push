@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Metador</title>
+
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <!-- CSS Reset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <!-- Milligram CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+    <!-- Uppy CSS -->
+    <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v1.29.1/uppy.min.css">
+  </head>
+  <body>
+    <script src="https://releases.transloadit.com/uppy/v1.29.1/uppy.min.js"></script>
+
+    <div class="container">
+      <div class="row">
+        <div class="column">
+          <h1 class="title">Metador</h1>
+          <h6 class="description"><em>Metadata enrichment and transmission assistance 
+              for digital objects in research</em></h6>
+          <p>Please upload your dataset files here:</p>
+
+          <!-- This div hosts the Uppy Dashboard-->
+          <div id="drag-drop-area"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // load uppy dashboard
+
+      var uppy = Uppy.Core()
+        .use(Uppy.Dashboard, {
+          inline: true,
+          target: '#drag-drop-area'
+        })
+        .use(Uppy.Tus, {endpoint: '{{tusd_endpoint}}'})
+        .use(Uppy.GoldenRetriever)
+
+      uppy.on('complete', (result) => {
+        console.log('Upload complete! We’ve uploaded these files:', result.successful)
+      })
+    </script>
+  </body>
+</html>

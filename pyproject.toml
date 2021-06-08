@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "metador"
+version = "0.1.0"
+description = "Metador is a metadata-aware mailbox for research data."
+authors = ["Anton Pirogov <a.pirogov@fz-juelich.de>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = {extras = ["all"], version = "^0.65.1"}
+typer = "^0.3.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+pre-commit = "^2.13.0"
+
+[tool.poetry.scripts]
+metador-cli = 'metador.cli:app'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,15 @@
+# Default configuration file for Metador.
+# You can and should override some of those values in your own config.
+# All entries that are missing in your config will take the following default values.
+##########################################################################################
+
+[tusd]
+# The endpoint URL for file uploads from client. Must be accessible from client.
+# It depends on the -base-path of tusd and the way you proxy/route/serve requests to it.
+endpoint = 'http://localhost:1080/files/'
+
+[uvicorn]
+# The host and port used by uvicorn for binding.
+# These are only respected if you launch your application using `metador-cli run`.
+host = '0.0.0.0'
+port = 8000
