@@ -5,10 +5,10 @@ https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenti
 
 import httpx
 
-import metador.config as config
+from metador.config import conf
 
 # add subdomain of sandbox if the option is selected
-SANDBOX = "sandbox." if bool(config.get("orcid", "sandbox")) else ""
+SANDBOX = "sandbox." if conf.orcid.sandbox else ""
 # Production/Sandbox ORCID URL prefix for OAuth
 ORCID_OAUTH_PREF = f"https://{SANDBOX}orcid.org/oauth"
 
@@ -19,9 +19,7 @@ def get_orcid_redir() -> str:
     as a valid redirect for use with the ORCID API client credentials.
     """
 
-    return str(config.get("metador", "site")) + str(
-        config.get("metador", "orcid-auth-route")
-    )
+    return conf.metador.site + conf.metador.orcid_redir_route
 
 
 def userauth_url() -> str:
@@ -36,7 +34,7 @@ def userauth_url() -> str:
     auth_url = ORCID_OAUTH_PREF + "/authorize"
     auth_url += "?response_type=code&scope=/authenticate"
 
-    orcid_cid = config.get("orcid", "client_id")
+    orcid_cid = conf.orcid.client_id
     orcid_redir = get_orcid_redir()
 
     return f"{auth_url}&client_id={orcid_cid}&redirect_uri={orcid_redir}"
@@ -53,8 +51,8 @@ def redeem_code(code: str) -> str:
         "Content-Type": "application/x-www-form-urlencoded",
     }
     dat = {
-        "client_id": config.get("orcid", "client_id"),
-        "client_secret": config.get("orcid", "client_secret"),
+        "client_id": conf.orcid.client_id,
+        "client_secret": conf.orcid.client_secret,
         "grant_type": "authorization_code",
         "code": code,
         "redirect_uri": get_orcid_redir(),

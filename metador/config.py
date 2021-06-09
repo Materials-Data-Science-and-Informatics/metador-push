@@ -2,50 +2,90 @@
 Globally accessible location for the configuration.
 """
 
-from typing import Optional, Any, List
-import os
+from typing import Final
 import sys
 
 import toml
+from pydantic import BaseModel, ValidationError
 
-import metador
+################################################################
+
+# some constants not exposed to the user
+
+STAGING_DIR: Final[str] = "staging"
+COMPLETE_DIR: Final[str] = "complete"
+
+################################################################
+
+# config model (overridable by user)
+
+
+class MetadorConf(BaseModel):
+    """Configuration of the Metador server itself."""
+
+    site: str = "http://localhost:8000"
+
+    tusd_endpoint: str = "http://localhost:1080/files/"
+
+    tusd_hook_route: str = "/tusd-events"
+    orcid_redir_route: str = "/orcid-auth"
+
+    data_dir: str = "metador_datasets"
+
+
+class OrcidConf(BaseModel):
+    """Configuration of ORCID authentication."""
+
+    enabled: bool = False
+    sandbox: bool = False
+
+    client_id: str = ""
+    client_secret: str = ""
+
+    whitelist_file: str = ""
+
+
+class UvicornConf(BaseModel):
+    """
+    The host and port used by uvicorn for binding.
+    These are only respected if you launch your application using `metador-cli run`.
+    """
+
+    host: str = "0.0.0.0"
+    port: int = 8000
+
+
+class Conf(BaseModel):
+    """The complete application configuration."""
+
+    metador: MetadorConf = MetadorConf()
+    orcid: OrcidConf = OrcidConf()
+    uvicorn: UvicornConf = UvicornConf()
+
+
+################################################################
+
 
 # default config
-def_config = toml.load(os.path.join(metador.__basepath__, "metador.def.toml"))
-
-# user config (init as default, overwritten by passed config file)
-config = def_config
+conf = Conf()
 
 
-def read_user_config(conf: str) -> None:
-    """Tries to parse the given config file and attach it to the global scope."""
+def read_user_config(conffile: str) -> None:
+    """
+    Tries to parse the given config file and attach it to the global scope.
+    Called when the server is started up.
+    """
 
-    global config
-
+    global conf
     try:
-        config = toml.load(conf)
+        userconf = toml.load(conffile)
+        conf = conf.parse_obj(userconf)  # override defaults from user config
     except FileNotFoundError:
-        print(f"Configuration file {conf} does not exist or cannot be opened!")
+        print(f"Configuration file {conffile} does not exist or cannot be opened!")
         sys.exit(1)
     except toml.TomlDecodeError as err:
-        print(f"Error while parsing TOML config file: {str(err)}")
+        print(f"Error while parsing config file {conffile}: {str(err)}")
         sys.exit(1)
-
-
-def _get_nested(conf, keys: List[str]) -> Optional[Any]:
-    """Helper function. Takes a dict-like object and tries to access the value
-    located behind the given sequence of keys. Returns None on failure."""
-
-    try:
-        cur = conf
-        for key in keys:
-            cur = cur[key]
-        return cur
-    except KeyError:
-        return None
-
-
-def get(*keys: str) -> Optional[Any]:
-    """Try to get config value from user config. If missing, return default."""
-
-    return _get_nested(config, list(keys)) or _get_nested(def_config, list(keys))
+    except ValidationError as err:
+        print(f"Error while parsing config file {conffile}: {str(err)}")
+        sys.exit(1)

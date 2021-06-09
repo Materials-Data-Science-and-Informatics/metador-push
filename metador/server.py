@@ -2,7 +2,7 @@
 Main file for the Metador backend.
 """
 
-from typing import Final
+import uuid
 
 from fastapi import FastAPI, Request, Header
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -11,12 +11,8 @@ from fastapi.templating import Jinja2Templates
 
 from metador.hookmodel import TusdEvent, TusdHookName
 import metador.orcid as orcid
-import metador.config as config
+from metador.config import conf
 from metador import pkg_res
-
-# configurable routes related to outside service interaction
-TUSD_HOOK_ROUTE: Final[str] = str(config.get("metador", "tusd-hook-route"))
-ORCID_AUTH_ROUTE: Final[str] = str(config.get("metador", "orcid-auth-route"))
 
 app = FastAPI()
 
@@ -33,13 +29,13 @@ async def favicon():
 templates = Jinja2Templates(directory=pkg_res("templates"))
 
 
-@app.post(TUSD_HOOK_ROUTE)
+@app.post(conf.metador.tusd_endpoint)
 async def tusd_hook(body: TusdEvent, hook_name: TusdHookName = Header(...)):
     print(hook_name, body)
     return "TODO"
 
 
-@app.get(ORCID_AUTH_ROUTE)
+@app.get(conf.metador.orcid_redir_route)
 async def orcid_auth(code: str):
     return orcid.redeem_code(code)
 
@@ -53,7 +49,27 @@ async def home(request: Request):
     return templates.TemplateResponse("index.html", tmpl_vars)
 
 
-@app.get("/upload", response_class=HTMLResponse)
-async def read_item(request: Request):
-    tmpl_vars = {"request": request, "tusd_endpoint": config.get("tusd", "endpoint")}
-    return templates.TemplateResponse("upload.html", tmpl_vars)
+def fresh_dataset() -> str:
+    """
+    Generate a new UUID not currently used for an existing dataset.
+    Create a directory for it, return the UUID.
+    """
+    # TODO: check staging and completed directory
+    fresh_uuid = str(uuid.uuid4())
+    return fresh_uuid
+
+
+@app.get("/new")
+def new():  # NOTE: not async, the "fresh_dataset" is critical section (free uuid check)
+    """Creates a new dataset directory, redirects to its upload/annotation page."""
+    return RedirectResponse(url=f"/dataset/{fresh_dataset()}")
+
+
+@app.get("/upload/{dataset}", response_class=HTMLResponse)
+async def read_item(dataset: str, request: Request):
+    tmpl_vars = {
+        "request": request,
+        "tusd_endpoint": conf.metador.tusd_endpoint,
+        "dataset": dataset,
+    }
+    return templates.TemplateResponse("dataset.html", tmpl_vars)
