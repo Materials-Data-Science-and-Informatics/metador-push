@@ -11,6 +11,7 @@ fastapi = {extras = ["all"], version = "^0.65.1"}
 python-multipart = "^0.0.5"
 httpx = "^0.18.1"
 toml = "^0.10.2"
+pytest-cov = "^2.12.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
