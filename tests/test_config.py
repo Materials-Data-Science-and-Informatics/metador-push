@@ -9,7 +9,7 @@ import metador.config as c
 def test_global_def_conf():
     """Test that the unmodified global config instance is found in the conf variable."""
 
-    assert c.Conf().dict() == c.conf.dict()
+    assert c.Conf().dict() == c.conf().dict()
 
 
 def test_toml_pydantic_consistent():
@@ -23,4 +23,4 @@ def test_toml_pydantic_consistent():
     # this should raise no exceptions
     tomlconf = toml.load(os.path.join(metador.__basepath__, "metador.def.toml"))
     # also actually be the same
-    assert tomlconf == c.conf.dict()
+    assert tomlconf == c.conf().dict()

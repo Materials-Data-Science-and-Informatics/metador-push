@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Metador</title>
+
+    <!-- CSS Reset -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css"> -->
+    <!-- Picnic is based on normalize -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <!-- Uppy CSS -->
+    <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v1.29.1/uppy.min.css">
+
+    <!-- Site-specific -->
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+      <nav>
+        <span class="brand" data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research">Metador</span>
+        <span style="position: relative; top: 30%;">
+          <small></small></span>
+      </nav>
+      <div style="height:70px"></div>
+      <main>
+        {% block content %}{% endblock %}
+      </main>
+  </body>
+</html>

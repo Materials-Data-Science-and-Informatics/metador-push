@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+
+  <!-- This div hosts the Uppy Dashboard-->
+  <div id="drag-drop-area"></div>
+
+  <script src="https://releases.transloadit.com/uppy/v1.29.1/uppy.min.js"></script>
+  <script>
+    // load uppy dashboard
+
+    var uppy = Uppy.Core()
+      .use(Uppy.Dashboard, {
+        inline: true,
+        target: '#drag-drop-area'
+      })
+      .use(Uppy.Tus, {endpoint: '{{tusd_endpoint}}'})
+      .use(Uppy.GoldenRetriever)
+
+    uppy.on('complete', (result) => {
+      console.log('Upload complete! We’ve uploaded these files:', result.successful)
+    })
+  </script>
+
+</div>
+{% endblock %}

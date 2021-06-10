@@ -176,7 +176,7 @@ can be considered to be as secure as the rest of your system.
 
 Before commiting, run `pytest` and make sure you did not break anything.
 
-To check coverage, use `pytest --cov=metador tests`
+To check coverage, use `pytest --cov-report term-missing:skip-covered --cov=metador tests/`
 
 Also verify that the pre-commit hooks are run, which includes `mypy` for type checking and
 `black` and `flake8` for formatting.
