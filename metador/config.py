@@ -8,7 +8,7 @@ import sys
 import os
 
 import toml
-from pydantic import BaseModel, ValidationError, FilePath
+from pydantic import BaseModel, ValidationError, FilePath, Extra
 from pathlib import Path
 from .log import log, init_logger
 
@@ -41,6 +41,8 @@ def complete_dir() -> str:
 
 
 class LogLevel(str, Enum):
+    """The default logging log levels, as an Enum for parsing."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -49,12 +51,20 @@ class LogLevel(str, Enum):
 
 
 class LogConf(BaseModel):
+    """Configuration of the used logger."""
+
+    class Config:
+        extra = Extra.forbid
+
     level: LogLevel = LogLevel.INFO
     file: Optional[Path] = None
 
 
 class MetadorConf(BaseModel):
     """Configuration of the Metador server itself."""
+
+    class Config:
+        extra = Extra.forbid
 
     site: str = "http://localhost:8000"
 
@@ -68,6 +78,9 @@ class MetadorConf(BaseModel):
 
 class OrcidConf(BaseModel):
     """Configuration of ORCID authentication."""
+
+    class Config:
+        extra = Extra.forbid
 
     enabled: bool = False
     sandbox: bool = False
@@ -84,6 +97,9 @@ class UvicornConf(BaseModel):
     These are only respected if you launch your application using `metador-cli run`.
     """
 
+    class Config:
+        extra = Extra.forbid
+
     host: str = "0.0.0.0"
     port: int = 8000
 
@@ -93,6 +109,9 @@ class UvicornConf(BaseModel):
 
 class Conf(BaseModel):
     """The complete application configuration."""
+
+    class Config:
+        extra = Extra.forbid
 
     metador: MetadorConf = MetadorConf()
     orcid: OrcidConf = OrcidConf()

@@ -22,6 +22,8 @@ def test_toml_pydantic_consistent():
 
     # this should raise no exceptions
     tomlconf = toml.load(os.path.join(metador.__basepath__, "metador.def.toml"))
-    # also loading toml defaults onto the builtin defaults should make no difference
+    # loading toml defaults onto the builtin defaults should make no difference
+    # as we have Extra.forbid in the pydantic model,
+    # the other direction should be ok too (no unknown fields are there)
     loadedConf = c.Conf().parse_obj(tomlconf)
     assert loadedConf == c.conf()
