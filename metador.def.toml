@@ -13,21 +13,26 @@ site = 'http://localhost:8000'
 # It depends on the -base-path of tusd and the way you proxy/route/serve requests to it.
 tusd_endpoint = 'http://localhost:1080/files/'
 # dataset location (will have subdirs "staging" and "complete")
-data_dir = 'metador_datasets'
+data_dir = 'datasets'
 # after that many hours the non-completed datasets have expired and can be cleaned up
-incomplete_expire = 48
-# file where logs go
-logfile = 'metador.log'
+incomplete_expire_after = 48
+
+[metador.log]
+# granularity of logging
+level = 'INFO'
+# filename where logs go. if not set, only console log is used
+# file = 'metador.log'
 
 ################
 
 [orcid]
 # Enable ORCID support
 enabled = false
-# If provided, the following file should contain the ORCIDs of permitted users.
-# If filename is empty, anyone with an ORCID can use your instance.
-# If filename is non-empty, but the file itself is empty, then _no one_ can use the instance.
-allowlist_file = ''
+
+# If provided, the following file must exist + contain the ORCIDs of permitted users.
+# If the file itself is empty, then _no one_ can use the instance.
+# allowlist_file = 'allowlist.txt'
+
 # You need to get API credentials for your Metador instance in your ORCID account. See:
 # https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/#Get_some_client_credentials
 client_id = ''
@@ -43,4 +48,6 @@ sandbox = false
 # These are only respected if you launch your application using `metador-cli run`.
 host = '0.0.0.0'
 port = 8000
+
+# Mostly for developers: reload application on code changes.
 reload = false

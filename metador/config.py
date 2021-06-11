@@ -3,20 +3,22 @@ Globally accessible location for the configuration.
 """
 
 from typing import Final, Optional, List
+from enum import Enum
 import sys
 import os
 
 import toml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, FilePath
+from pathlib import Path
+from .log import log, init_logger
 
-import metador
+from . import __basepath__
 
 ################################################################
 
 # some constants not exposed to the user
 
-DEF_CONFIG_FILE: Final[str] = os.path.join(metador.__basepath__, "metador.def.toml")
-
+DEF_CONFIG_FILE: Final[str] = os.path.join(__basepath__, "metador.def.toml")
 CONFFILE_ENVVAR: Final[str] = "METADOR_CONF"
 
 STAGING_DIR: Final[str] = "staging"
@@ -38,6 +40,19 @@ def complete_dir() -> str:
 # config model (overridable by user)
 
 
+class LogLevel(str, Enum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+
+class LogConf(BaseModel):
+    level: LogLevel = LogLevel.INFO
+    file: Optional[Path] = None
+
+
 class MetadorConf(BaseModel):
     """Configuration of the Metador server itself."""
 
@@ -45,10 +60,10 @@ class MetadorConf(BaseModel):
 
     tusd_endpoint: str = "http://localhost:1080/files/"
 
-    data_dir: str = "metador_datasets"
-    incomplete_expire: int = 48
+    data_dir: Path = Path("datasets")
+    incomplete_expire_after: int = 48
 
-    logfile: str = "metador.log"
+    log: LogConf = LogConf()
 
 
 class OrcidConf(BaseModel):
@@ -60,7 +75,7 @@ class OrcidConf(BaseModel):
     client_id: str = ""
     client_secret: str = ""
 
-    allowlist_file: str = ""
+    allowlist_file: Optional[FilePath] = None
 
 
 class UvicornConf(BaseModel):
@@ -104,20 +119,15 @@ def read_user_config(conffile: str) -> Conf:
         userconf = toml.load(conffile)
         return Conf().parse_obj(userconf)  # override defaults from user config
     except FileNotFoundError:
-        print(
-            f"Configuration file {conffile} does not exist or cannot be opened!",
-            file=sys.stderr,
+        log.critical(
+            f"Configuration file {conffile} does not exist or cannot be opened!"
         )
         sys.exit(1)
     except toml.TomlDecodeError as err:
-        print(
-            f"Error while parsing config file {conffile}: {str(err)}", file=sys.stderr
-        )
+        log.critical(f"Error while parsing config file {conffile}: {str(err)}")
         sys.exit(1)
     except ValidationError as err:
-        print(
-            f"Error while parsing config file {conffile}: {str(err)}", file=sys.stderr
-        )
+        log.critical(f"Error while parsing config file {conffile}: {str(err)}")
         sys.exit(1)
 
 
@@ -133,7 +143,7 @@ def init_conf(conffile: Optional[str] = None) -> None:
     global _conf
 
     # Trick: to preserve between auto-reloads,
-    # store the provided config file into an environment variable.
+    # store the provided config file into an environment variable!
 
     # If we get a filename passed, it always overrides the env var
     if conffile:
@@ -141,16 +151,13 @@ def init_conf(conffile: Optional[str] = None) -> None:
 
     # load the config from filename stored in env var
     if CONFFILE_ENVVAR in os.environ:
-        print(
-            f"(Re-)Loading configuration from {os.environ[CONFFILE_ENVVAR]}",
-            file=sys.stderr,
-        )
+        log.info(f"(Re-)Loading configuration from {os.environ[CONFFILE_ENVVAR]}")
         _conf = read_user_config(os.environ[CONFFILE_ENVVAR])
     else:
-        print("WARNING: No configuration file passed, using defaults.", file=sys.stderr)
+        log.warning("No configuration file passed, using defaults.")
         _conf = Conf()
 
-    allowed_orcids(True)  # force to load the list from file
+    allowed_orcids(True)  # force to (re-)load the list from file
 
 
 def conf() -> Conf:
@@ -163,17 +170,20 @@ def conf() -> Conf:
     global _conf
     try:
         _conf
+
+    # the config vanished because uvicorn restarted the app:
     except NameError:
-        init_conf()
+        init_logger()  # bootstrap default logger (will be re-configured by user conf)
+        init_conf()  # reload configuration
 
     return _conf
 
 
-# in-memory cached list of allowed ORCIDs
-_allowed_orcids: List[str] = []
+# in-memory cached list of allowed ORCIDs. if None, everything is allowed
+_allowed_orcids: Optional[List[str]] = None
 
 
-def allowed_orcids(reload_from_file: bool = False) -> List[str]:
+def allowed_orcids(reload_from_file: bool = False) -> Optional[List[str]]:
     """Return list of ORCIDs that should be allowed to sign in."""
 
     global _allowed_orcids
@@ -182,12 +192,15 @@ def allowed_orcids(reload_from_file: bool = False) -> List[str]:
     if not reload_from_file:
         return _allowed_orcids
 
+    _allowed_orcids = None  # reset list
+
     # if reload requested and whitelist file provided, read it
-    fname = conf().orcid.allowlist_file.strip()
-    if fname != "":
-        stripped = list(map(str.strip, open(fname, "r").readlines()))
-        nonempty = list(filter(lambda x: x != "", stripped))
-        noncommented = list(filter(lambda x: x[0] != "#", nonempty))
-        _allowed_orcids = noncommented
+    if conf().orcid.allowlist_file is not None:
+        fname = str(conf().orcid.allowlist_file)
+        if fname != "":
+            stripped = list(map(str.strip, open(fname, "r").readlines()))
+            nonempty = list(filter(lambda x: x != "", stripped))
+            noncommented = list(filter(lambda x: x[0] != "#", nonempty))
+            _allowed_orcids = noncommented
 
     return _allowed_orcids

@@ -5,12 +5,12 @@ https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenti
 
 from typing import Literal
 
+from pydantic import BaseModel
 import httpx
 
-from metador.config import conf
-import metador.config as c
-
-from pydantic import BaseModel
+from .config import conf
+from . import config as c
+from .log import log
 
 
 class OrcidBearerToken(BaseModel):
@@ -91,6 +91,6 @@ def revoke_token(tok: OrcidBearerToken) -> bool:
     }
     r = httpx.post(orcid_oauth_pref() + "/revoke", headers=hdrs, data=dat)
     if r.status_code != 200:
-        print("ORCID token revoke failed! This is strange, but not a problem.")
+        log.warning("ORCID token revoke failed! This is strange, but not a problem.")
         return False
     return True

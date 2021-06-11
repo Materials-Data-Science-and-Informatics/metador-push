@@ -1,18 +1,17 @@
 """
-Utility CLI for Metador.
+Utility CLI for the application.
 """
 
 from typing import Optional
-import os
 
 import uvicorn  # type: ignore
 import typer
 
-import metador
-from metador.orcid import get_orcid_redir
-
+from . import __version__, __pkg_path__
 from . import config as c
+from .orcid import get_orcid_redir
 from .util import prepare_dirs
+from .log import patch_uvicorn_log_format
 
 app = typer.Typer()
 
@@ -21,7 +20,7 @@ app = typer.Typer()
 def version() -> None:
     """Print current version."""
 
-    print(metador.__version__)
+    print(__version__)
 
 
 @app.command()
@@ -38,7 +37,7 @@ def tusd_hook_url(config: Optional[str] = None) -> None:
     Output the route to construct a hook path for tusd.
     """
 
-    c.init_conf(config)
+    c.init_conf(config)  # correct result depends on configured metador.site
     print(c.conf().metador.site + c.TUSD_HOOK_ROUTE)
 
 
@@ -48,7 +47,7 @@ def orcid_redir_url(config: Optional[str] = None) -> None:
     URL that should be registered as the ORCID API redirect.
     """
 
-    c.init_conf(config)
+    c.init_conf(config)  # correct result depends on configured metador.site
     print(get_orcid_redir())
 
 
@@ -59,13 +58,17 @@ def run(config: Optional[str] = None) -> None:
     c.init_conf(config)
     prepare_dirs()
 
-    # run server
+    # add date and time to uvicorn log
+    patch_uvicorn_log_format()
+    # run server. if reload is active, it watches for changes in the Python code.
+    # The templates and static files can be changed on runtime anyway.
+    # If you want to change a conf and reload, just "touch" a Python file forcing reload
     uvicorn.run(
         "metador.server:app",
         host=c.conf().uvicorn.host,
         port=c.conf().uvicorn.port,
         reload=c.conf().uvicorn.reload,
-        reload_dirs=[os.path.join(metador.__basepath__, "metador")],
+        reload_dirs=[__pkg_path__],
     )
 
 

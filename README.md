@@ -172,6 +172,17 @@ feasible attack scenario.
 Completed datasets can no longer be accessed by anyone from the client-side and therefore
 can be considered to be as secure as the rest of your system.
 
+### Technical: Why do you use old-fashioned session cookies? Why don't you use Redis?
+
+The classical session-cookie approach is easier to implement, handling JWT correctly is
+more involved. It might change in the future, but is not high priority.
+
+Concerning Redis, it might be used to persist in-memory data between reloads, but only for
+this pulling in this dependency seems to be "overkill". As this service is not intended to
+be replicated and up-scaled, having a shared cache seems also not so important.
+Possibly Redis might be added as an *optional* dependency at some point in the future, but
+it will never be mandatory.
+
 ## Development
 
 Before commiting, run `pytest` and make sure you did not break anything.
@@ -189,17 +200,17 @@ See [LICENSE](./LICENSE).
 
 #### Libraries
 
-**CLI:** typer (MIT), toml (MIT)
+**CLI:** typer (MIT), toml (MIT), colorlog (MIT)
 
 **Backend:** FastAPI (MIT), pydantic (MIT), tusd (MIT), httpx (BSD-3), python-multipart (Apache 2.0)
 
-**Frontend:** uppy (MIT), milligram (MIT)
+**Frontend:** uppy (MIT), Picnic CSS (MIT)
 
 ...and of course, the Python standard library.
 
 #### Tools
 
-**Checked by:** pytest (MIT), pre-commit (MIT), black (MIT), flake8 (MIT), mypy (MIT)
+**Checked by:** pytest (MIT), pytest-cov (MIT), pre-commit (MIT), black (MIT), flake8 (MIT), mypy (MIT)
 
 **Packaged by:** poetry (MIT)
 
