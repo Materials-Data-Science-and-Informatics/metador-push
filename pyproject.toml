@@ -13,9 +13,10 @@ httpx = "^0.18.1"
 toml = "^0.10.2"
 pytest-cov = "^2.12.1"
 colorlog = "^5.0.1"
+pytest = "^6.2.4"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^6.0"
 pre-commit = "^2.13.0"
 
 [tool.poetry.scripts]
@@ -24,3 +25,6 @@ metador-cli = 'metador.cli:app'
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning:aiofiles.*"]

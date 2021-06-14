@@ -9,7 +9,7 @@ import typer
 
 from . import __version__, __pkg_path__
 from . import config as c
-from .orcid import get_orcid_redir
+from .orcid import Auth
 from .util import prepare_dirs
 from .log import patch_uvicorn_log_format
 
@@ -48,7 +48,7 @@ def orcid_redir_url(config: Optional[str] = None) -> None:
     """
 
     c.init_conf(config)  # correct result depends on configured metador.site
-    print(get_orcid_redir())
+    print(Auth(c.conf().metador.site, c.conf().orcid).get_orcid_redir())
 
 
 @app.command()

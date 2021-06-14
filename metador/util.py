@@ -2,6 +2,7 @@ from typing import List
 
 import os
 import uuid
+from uuid import UUID
 
 from fastapi import HTTPException, status
 
@@ -38,19 +39,22 @@ def valid_staging_dataset(dataset: str):
 def existing_datasets() -> List[str]:
     """Get UUIDs of datasets currently in the system."""
 
-    return os.listdir() + os.listdir(c.complete_dir())
+    return os.listdir(c.staging_dir()) + os.listdir(c.complete_dir())
 
 
-def fresh_dataset() -> str:
+def fresh_dataset() -> UUID:
     """
     Generate a new UUID not currently used for an existing dataset.
     Create a directory for it, return the UUID.
     """
 
     existing = existing_datasets()
-    fresh_uuid = str(uuid.uuid1())
-    while fresh_uuid in existing:
-        fresh_uuid = str(uuid.uuid1())
+    fresh_uuid = uuid.uuid1()
+    while str(fresh_uuid) in existing:
+        fresh_uuid = uuid.uuid1()
 
-    os.mkdir(os.path.join(c.staging_dir(), fresh_uuid))
+    os.mkdir(os.path.join(c.staging_dir(), str(fresh_uuid)))
+    # state.dataset_expires_by[fresh_uuid] = datetime.today() + timedelta(
+    #     hours=c.conf().metador.incomplete_expire_after
+    # )
     return fresh_uuid

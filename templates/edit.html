@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row">
+<div class="flex">
+  <div>
+  <p>
+  This dataset must be completed until <b>{{expire_time}}</b>, otherwise it will be deleted.
+
+  Until then, you can access this page.
+
+  Make sure that you keep the link private, if the dataset is sensitive!
+  </p>
+  </div>
 
   <!-- This div hosts the Uppy Dashboard-->
   <div id="drag-drop-area"></div>

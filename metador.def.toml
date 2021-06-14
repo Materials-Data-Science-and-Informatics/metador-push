@@ -28,6 +28,8 @@ level = 'INFO'
 [orcid]
 # Enable ORCID support
 enabled = false
+# after that many minutes the user sessions expire and they have to sign in again
+auth_expire_after = 180
 
 # If provided, the following file must exist + contain the ORCIDs of permitted users.
 # If the file itself is empty, then _no one_ can use the instance.
@@ -40,6 +42,8 @@ client_secret = ''
 
 # If true, uses the sandbox servers provided by ORCID (only useful for developers)
 sandbox = false
+# If true, uses mock of ORCID (works even offline) (only useful for developers)
+use_fake = false
 
 ################
 

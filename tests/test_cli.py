@@ -15,7 +15,7 @@ def test_helpers():
     res = runner.invoke(app, ["tusd-hook-url"] + def_conf).stdout.strip()
     assert "http://localhost:8000/tusd-events" in res
     res = runner.invoke(app, ["orcid-redir-url"] + def_conf).stdout.strip()
-    assert "http://localhost:8000/orcid-auth" in res
+    assert "http://localhost:8000/oauth/orcid" in res
 
     file = open("metador.def.toml", "r").read()
     output = runner.invoke(app, "default-conf").stdout

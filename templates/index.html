@@ -3,14 +3,15 @@
 <div class="flex three">
   <div></div>
   <div>
-    <a class="button stack" style="{{maybe_hidden}}" href="{{orcid_userauth_url}}">
-      <i style="width:20px;" class="fab fa-orcid"></i>
-      Sign in with ORCID
-    </a>
-    <a class="button stack" href="/new">
+    <p>
+    Hello, <span id="user_name">guest</span> !
+    </p>
+
+    <a class="button" href="/new">
     <i style="width:20px;" class="fas fa-folder-open"></i>
       Upload a new dataset
     </a>
+
   </div>
   <div></div>
 </div>
@@ -20,4 +21,14 @@
   </div>
   <div></div>
 </div>
+    <script>
+      function check_auth() {
+          with_auth_info(data => {
+                  if (data.session) {
+              document.getElementById("user_name").innerHTML = data.session.user_name;
+                        }
+          });
+      }
+      check_auth();
+    </script>
 {% endblock %}

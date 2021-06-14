@@ -2,17 +2,18 @@
 Globally accessible location for the configuration.
 """
 
-from typing import Final, Optional, List
+from typing import Final, Optional
 from enum import Enum
 import sys
 import os
 
 import toml
-from pydantic import BaseModel, ValidationError, FilePath, Extra
+from pydantic import BaseModel, ValidationError, Extra
 from pathlib import Path
 from .log import log, init_logger
 
 from . import __basepath__
+from .orcid import OrcidConf
 
 ################################################################
 
@@ -24,7 +25,6 @@ CONFFILE_ENVVAR: Final[str] = "METADOR_CONF"
 STAGING_DIR: Final[str] = "staging"
 COMPLETE_DIR: Final[str] = "complete"
 
-ORCID_REDIR_ROUTE: Final[str] = "/orcid-auth"
 TUSD_HOOK_ROUTE: Final[str] = "/tusd-events"
 
 
@@ -38,6 +38,7 @@ def complete_dir() -> str:
 
 ################################################################
 # config model (overridable by user)
+# For more info about the fields, see the default TOML file.
 
 
 class LogLevel(str, Enum):
@@ -74,21 +75,6 @@ class MetadorConf(BaseModel):
     incomplete_expire_after: int = 48
 
     log: LogConf = LogConf()
-
-
-class OrcidConf(BaseModel):
-    """Configuration of ORCID authentication."""
-
-    class Config:
-        extra = Extra.forbid
-
-    enabled: bool = False
-    sandbox: bool = False
-
-    client_id: str = ""
-    client_secret: str = ""
-
-    allowlist_file: Optional[FilePath] = None
 
 
 class UvicornConf(BaseModel):
@@ -176,8 +162,6 @@ def init_conf(conffile: Optional[str] = None) -> None:
         log.warning("No configuration file passed, using defaults.")
         _conf = Conf()
 
-    allowed_orcids(True)  # force to (re-)load the list from file
-
 
 def conf() -> Conf:
     """
@@ -196,30 +180,3 @@ def conf() -> Conf:
         init_conf()  # reload configuration
 
     return _conf
-
-
-# in-memory cached list of allowed ORCIDs. if None, everything is allowed
-_allowed_orcids: Optional[List[str]] = None
-
-
-def allowed_orcids(reload_from_file: bool = False) -> Optional[List[str]]:
-    """Return list of ORCIDs that should be allowed to sign in."""
-
-    global _allowed_orcids
-
-    # return cached by default
-    if not reload_from_file:
-        return _allowed_orcids
-
-    _allowed_orcids = None  # reset list
-
-    # if reload requested and whitelist file provided, read it
-    if conf().orcid.allowlist_file is not None:
-        fname = str(conf().orcid.allowlist_file)
-        if fname != "":
-            stripped = list(map(str.strip, open(fname, "r").readlines()))
-            nonempty = list(filter(lambda x: x != "", stripped))
-            noncommented = list(filter(lambda x: x[0] != "#", nonempty))
-            _allowed_orcids = noncommented
-
-    return _allowed_orcids

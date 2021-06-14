@@ -114,9 +114,11 @@ The following never actually asked questions might be of interest to you.
 
 ### Feature: Will there be an API for external tools to automate uploads?
 
-No, this service is intended strictly for use by human beings, to send you data that
-originally has ad-hoc or lacking metadata. If the dataset is already fully annotated, it
-should be transferred in a different way.
+This service is intended for use by human beings, to send you data that originally has
+ad-hoc or lacking metadata. If the dataset is already fully annotated, it probably should
+be transferred in a different and simpler way. If you insist on using this service
+mechanically, in fact it is designed to be as RESTful as possible so you might try to
+script an auto-uploader. However, there is no official support for this.
 
 ### Feature: Will there be support for e.g. cloud-based storage?
 
@@ -151,37 +153,48 @@ If you, against all advice, want to have a custom authentication mechanism, use
 this with ORCID disabled, i.e. in "open mode", and then restrict access to the service in
 a different way.
 
-### Security: Can any (logged-in) user edit any dataset, knowing its UUID?
+### Security: Are my datasets secure and cannot be stolen or manipulated?
 
-In principle - for non-completed datasets, yes, but this is not a problem.
+Short answer: if this service is exposed via HTTPS, for all practical purposes the answer
+is **yes**.
 
-This service tries to store as few information as possible, except for the actual
-annotated data. Dataset upload and annotation is a transient workflow, this service does
-not care about completed datasets after the user confirmed completion of the dataset and 
-the post-processing hook has been called.
+OAuth is used to authenticate via ORCID, so authentication is as secure as ORCID is.
+After completing authentication, a classical session cookie is stored, proving that the
+user is signed in. This cookie is not accessible from JavaScript and is using
+all the best practices to counteract typical attacks.
 
-The UUID of a new dataset is given out by the server and is known only to the user who
-created it. If you use HTTPS, but an attacker is still able to obtain the UUID of a
-currently edited dataset of a regular user, then you have a serious security problem
-elsewhere.
+Only with that cookie the user can access the datasets, and only his own datasets.
+This is ensured by the fact that the session cookie witnesses an authenticated ORCID
+and each dataset is marked with the ORCID of its creator as well as a secret token 
+only accessible by this user for all file uploads. The risk of abuse is further
+minimized if the user signs out after completing their work. 
 
-Finally, guessing UUIDs randomly, hoping that one can access a dataset to tamper with in
-the narrow timeslot that the actual creator has not completed it yet, is clearly not a
-feasible attack scenario.
+So if you trust HTTPS, ORCID, and your own server where you host your instance, 
+you can be reasonably sure that only the user who created a dataset is able to access it
+in any way and that at least no naive attack should succeed.
 
-Completed datasets can no longer be accessed by anyone from the client-side and therefore
-can be considered to be as secure as the rest of your system.
+To gain illicit access to a dataset, an attacker must bypass the 3-legged OAuth procedure,
+or must somehow steal the SessionID of a legitimate user, which, as described, seems to be
+rather infeasible, unless the attacker has already absolute control over the system of the
+uploader. In that case your problem is clearly somewhere else, anyway.
+
+Finally, completed datasets can no longer be accessed by anyone from the client-side and
+therefore can be considered to be as secure as the rest of your system.
 
 ### Technical: Why do you use old-fashioned session cookies? Why don't you use Redis?
 
 The classical session-cookie approach is easier to implement, handling JWT correctly is
-more involved. It might change in the future, but is not high priority.
+more involved and 
+[there are](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/)
+[arguments](https://developer.okta.com/blog/2017/08/17/why-jwts-suck-as-session-tokens)
+that JWT should not be used for sessions or at least have no advantages for this usage.
 
-Concerning Redis, it might be used to persist in-memory data between reloads, but only for
-this pulling in this dependency seems to be "overkill". As this service is not intended to
-be replicated and up-scaled, having a shared cache seems also not so important.
-Possibly Redis might be added as an *optional* dependency at some point in the future, but
-it will never be mandatory.
+Concerning Redis - it might be used to persist in-memory data between reloads, but only for
+this, pulling in this dependency seems to be "overkill". As this service is not intended to
+be up-scaled and each instance will probably have probably at most a few dozens of users,
+having a shared cache seems not so important. Possibly Redis might be added as an
+*optional* dependency at some point in the future, if problems arise, but it will never be
+mandatory.
 
 ## Development
 

@@ -18,14 +18,40 @@
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
+      <script src="/static/base.js"></script>
       <nav>
-        <span class="brand" data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research">Metador</span>
-        <span style="position: relative; top: 30%;">
-          <small></small></span>
+        <a href="/" class="brand" data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research">
+          Metador
+        </a>
+
+        <span style="position: relative; top: 25%;">
+          <i><small>The metadata-aware mailbox for research data.</small></i></span>
+
+        <div class="menu">
+          <span id="auth-button"></span>
+          <script>
+            signin_btn = `
+              <a class="button" href="/oauth/orcid">
+                <i style="width:20px;" class="fab fa-orcid"></i>
+                Sign in with ORCID
+              </a>`;
+            signout_btn = `<a class="button" href="/oauth/signout">Sign out</a>`;
+            with_auth_info(data => {
+                          if (data.orcid_enabled) {
+                                  document.getElementById("auth-button").innerHTML = 
+                                        data.session == null ? signin_btn : signout_btn;
+
+                                      }
+                        });
+          </script>
+        </div>
       </nav>
       <div style="height:70px"></div>
       <main>
         {% block content %}{% endblock %}
       </main>
+  <footer>
+    <!-- What to put here? -->
+  </footer>
   </body>
 </html>
