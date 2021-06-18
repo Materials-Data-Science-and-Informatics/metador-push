@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MetadorProfile",
+  "description": "Describes which files of a dataset must have which kind of metadata.",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Human-readable name of dataset profile.",
+      "minLength": 1
+    },
+    "rootSchema": {
+      "$ref": "#/definitions/JSONSchemaRef",
+      "description": "Schema to use for the dataset itself."
+    },
+    "patterns": {
+      "type": "array",
+      "description": "List of regex patterns, of which the first matching one will be used.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "Regex pattern that must match the whole filename.",
+            "minLength": 1
+          },
+          "schema": {
+            "$ref": "#/definitions/JSONSchemaRef",
+            "description": "Schema to apply to metadata of a file matching the pattern."
+          }
+        },
+        "required": [
+          "pattern",
+          "schema"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "fallbackSchema": {
+      "$ref": "#/definitions/JSONSchemaRef",
+      "description": "Schema to use if no pattern matched."
+    }
+  },
+  "required": [
+    "title",
+    "rootSchema",
+    "patterns",
+    "fallbackSchema"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "JSONSchemaRef": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "$comment": "Either trivial schema, or a filename/URI (whatever is allowed in $ref)"
+    }
+  }
+}

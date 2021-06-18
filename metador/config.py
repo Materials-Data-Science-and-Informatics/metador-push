@@ -13,31 +13,23 @@ from pathlib import Path
 from .log import log, init_logger
 
 from . import __basepath__
-from .orcid import OrcidConf
+from .orcid import auth
 
 ################################################################
 
 # some constants not exposed to the user
 
+#: Default name of config file. used by CLI
 DEF_CONFIG_FILE: Final[str] = os.path.join(__basepath__, "metador.def.toml")
+
+#: Environment variable name to pass or store config location (needed for restarts!)
 CONFFILE_ENVVAR: Final[str] = "METADOR_CONF"
 
-STAGING_DIR: Final[str] = "staging"
-COMPLETE_DIR: Final[str] = "complete"
-
+#: API route to handle tusd events (TODO: move to another module?)
 TUSD_HOOK_ROUTE: Final[str] = "/tusd-events"
 
-
-def staging_dir() -> str:
-    return os.path.join(conf().metador.data_dir, STAGING_DIR)
-
-
-def complete_dir() -> str:
-    return os.path.join(conf().metador.data_dir, COMPLETE_DIR)
-
-
 ################################################################
-# config model (overridable by user)
+# Models for configuration that is available to user.
 # For more info about the fields, see the default TOML file.
 
 
@@ -71,8 +63,10 @@ class MetadorConf(BaseModel):
 
     tusd_endpoint: str = "http://localhost:1080/files/"
 
-    data_dir: Path = Path("datasets")
     incomplete_expire_after: int = 48
+
+    profile_dir: Path = Path("profiles")
+    data_dir: Path = Path("metador_data")
 
     log: LogConf = LogConf()
 
@@ -99,8 +93,8 @@ class Conf(BaseModel):
     class Config:
         extra = Extra.forbid
 
+    orcid: auth.OrcidConf = auth.OrcidConf()
     metador: MetadorConf = MetadorConf()
-    orcid: OrcidConf = OrcidConf()
     uvicorn: UvicornConf = UvicornConf()
 
 

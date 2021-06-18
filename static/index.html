@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Metador</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+
+    <!-- CSS Reset -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css"> -->
+    <!-- Picnic is already based on normalize -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+    <!-- some icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <!-- Uppy CSS -->
+    <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v1.29.1/uppy.min.css">
+
+    <!-- we use Vue, it works without special tooling -->
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="https://unpkg.com/vue-router@4"></script>
+
+    <!-- Site-specific -->
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+      <script src="/static/app.js"></script>
+      <script src="/static/routes.js"></script>
+
+      <header>
+        <nav>
+          <span
+            class="brand"
+            data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research">
+            Metador
+          </span>
+
+          <span style="position: relative; top: 25%;">
+            <i><small>The metadata-aware mailbox for research data.</small></i></span>
+
+          <div class="menu">
+            <span id="auth-button"></span>
+          </div>
+        </nav>
+      <div style="height:70px"></div>
+      </header>
+      <main id="app">
+        <router-view></router-view>
+      </main>
+  <footer>
+    <!-- What to put here? -->
+  </footer>
+  </body>
+</html>

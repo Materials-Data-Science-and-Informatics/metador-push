@@ -165,9 +165,10 @@ all the best practices to counteract typical attacks.
 
 Only with that cookie the user can access the datasets, and only his own datasets.
 This is ensured by the fact that the session cookie witnesses an authenticated ORCID
-and each dataset is marked with the ORCID of its creator as well as a secret token 
-only accessible by this user for all file uploads. The risk of abuse is further
-minimized if the user signs out after completing their work. 
+and each dataset is marked with the ORCID of its creator, so it is only accessible by this
+user. File uploads are also all marked with the Dataset UUID, which only the user knows.
+The risk of abuse can be further minimized if the user signs out after completing their
+work.
 
 So if you trust HTTPS, ORCID, and your own server where you host your instance, 
 you can be reasonably sure that only the user who created a dataset is able to access it

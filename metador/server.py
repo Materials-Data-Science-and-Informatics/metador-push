@@ -2,119 +2,70 @@
 Main file for the Metador backend.
 """
 
-from typing import Optional
-
-from fastapi import FastAPI, Request, Header, Depends
-from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import util, pkg_res, orcid
-from . import config as c
-from .orcid import Auth, Session
-from .log import log, init_logger
+from . import pkg_res, orcid, api
+from .orcid import api as orcid_api
+from .orcid import mock
+
 from .config import conf
-from .hookmodel import TusdEvent, TusdHookName
+from .log import init_logger
 
-app = FastAPI()
 
-if c.conf().orcid.use_fake:
-    app.include_router(orcid.mock_orcid)
+app = FastAPI(title="Metador")
+
+# add dummy-ORCID routes for development (they always sign in a dummy user)
+if conf().orcid.use_fake:
+    app.include_router(mock.routes)
 
 # initialize authentication based on config file
-auth = Auth(c.conf().metador.site, c.conf().orcid, c.conf().metador.data_dir)
-app.include_router(auth.routes)
+orcid.init_auth(conf().metador.site, conf().orcid, conf().metador.data_dir)
+app.include_router(orcid_api.routes)
 
-
-# make HTTPException return a plain text message
-# TODO: what about user-facing exceptions? need to subclass and make templated variant
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, exc):
-    return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
+# actual backend interface used by SPA
+app.include_router(api.routes)
 
 
 @app.on_event("startup")
 def on_startup():
-    # must re-init logging here (otherwise won't work with uvicorn reload)
-    init_logger(c.conf().metador.log.level.value, str(c.conf().metador.log.file))
+    # must (re-)init logging here (otherwise won't work properly with uvicorn reload)
+    init_logger(conf().metador.log.level.value, str(conf().metador.log.file))
 
 
 @app.on_event("shutdown")
 def on_shutdown():
-    auth.dump_sessions()
+    # persist state to files
+    orcid.get_auth().dump_sessions()
 
 
-# serve static files
 app.mount("/static", StaticFiles(directory=pkg_res("static")), name="static")
 
-
-# prevent 404 (browser always tries to get this)
-@app.get("/favicon.ico")
-async def favicon():
-    return RedirectResponse(url="/static/favicon.ico")
-
-
-# location of templates
-templates = Jinja2Templates(directory=pkg_res("templates"))
+# @app.post(c.TUSD_HOOK_ROUTE)
+# async def tusd_hook(body: TusdEvent, hook_name: TusdHookName = Header(...)):
+#     log.debug(hook_name)
+#     log.debug(body)
+#     return "TODO"
 
 
-@app.post(c.TUSD_HOOK_ROUTE)
-async def tusd_hook(body: TusdEvent, hook_name: TusdHookName = Header(...)):
-    log.debug(hook_name)
-    log.debug(body)
-    return "TODO"
+@app.get("/favicon.ico", response_class=FileResponse)
+def read_favicon():
+    """To prevent browser 404 errors."""
+
+    return FileResponse(pkg_res("static/favicon.ico"))
 
 
-@app.get("/", response_class=HTMLResponse)
-async def home(
-    request: Request,
-    session: Optional[Session] = Depends(auth.maybe_session),
-):
-    tmpl_vars = {
-        "request": request,
-        "orcid_enabled": conf().orcid.enabled,
-        "signed_in": session is not None,
-        # "orcid_userauth_url": auth.userauth_url(),
-        "user_name": session.user_name if session else "guest",
-    }
-    return templates.TemplateResponse("index.html", tmpl_vars)
+@app.get("/site-base")
+async def site_base():
+    """Returns the configured site prefix. Useful for correct client-side routing."""
+
+    return conf().metador.site
 
 
-@app.get("/new")
-def new():
-    """Creates a new dataset directory, redirects to its upload/annotation page."""
+# must come last
+@app.get("/{anything_else:path}")
+async def catch_all():
+    """Catch-all redirect of unknown routes to SPA UI."""
 
-    return RedirectResponse(url=f"/edit/{ util.fresh_dataset() }")
-
-
-@app.get(
-    "/edit/{dataset}",
-    response_class=HTMLResponse,
-    dependencies=[Depends(util.valid_staging_dataset)],
-)
-async def edit(
-    request: Request,
-    dataset: str,
-    session: Optional[Session] = Depends(auth.get_session),
-):
-
-    tmpl_vars = {
-        "request": request,
-        "tusd_endpoint": conf().metador.tusd_endpoint,
-        "dataset": dataset,
-        "signed_in": session is not None,
-        # "expire_time": state.dataset_expires_by[UUID(dataset)].strftime(
-        #     "%Y-%m-%d %H:%M:%S"
-        # ),
-    }
-    return templates.TemplateResponse("edit.html", tmpl_vars)
-
-
-@app.get("/test")
-def test_func():
-    log.debug("debug log")
-    log.info("info log")
-    log.warning("warning log")
-    log.error("error log")
-    return "ok"
+    return FileResponse(pkg_res("static/index.html"))

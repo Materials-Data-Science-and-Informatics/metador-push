@@ -9,8 +9,8 @@ import typer
 
 from . import __version__, __pkg_path__
 from . import config as c
-from .orcid import Auth
-from .util import prepare_dirs
+from . import core
+from .orcid.util import orcid_redir
 from .log import patch_uvicorn_log_format
 
 app = typer.Typer()
@@ -48,7 +48,7 @@ def orcid_redir_url(config: Optional[str] = None) -> None:
     """
 
     c.init_conf(config)  # correct result depends on configured metador.site
-    print(Auth(c.conf().metador.site, c.conf().orcid).get_orcid_redir())
+    print(orcid_redir(c.conf().metador.site))
 
 
 @app.command()
@@ -56,7 +56,7 @@ def run(config: Optional[str] = None) -> None:
     """Serve application using uvicorn."""
 
     c.init_conf(config)
-    prepare_dirs()
+    core.prepare_dirs()
 
     # add date and time to uvicorn log
     patch_uvicorn_log_format()

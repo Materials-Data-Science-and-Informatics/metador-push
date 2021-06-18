@@ -1,0 +1,10 @@
+{
+  "title": "An example dataset",
+  "rootSchema": "example.schema.json",
+  "patterns": [
+    {"pattern": "good-file", "schema": true},
+    {"pattern": "bad-file", "schema": false},
+    {"pattern": "\\w+", "schema": "some.schema.json"}
+  ],
+  "fallbackSchema": false
+}
