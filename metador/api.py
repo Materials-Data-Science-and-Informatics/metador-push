@@ -3,8 +3,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-# from .config import conf
 from .orcid import get_session
+from .profile import get_profiles, get_profile
+
+# from . import dataset
+# from .config import conf
 
 API_PREF: Final[str] = "/api"
 
@@ -17,7 +20,7 @@ routes: APIRouter = APIRouter(
 def api_info():
     """Entry point into backend API."""
 
-    # TODO: maybe give some navigation (possible actions...)
+    # TODO: maybe give some HATEOAS navigation (possible actions...)
     return "This is the Metador backend. If you see this, then you are authenticated."
 
 
@@ -25,13 +28,21 @@ def api_info():
 
 
 @routes.get("/profiles")
-def get_profiles():
+def get_profile_list():
     """
     Return the available dataset profiles (pr_id + human readable title for UI).
 
     Only used for the client to select which kind of dataset they desire to create.
     """
-    pass
+
+    return get_profiles()
+
+
+@routes.get("/profiles/{pr_name}")
+def get_profile_instance(pr_name: str):
+    """Returns the profile."""
+
+    return get_profile(pr_name)
 
 
 ####

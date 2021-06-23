@@ -13,8 +13,8 @@ This module supports the official production+sandbox servers and the mock server
 This module does not directly rely on Metador-specifics to simplify reuse.
 """
 
-import os
 import sys
+from pathlib import Path
 import re
 from datetime import datetime, timedelta
 from typing import Literal, Optional, Dict, Annotated, Final, List, NewType
@@ -154,9 +154,9 @@ class Auth:
         self.orcid_conf: OrcidConf = conf
 
         #: Directory where the sessions are persisted between server restarts.
-        self.persist_dir: Optional[str] = None
+        self.persist_dir: Optional[Path] = None
         if persist_dir:
-            self.persist_dir = str(persist_dir)
+            self.persist_dir = persist_dir
             self.load_sessions()
 
         #: List of permitted ORCIDs.
@@ -236,9 +236,9 @@ class Auth:
                 headers=hdrs,
                 data=dat,
             )
-        if r.status_code != 200:
-            return False
-        return True
+        if 200 <= r.status_code < 300:
+            return True
+        return False
 
     ####
 
@@ -264,10 +264,10 @@ class Auth:
 
     ####
 
-    def persist_file_path(self) -> Optional[str]:
+    def persist_file_path(self) -> Optional[Path]:
         if self.persist_dir is None:
             return None
-        return os.path.join(self.persist_dir, self.PERSIST_FILE)
+        return self.persist_dir / self.PERSIST_FILE
 
     def load_sessions(self) -> None:
         """If persistence directory specified, try to load sessions."""
@@ -276,7 +276,7 @@ class Auth:
             log.debug("Session serialization is not enabled.")
             return
 
-        if not os.path.isfile(fname):
+        if not fname.is_file():
             log.debug("No serialized session file.")
             return
 

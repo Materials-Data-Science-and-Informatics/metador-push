@@ -4,6 +4,7 @@ import re
 import sys
 import logging
 from logging import Formatter, Logger
+from pathlib import Path
 
 from colorlog import ColoredFormatter
 
@@ -33,7 +34,7 @@ log: Final[Logger] = logging.getLogger("metador")
 
 
 def init_logger(
-    level: str = logging.getLevelName(logging.INFO), logfile: Optional[str] = None
+    level: str = logging.getLevelName(logging.INFO), logfile: Optional[Path] = None
 ):
     """Init logger for console and file output."""
 

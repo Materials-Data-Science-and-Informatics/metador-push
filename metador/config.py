@@ -20,7 +20,7 @@ from .orcid import auth
 # some constants not exposed to the user
 
 #: Default name of config file. used by CLI
-DEF_CONFIG_FILE: Final[str] = os.path.join(__basepath__, "metador.def.toml")
+DEF_CONFIG_FILE: Final[Path] = __basepath__ / "metador.def.toml"
 
 #: Environment variable name to pass or store config location (needed for restarts!)
 CONFFILE_ENVVAR: Final[str] = "METADOR_CONF"
@@ -41,6 +41,13 @@ class LogLevel(str, Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+
+
+class ChecksumTool(str, Enum):
+    """The supported checksum tools."""
+
+    SHA256SUM = "sha256sum"
+    SHA512SUM = "sha512sum"
 
 
 class LogConf(BaseModel):
@@ -65,8 +72,11 @@ class MetadorConf(BaseModel):
 
     incomplete_expire_after: int = 48
 
+    # TODO: could use DirectoryPath, but then need some more fancy testing setup
     profile_dir: Path = Path("profiles")
     data_dir: Path = Path("metador_data")
+
+    checksum_tool: ChecksumTool = ChecksumTool.SHA256SUM
 
     log: LogConf = LogConf()
 
@@ -141,6 +151,8 @@ def init_conf(conffile: Optional[str] = None) -> None:
 
     global _conf
 
+    init_logger()  # bootstrap default logger (will be re-configured by user conf)
+
     # Trick: to preserve between auto-reloads,
     # store the provided config file into an environment variable!
 
@@ -170,7 +182,6 @@ def conf() -> Conf:
 
     # the config vanished because uvicorn restarted the app:
     except NameError:
-        init_logger()  # bootstrap default logger (will be re-configured by user conf)
         init_conf()  # reload configuration
 
     return _conf

@@ -6,9 +6,10 @@ It exposes the interface to handle datasets, files and metadata.
 
 from typing import Final
 
-import os
+from pathlib import Path
 
 from .config import conf
+from .util import critical_exit
 
 #: Directory name for non-completed datasets
 STAGING_DIR_NAME: Final[str] = "staging"
@@ -17,57 +18,26 @@ STAGING_DIR_NAME: Final[str] = "staging"
 COMPLETE_DIR_NAME: Final[str] = "complete"
 
 
-def staging_dir() -> str:
+def staging_dir() -> Path:
     """Return directory for incomplete datasets (editable by client)."""
 
-    return os.path.join(conf().metador.data_dir, STAGING_DIR_NAME)
+    return conf().metador.data_dir / STAGING_DIR_NAME
 
 
-def complete_dir() -> str:
+def complete_dir() -> Path:
     """Return directory for complete datasets (handled by post-processing)."""
 
-    return os.path.join(conf().metador.data_dir, COMPLETE_DIR_NAME)
+    return conf().metador.data_dir / COMPLETE_DIR_NAME
 
 
 def prepare_dirs() -> None:
     """Create directory structure for datasets at location specified in config."""
 
-    if not os.path.isdir(conf().metador.data_dir):
-        os.mkdir(conf().metador.data_dir)
-    if not os.path.isdir(staging_dir()):
-        os.mkdir(staging_dir())
-    if not os.path.isdir(complete_dir()):
-        os.mkdir(complete_dir())
+    data_dir = conf().metador.data_dir
+    if not data_dir.is_dir():
+        critical_exit(f"Configured data directory '{data_dir}' does not exist!")
 
-
-# def valid_staging_dataset(dataset: str):
-#     """Check that the dataset exists."""
-
-#     if not os.path.isdir(os.path.join(staging_dir(), dataset)):
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND, detail="No such dataset."
-#         )
-
-
-# def existing_datasets() -> List[str]:
-#     """Get UUIDs of datasets currently in the system."""
-
-#     return os.listdir(c.staging_dir()) + os.listdir(c.complete_dir())
-
-
-# def fresh_dataset() -> UUID:
-#     """
-#     Generate a new UUID not currently used for an existing dataset.
-#     Create a directory for it, return the UUID.
-#     """
-
-#     existing = existing_datasets()
-#     fresh_uuid = uuid.uuid1()
-#     while str(fresh_uuid) in existing:
-#         fresh_uuid = uuid.uuid1()
-
-#     os.mkdir(os.path.join(c.staging_dir(), str(fresh_uuid)))
-#     # state.dataset_expires_by[fresh_uuid] = datetime.today() + timedelta(
-#     #     hours=c.conf().metador.incomplete_expire_after
-#     # )
-#     return fresh_uuid
+    if not staging_dir().is_dir():
+        staging_dir().mkdir()
+    if not complete_dir().is_dir():
+        complete_dir().mkdir()

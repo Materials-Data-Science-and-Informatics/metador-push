@@ -31,7 +31,7 @@ app.include_router(api.routes)
 @app.on_event("startup")
 def on_startup():
     # must (re-)init logging here (otherwise won't work properly with uvicorn reload)
-    init_logger(conf().metador.log.level.value, str(conf().metador.log.file))
+    init_logger(conf().metador.log.level.value, conf().metador.log.file)
 
 
 @app.on_event("shutdown")

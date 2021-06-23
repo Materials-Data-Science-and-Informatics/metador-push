@@ -30,6 +30,8 @@ profile_dir = 'profiles'
 # it will have subdirs "staging" and "complete" for datasets
 # and also some temporary files
 data_dir = 'metador_data'
+# checksum tool to use (sha256sum and sha512sum are supported)
+checksum_tool = 'sha256sum'
 
 [metador.log]
 # Granularity of logging.

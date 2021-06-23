@@ -7,7 +7,7 @@ runner = CliRunner()
 
 
 def test_helpers():
-    def_conf = ["--config", c.DEF_CONFIG_FILE]
+    def_conf = ["--config", str(c.DEF_CONFIG_FILE)]
 
     res = runner.invoke(app, ["version"]).stdout.strip()
     assert res == metador.__version__
