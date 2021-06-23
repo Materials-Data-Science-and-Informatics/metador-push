@@ -1,8 +1,8 @@
+import os
+import sys
+from pathlib import Path
 from typing import Final
 
-import os
-from pathlib import Path
-import sys
 import toml
 
 __pkg_path__: Final[Path] = Path(
@@ -19,7 +19,7 @@ pyproject = toml.load(os.path.join(__basepath__, "pyproject.toml"))
 __version__: Final[str] = pyproject["tool"]["poetry"]["version"]
 
 
-def pkg_res(path: str) -> str:
+def pkg_res(path: str) -> Path:
     """Return resource bundled with this package."""
 
-    return os.path.join(__basepath__, path)
+    return __basepath__ / path

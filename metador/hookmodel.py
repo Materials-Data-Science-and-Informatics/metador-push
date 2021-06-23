@@ -3,8 +3,9 @@ Pydantic model to parse JSON passed by tusd to hook handler.
 Based on description in: https://github.com/tus/tusd/blob/master/docs/hooks.md
 """
 
-from typing import List, Optional, Dict, Literal, Any
 from enum import Enum
+from typing import Any, Dict, List, Literal, Optional
+
 from pydantic import BaseModel
 
 

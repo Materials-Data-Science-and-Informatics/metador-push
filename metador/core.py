@@ -4,9 +4,8 @@ Main functionality of Metador backend, independent of HTTP routing.
 It exposes the interface to handle datasets, files and metadata.
 """
 
-from typing import Final
-
 from pathlib import Path
+from typing import Final
 
 from .config import conf
 from .util import critical_exit

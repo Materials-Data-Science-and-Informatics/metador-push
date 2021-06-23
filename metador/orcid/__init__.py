@@ -1,7 +1,8 @@
 from typing import Optional
-from .auth import Auth, SessionID, Session
 
-from fastapi import Cookie, status, HTTPException
+from fastapi import Cookie, HTTPException, status
+
+from .auth import Auth, Session, SessionID
 
 ####
 # var for singleton instance

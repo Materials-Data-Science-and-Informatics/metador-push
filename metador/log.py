@@ -1,15 +1,12 @@
-from typing import Final, Optional
-
+import logging
 import re
 import sys
-import logging
 from logging import Formatter, Logger
 from pathlib import Path
+from typing import Final, Optional
 
 from colorlog import ColoredFormatter
-
 from uvicorn.config import LOGGING_CONFIG
-
 
 # see https://docs.python.org/3/library/logging.html#logrecord-attributes
 

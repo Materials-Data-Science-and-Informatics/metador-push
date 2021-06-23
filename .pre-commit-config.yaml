@@ -1,6 +1,11 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
+  - repo: https://github.com/pycqa/isort
+    rev: '5.8.0'
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
   - repo: https://github.com/ambv/black
     rev: '21.5b2'
     hooks:

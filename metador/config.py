@@ -2,17 +2,17 @@
 Globally accessible location for the configuration.
 """
 
-from typing import Final, Optional
-from enum import Enum
-import sys
 import os
+import sys
+from enum import Enum
+from pathlib import Path
+from typing import Final, Optional
 
 import toml
-from pydantic import BaseModel, ValidationError, Extra
-from pathlib import Path
-from .log import log, init_logger
+from pydantic import BaseModel, Extra, ValidationError
 
 from . import __basepath__
+from .log import init_logger, log
 from .orcid import auth
 
 ################################################################

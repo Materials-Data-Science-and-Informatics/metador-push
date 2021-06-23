@@ -1,10 +1,12 @@
-from typing import Final, Optional
+from typing import Final, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
+from .dataset import Dataset, get_dataset, get_datasets
 from .orcid import get_session
-from .profile import get_profiles, get_profile
+from .orcid.auth import Session
+from .profile import Profile, get_profile, get_profiles
 
 # from . import dataset
 # from .config import conf
@@ -28,7 +30,7 @@ def api_info():
 
 
 @routes.get("/profiles")
-def get_profile_list():
+def get_profile_list() -> List[str]:
     """
     Return the available dataset profiles (pr_id + human readable title for UI).
 
@@ -39,7 +41,7 @@ def get_profile_list():
 
 
 @routes.get("/profiles/{pr_name}")
-def get_profile_instance(pr_name: str):
+def get_profile_instance(pr_name: str) -> Optional[Profile]:
     """Returns the profile."""
 
     return get_profile(pr_name)
@@ -52,61 +54,87 @@ DATASETS: Final[str] = "/datasets"
 
 
 @routes.post(DATASETS)
-def new_dataset(profile: str):
+def new_dataset(
+    profile: str, session: Optional[Session] = Depends(get_session)
+) -> UUID:
     """
     Creates a new dataset to be validated according to selected profile (query param).
 
     Returns its UUID as string.
     """
-    pass
+
+    prf = get_profile(profile)
+    if prf is None:
+        raise HTTPException(
+            status_code=404, detail=f"Profile '{profile}' does not exist."
+        )
+
+    orcid = session.orcid if session else None
+    ds = Dataset.create(prf, orcid)
+    return ds.id
 
 
 @routes.get(DATASETS)
-def get_user_datasets():
+def get_user_datasets(session: Optional[Session] = Depends(get_session)) -> List[UUID]:
     """Return list of staging dataset UUIDs owned by the user."""
-    pass
+
+    if session is None:
+        return []  # if unauthenticated, do not return a list of datasets
+
+    return get_datasets(session.orcid)
 
 
 ####
 
 
+def dataset_exists(ds_uuid: UUID):
+    """Helper dependency. requires existence of referenced dataset."""
+    try:
+        get_dataset(ds_uuid)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+
 ds_routes: APIRouter = APIRouter(
     prefix=DATASETS,
-    dependencies=[],  # TODO: add "dataset_exists" check (exists + not too old)
+    dependencies=[Depends(dataset_exists)],
     responses={404: {"description": "Dataset not found"}},
 )
 
 
 @ds_routes.get("/{ds_uuid}")
-def get_dataset(ds_uuid: UUID):
+def get_existing_dataset(ds_uuid: UUID) -> Optional[Dataset]:
     """
     Return overview of current dataset.
 
     This includes file names, metadata, profile, schemas, etc.
     And also checksum algorithm and data file checksums.
     """
-    pass
+
+    return get_dataset(ds_uuid)
 
 
 @ds_routes.put(
     "/{ds_uuid}",
     responses={422: {"description": "Validation failed"}},
 )
-def put_dataset(ds_uuid: UUID):
+def put_dataset(ds_uuid: UUID) -> bool:
     """
     Try to submit dataset. If it validates fine, passed on to subprocessing.
 
     If validation fails, returns 422 status code.
     """
 
-    pass
+    ds = get_dataset(ds_uuid)
+    print(ds)
+    return get_dataset(ds_uuid).complete()
 
 
 @ds_routes.delete("/{ds_uuid}")
 def del_dataset(ds_uuid: UUID):
     """IRREVERSIBLY(!!!) delete the dataset and all related data."""
 
-    pass
+    get_dataset(ds_uuid).delete()
 
 
 @ds_routes.get("/{ds_uuid}/meta")
@@ -220,6 +248,14 @@ def test(ds_uuid: UUID, filename: str):
 
 ds_routes.include_router(file_routes)
 routes.include_router(ds_routes)
+
+
+# must come last. need to catch this, because the "main" catch-all will just give the UI
+@routes.get("/{anything_else:path}")
+async def invalid_api_endpoint():
+    """Catch unknown API endpoint."""
+
+    raise HTTPException(status_code=404, detail="API endpoint not found")
 
 
 # TODO: start implementing all this stuff

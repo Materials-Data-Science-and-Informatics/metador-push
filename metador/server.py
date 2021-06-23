@@ -6,13 +6,11 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import pkg_res, orcid, api
-from .orcid import api as orcid_api
-from .orcid import mock
-
+from . import api, orcid, pkg_res
 from .config import conf
 from .log import init_logger
-
+from .orcid import api as orcid_api
+from .orcid import mock
 
 app = FastAPI(title="Metador")
 

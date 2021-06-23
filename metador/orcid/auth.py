@@ -13,26 +13,25 @@ This module supports the official production+sandbox servers and the mock server
 This module does not directly rely on Metador-specifics to simplify reuse.
 """
 
-import sys
-from pathlib import Path
 import re
-from datetime import datetime, timedelta
-from typing import Literal, Optional, Dict, Annotated, Final, List, NewType
 import secrets
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Annotated, Dict, Final, List, Literal, NewType, Optional
 
+import httpx
 from pydantic import (
     BaseModel,
-    Field,
-    FilePath,
     DirectoryPath,
     Extra,
+    Field,
+    FilePath,
     validate_arguments,
 )
-import httpx
-
-from .util import orcid_server_pref, orcid_redir
 
 from ..log import log
+from .util import orcid_redir, orcid_server_pref
 
 #: Regex matching an ORCID
 ORCID_PAT: str = r"\d{4}-\d{4}-\d{4}-\d{4}"
@@ -118,7 +117,11 @@ def load_allowlist(filename: Optional[str]) -> Optional[List[OrcidStr]]:
     if filename is None or filename == "":
         return None
 
-    stripped = list(map(str.strip, open(filename, "r").readlines()))
+    lines: List[str] = []
+    with open(filename, "r") as file:
+        lines = file.readlines()
+
+    stripped = list(map(str.strip, lines))
     nonempty = list(filter(lambda x: x != "", stripped))
     noncommented = list(filter(lambda x: x[0] != "#", nonempty))
     invalid = list(filter(lambda oid: not re.match(ORCID_PAT, oid), noncommented))

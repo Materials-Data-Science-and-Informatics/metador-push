@@ -4,14 +4,14 @@ Utility CLI for the application.
 
 from typing import Optional
 
-import uvicorn  # type: ignore
 import typer
+import uvicorn  # type: ignore
 
-from . import __version__, __pkg_path__
+from . import __pkg_path__, __version__
 from . import config as c
 from . import core
-from .orcid.util import orcid_redir
 from .log import patch_uvicorn_log_format
+from .orcid.util import orcid_redir
 
 app = typer.Typer()
 

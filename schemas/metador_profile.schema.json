@@ -9,6 +9,19 @@
       "description": "Human-readable name of dataset profile.",
       "minLength": 1
     },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of dataset profile."
+    },
+    "schemas": {
+      "type": "object",
+      "description": "Mapping of names to embedded JSON Schemas.",
+      "patternProperties": {
+        ".*": {
+          "$ref": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
     "rootSchema": {
       "$ref": "#/definitions/JSONSchemaRef",
       "description": "Schema to use for the dataset itself."
@@ -24,14 +37,14 @@
             "description": "Regex pattern that must match the whole filename.",
             "minLength": 1
           },
-          "schema": {
+          "useSchema": {
             "$ref": "#/definitions/JSONSchemaRef",
             "description": "Schema to apply to metadata of a file matching the pattern."
           }
         },
         "required": [
           "pattern",
-          "schema"
+          "useSchema"
         ],
         "additionalProperties": false
       }

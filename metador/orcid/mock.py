@@ -4,8 +4,9 @@ A mock ORCID server implementation. It just plays along with signin process.
 
 from typing import Optional
 
-from fastapi import APIRouter, status, Response
+from fastapi import APIRouter, Response, status
 from fastapi.responses import RedirectResponse
+
 from .auth import OrcidBearerToken
 from .util import MOCK_ORCID_ENDPOINT
 

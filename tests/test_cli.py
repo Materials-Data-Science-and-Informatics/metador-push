@@ -1,7 +1,8 @@
 from typer.testing import CliRunner
-from metador.cli import app
+
 import metador
 import metador.config as c
+from metador.cli import app
 
 runner = CliRunner()
 

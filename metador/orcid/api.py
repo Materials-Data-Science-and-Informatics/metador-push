@@ -2,15 +2,14 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Response, status, Cookie, HTTPException
+from fastapi import APIRouter, Cookie, HTTPException, Response, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
-from .util import AUTH_PREF, ORCID_ENDPOINT
-from .auth import SessionID, Session
-from . import get_auth
-
 from ..log import log
+from . import get_auth
+from .auth import Session, SessionID
+from .util import AUTH_PREF, ORCID_ENDPOINT
 
 #: Routes to be added to the app to provide the authentication flow.
 routes: APIRouter = APIRouter(prefix=AUTH_PREF, tags=["orcid-auth-client"])

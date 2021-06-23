@@ -1,10 +1,12 @@
-from typing import Union, List, Mapping, Any, Optional
+import json
+import sys
+from pathlib import Path
+from typing import Any, List, Mapping, Optional, Union
 
 import jsonschema
 from jsonschema.exceptions import ValidationError
 
 from .log import log
-import sys
 
 #: JSON primitives
 JSON_v = Union[None, bool, int, float, str]
@@ -13,6 +15,11 @@ UnsafeJSON = Union[JSON_v, List[JSON_v], Mapping[str, Any]]
 
 #: recursive type alias for JSON (the one we'd like to use, but makes problems)
 # JSON = Union[None, bool, int, float, str, List["JSON"], Mapping[str, "JSON"]]
+
+
+def load_json(filename: Path) -> UnsafeJSON:
+    with open(filename, "r") as file:
+        return json.load(file)
 
 
 def validate_json(instance: UnsafeJSON, schema: UnsafeJSON) -> Optional[str]:

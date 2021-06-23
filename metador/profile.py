@@ -2,18 +2,18 @@
 Metador profile management.
 """
 
-from typing import Union, List, Dict, Final, Optional, NamedTuple, Mapping, Any
-from pathlib import Path
-import re
 import json
-
+import re
 from json.decoder import JSONDecodeError
+from pathlib import Path
+from typing import Any, Dict, Final, List, Mapping, Optional, Type, TypeVar, Union
+
 from pydantic import BaseModel
 
 from . import pkg_res
-from .log import log
 from .config import conf
-from .util import critical_exit, UnsafeJSON, validate_json
+from .log import log
+from .util import UnsafeJSON, critical_exit, load_json, validate_json
 
 #: file suffix for json schemas
 SCHEMA_SUF: Final[str] = ".schema.json"
@@ -22,10 +22,10 @@ SCHEMA_SUF: Final[str] = ".schema.json"
 PROFILE_SUF: Final[str] = ".profile.json"
 
 #: JSON Schema of JSON Schema to check schemas (we use Draft 7 like jsonschema)
-JSONSCHEMA_SCHEMA = json.load(open(pkg_res("schemas/draft-07" + SCHEMA_SUF), "r"))
+JSONSCHEMA_SCHEMA = load_json(pkg_res("schemas/draft-07" + SCHEMA_SUF))
 
 #: JSON Schema the profiles are checked against
-PROFILE_SCHEMA = json.load(open(pkg_res("schemas/metador_profile" + SCHEMA_SUF), "r"))
+PROFILE_SCHEMA = load_json(pkg_res("schemas/metador_profile" + SCHEMA_SUF))
 
 # check out profile directory and profile filenames
 PROFILE_DIR: Final[Path] = conf().metador.profile_dir
@@ -96,7 +96,7 @@ def get_profile_json(
 
     # Extract, load and check schemas referenced in profiles
     for entry in content["patterns"]:
-        schemaref = entry["schema"]
+        schemaref = entry["useSchema"]
         if type(schemaref) == str:
             get_schema_json(schemaref)
 
@@ -135,14 +135,20 @@ def schema_content(filename: str) -> UnsafeJSON:
         return get_schema_json(filename)
 
 
-class PatternSchema(NamedTuple):
+class PatternSchema(BaseModel):
     """
     A pairing representing that the schema is to be applied,
     if the pattern matches the whole file path.
     """
 
+    #: Regex pattern (must match full filename)
     pattern: str
-    jsonSchema: UnsafeJSON
+
+    #: Schema (if not URL, resolves first to embedded schemas, then to same dir files)
+    useSchema: str
+
+
+T = TypeVar("T")
 
 
 class Profile(BaseModel):
@@ -155,47 +161,60 @@ class Profile(BaseModel):
     #: Name is extracted from filename (i.e. NAME.profile.json)
     name: str
 
+    #: Human-readable title of dataset profile
     title: str
 
+    #: Human-readable description of dataset profile
+    description: Optional[str] = ""
+
+    #: Assembled collection of included schemas
     schemas: Dict[str, UnsafeJSON] = {}
 
+    #: List of regex -> schema mappings (name of schema is resolved to corresp. schema)
     patterns: List[PatternSchema] = []
-    rootSchema: UnsafeJSON = None
-    fallbackSchema: UnsafeJSON = None
+
+    rootSchema: str
+    fallbackSchema: str
 
     @classmethod
-    def assemble(cls, filename: str):
+    def assemble(cls: Type[T], filename: str) -> T:
         """
         Given a profile file, construct a self-contained profile from the loaded
-        JSON profiles and schemas.
+        JSON profiles and schemas (i.e. load and piece together).
         """
 
         profile: Mapping[str, Any] = get_profile_json(filename)
 
-        name = re.sub(PROFILE_SUF + "$", "", str(filename))
+        name: str = re.sub(PROFILE_SUF + "$", "", str(filename))
 
-        title = profile["title"]
-        rootSchema = schema_filename(profile["rootSchema"])
-        fallbackSchema = schema_filename(profile["fallbackSchema"])
+        title: str = profile["title"] if profile["title"] is not None else name
 
-        schemas = {}
+        description: str = ""
+        if "description" in profile:
+            description = profile["description"]
+
+        rootSchema: str = schema_filename(profile["rootSchema"])
+        fallbackSchema: str = schema_filename(profile["fallbackSchema"])
+
+        schemas: Dict[str, UnsafeJSON] = {TRIV_TRUE: True, TRIV_FALSE: False}
         patterns = []
         for pat in profile["patterns"]:
             # add schema if not yet added
-            schemaref = schema_filename(pat["schema"])
-            schemaval = schema_content(schemaref)
+            schemaref: str = schema_filename(pat["useSchema"])
+            schemaval: UnsafeJSON = schema_content(schemaref)
             schemas[schemaref] = schemaval
             # add regex entry
-            patterns.append((pat["pattern"], schemaref))
+            patterns.append(PatternSchema(pattern=pat["pattern"], useSchema=schemaref))
 
         return cls(
             name=name,
             title=title,
+            description=description,
             rootSchema=rootSchema,
             fallbackSchema=fallbackSchema,
             schemas=schemas,
             patterns=patterns,
-        )
+        )  # type: ignore
 
     def get_schema_for(self, filepath: Optional[str]) -> UnsafeJSON:
         """
@@ -206,12 +225,12 @@ class Profile(BaseModel):
         """
 
         if filepath is None:
-            return self.rootSchema
+            return self.schemas[self.rootSchema]
         for pat in self.patterns:
             pmatch = re.match(pat.pattern, filepath)
             if pmatch and pmatch.group(0) == filepath:
-                return pat.jsonSchema
-        return self.fallbackSchema
+                return self.schemas[pat.useSchema]
+        return self.schemas[self.fallbackSchema]
 
 
 #: global storage of assembled profiles, ready to be copied into datasets
@@ -224,10 +243,12 @@ def get_profiles() -> List[str]:
     return list(sorted(_profiles.keys()))
 
 
-def get_profile(name: str) -> Profile:
+def get_profile(name: str) -> Optional[Profile]:
     """Return a profile given its name."""
 
-    return _profiles[name]
+    if name in _profiles:
+        return _profiles[name]
+    return None
 
 
 def load_profiles() -> None:
