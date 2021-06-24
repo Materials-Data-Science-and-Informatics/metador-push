@@ -1,0 +1,27 @@
+{
+  "title": "Generic",
+  "description": "Generic author information",
+  "type": "object",
+  "properties": {
+    "authorName": {
+      "title": "Author name",
+      "description": "Name of the author",
+      "type": "string",
+      "minLength": 1
+
+    },
+    "authorOrcid": {
+      "title": "Author ORCID",
+      "description": "ORCID of the author",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{4}$"
+    },
+    "authorEmail": {
+      "title": "Author E-Mail",
+      "description": "E-Mail address of the author",
+      "type": "string",
+      "format": "email"
+    }
+  },
+  "required": ["authorName", "authorEmail"]
+}

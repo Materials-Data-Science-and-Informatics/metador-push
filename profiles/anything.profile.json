@@ -1,0 +1,7 @@
+{
+  "title": "Unstructured Dataset",
+  "description": "Dataset without any constraints or requirements.",
+  "rootSchema": true,
+  "patterns": [],
+  "fallbackSchema": true
+}

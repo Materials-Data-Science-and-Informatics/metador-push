@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Set, Type, TypeVar
@@ -69,7 +70,7 @@ class DatasetInfo(BaseModel):
     #: Creation time
     created: datetime
 
-    #: copy of the profile embedded into dataset (for same reason as checksum)
+    #: copy of the profile embedded into dataset
     profile: Profile
 
 
@@ -119,6 +120,16 @@ class Dataset(BaseModel):
 
     ####
 
+    def upload_filepath(self, filename: str) -> Path:
+        """Return the filepath where a file with a certain name must be."""
+        return self.upload_dir(self.id) / filename
+
+    def is_expired(self) -> bool:
+        """Returns true if dataset is expired according to current config."""
+
+        age_hours = (datetime.now() - self.created).total_seconds() / 3600
+        return age_hours > conf().metador.incomplete_expire_after
+
     def save(self) -> None:
         """Serialize the current state into a file."""
 
@@ -146,6 +157,133 @@ class Dataset(BaseModel):
                 errors[file] = err
 
         return errors
+
+    ####
+
+    def delete_file(self, name: str) -> bool:
+        """Delete file and its data, if it exists."""
+
+        filepath = self.upload_filepath(name)
+        if name not in self.files:
+            log.warning(f"Cannot delete non-existing file {name} from {self.id}")
+            return False
+
+        if filepath.is_file():
+            filepath.unlink()  # delete file
+        else:
+            log.critical(f"Referenced file {name} does non-exist in {self.id}")
+
+        del self.files[name]  # remove data attached to file
+        self.save()
+        return True
+
+    def import_file(self, filepath: Path) -> bool:
+        """
+        Move file from provided location into dataset.
+
+        Return True if file exists, can be moved, and won't overwrite existing file.
+        """
+
+        target = self.upload_filepath(filepath.name)
+
+        if filepath.name in self.files or target.is_file():
+            log.error(f"Cannot import file {filepath}, file with that name exists!")
+            return False
+
+        if not filepath.is_file():
+            log.error(f"File {filepath} cannot be imported, not a file!")
+            return False
+
+        filepath.rename(target)
+        self.files[filepath.name] = FileInfo()
+
+        self.save()
+        return True
+
+    def compute_checksum(self, filename: str) -> bool:
+        """
+        Run checksum tool on file and assign checksum.
+        """
+        filepath = self.upload_filepath(filename)
+
+        if filename not in self.files or not filepath.is_file():
+            log.error(f"Cannot compute checksum for {filename}, file does not exist!")
+            return False
+
+        try:
+            ret = subprocess.run(
+                [self.checksumTool, filepath],
+                check=True,
+                capture_output=True,
+                encoding="utf-8",
+            ).stdout.split()
+            assert ret[1] == filepath  # sanity-check
+            file_checksum = ret[0]
+            self.files[filename].checksum = file_checksum
+        except subprocess.CalledProcessError:
+            log.error(f"Failed {self.checksumTool} on {filepath}: non-zero exit code!")
+            return False
+
+        self.save()
+        return True
+
+    def set_metadata(self, filename: Optional[str], metadata: UnsafeJSON) -> bool:
+        """
+        Assign provided metadata to file (or dataset root, if filename=None).
+
+        No validation is done at this step. Fails only if file does not exist.
+        """
+
+        if filename is not None and filename not in self.files:
+            log.error(f"Cannot assign metadata to {filename}, file does not exist!")
+            return False
+
+        if filename is None:
+            self.rootMeta = metadata
+        else:
+            self.files[filename].metadata = metadata
+
+        self.save()
+        return True
+
+    def rename_file(self, name: str, new_name: str) -> bool:
+        """
+        Try to rename an existing file to a new free filename.
+
+        Returns True on success, i.e. file and its data exists and new name is free.
+        """
+
+        if name == new_name:
+            log.info(f"Rename {name}->{new_name} in {self.id}: nothing to do.")
+            return True
+
+        if name not in self.files:
+            log.warning(f"Cannot rename non-existing file {name} from {self.id}")
+            return False
+        if new_name in self.files:
+            log.warning(
+                f"Cannot rename {name}->{new_name} in {self.id}, target exists!"
+            )
+            return False
+
+        oldpath = self.upload_filepath(name)
+        newpath = self.upload_filepath(new_name)
+
+        if not oldpath.is_file():
+            log.error(f"File {oldpath} does not exists, although referenced!")
+            return False
+        if newpath.is_file():
+            log.error(f"File {newpath} exists, but not referenced! Abort rename.")
+            return False
+
+        oldpath.rename(newpath)
+        self.files[new_name] = self.files[name]
+        del self.files[name]
+
+        self.save()
+        return True
+
+    ####
 
     def complete(self) -> bool:
         """
@@ -266,6 +404,8 @@ _datasets: Dict[UUID, Dataset] = {}
 
 
 def load_datasets() -> None:
+    """Load datasets for which a persistence file exists."""
+
     global _datasets
     for ds_id in _ds_uuids:
         log.debug(f"Loading dataset {ds_id} from file.")
@@ -289,9 +429,18 @@ def get_datasets(creator: Optional[OrcidStr] = None) -> List[UUID]:
 
 
 def get_dataset(ds_id: UUID) -> Dataset:
-    """Return a dataset (throws if it does not exist)."""
+    """
+    Return a dataset if it exists and is not expired (throws if it does not exist).
 
-    return _datasets[ds_id]
+    If it is expired, it is cleaned up and treated like it does not exist.
+    This is better than giving it out, as a cleaning job could delete it any moment.
+    """
+
+    ds = _datasets[ds_id]
+    if ds.is_expired():
+        ds.delete()
+        raise KeyError
+    return ds
 
 
 load_datasets()

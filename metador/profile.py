@@ -22,10 +22,10 @@ SCHEMA_SUF: Final[str] = ".schema.json"
 PROFILE_SUF: Final[str] = ".profile.json"
 
 #: JSON Schema of JSON Schema to check schemas (we use Draft 7 like jsonschema)
-JSONSCHEMA_SCHEMA = load_json(pkg_res("schemas/draft-07" + SCHEMA_SUF))
+JSONSCHEMA_SCHEMA = load_json(pkg_res("draft-07" + SCHEMA_SUF))
 
 #: JSON Schema the profiles are checked against
-PROFILE_SCHEMA = load_json(pkg_res("schemas/metador_profile" + SCHEMA_SUF))
+PROFILE_SCHEMA = load_json(pkg_res("profile" + SCHEMA_SUF))
 
 # check out profile directory and profile filenames
 PROFILE_DIR: Final[Path] = conf().metador.profile_dir

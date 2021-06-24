@@ -1,0 +1,23 @@
+{
+  "title": "Generic text files dataset",
+  "description": "This dataset may only contain text files with some metadata and images.",
+  "schemas": {
+    "embeddedSchema": {
+      "type": "object",
+      "description": "A dummy object to test embedded schemas",
+      "properties": {
+        "validNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "exclusiveMaximum": 100
+        }
+      }
+    }
+  },
+  "rootSchema": "embeddedSchema",
+  "patterns": [
+    {"pattern": ".*\\.txt", "useSchema": "generic.schema.json"},
+    {"pattern": ".*\\.jpg", "useSchema": true}
+  ],
+  "fallbackSchema": false
+}

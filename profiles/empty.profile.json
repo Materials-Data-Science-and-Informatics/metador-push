@@ -1,0 +1,7 @@
+{
+  "title": "Empty Dataset",
+  "description": "This dataset only validates if there are no files.",
+  "rootSchema": true,
+  "patterns": [],
+  "fallbackSchema": false
+}

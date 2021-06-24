@@ -5,33 +5,38 @@
 #
 # For readability, you can remove everything that you do not need to change.
 #
-# NOTE: relative file/directory paths will be interpreted relative to current directory,
+# NOTE: relative file/directory paths will be interpreted relative to CWD,
 # NOT relative to location of this config.
 ##########################################################################################
 
 [metador]
-# Site where metador is served (without trailing slash)
+# Site where metador is served (without trailing slash).
 site = 'http://localhost:8000'
 # The endpoint URL for file uploads from client. Must be accessible from client.
 # It depends on the -base-path of tusd and the way you proxy/route/serve requests to it.
 tusd_endpoint = 'http://localhost:1080/files/'
-# after that many hours the non-completed datasets have expired and can be cleaned up
+# After that many hours the non-completed datasets have expired and can be cleaned up.
 incomplete_expire_after = 48
 
 # Directory where JSON Schemas and Dataset Profiles are stored.
 # Make sure that all profile files end with .profile.json
 # to ensure that they are identified and loaded correctly.
+#
 # NOTE: that filenames referencing JSON schemas are relative to profile location.
-# NOTE: Only JSON Schema Draft 7 is supported (newest standard supported by jsonschema library).
-# NOTE: Profiles are copied into datasets and are not updated for existing datasets
-# if you change the profiles or schemas!
+# NOTE: Only JSON Schema Draft 7 is supported (newest supported by jsonschema library).
+# NOTE: Profiles+schemas are copied into datasets and not updated in existing datasets!
 profile_dir = 'profiles'
-# Location to store all application data and state 
-# it will have subdirs "staging" and "complete" for datasets
-# and also some temporary files
+
+# Location to store all application data and state.
+# It will have subdirs "staging" and "complete" for datasets
+# and also contain some temporary files.
 data_dir = 'metador_data'
-# checksum tool to use (sha256sum and sha512sum are supported)
+# Checksum tool to use (sha256sum and sha512sum are supported).
 checksum_tool = 'sha256sum'
+
+# Script that is called when a dataset is complete, if provided.
+# It is passed the directory of the completed dataset as the sole argument.
+# completion_hook = 'your_script.py'
 
 [metador.log]
 # Granularity of logging.
@@ -42,9 +47,9 @@ level = 'INFO'
 ################
 
 [orcid]
-# Enable ORCID support
+# Enable ORCID support (without it there is no authentication performed!)
 enabled = false
-# After that many minutes the user sessions expire and they have to sign in again
+# After that many minutes the user sessions expire and they have to sign in again.
 auth_expire_after = 180
 
 # If provided, the following file must exist + contain the ORCIDs of permitted users.
@@ -56,9 +61,9 @@ auth_expire_after = 180
 client_id = ''
 client_secret = ''
 
-# If true, uses the sandbox servers provided by ORCID (only useful for developers)
+# If true, uses the sandbox servers provided by ORCID (only useful for developers).
 sandbox = false
-# If true, uses mock of ORCID (works even offline) (only useful for developers)
+# If true, uses mock of ORCID (works even offline) (only useful for developers).
 use_fake = false
 
 ################

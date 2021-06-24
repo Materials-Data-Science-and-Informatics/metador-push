@@ -1,0 +1,7 @@
+{
+  "title": "Impossible Dataset",
+  "description": "This dataset cannot validate (root metadata always fails validation).",
+  "rootSchema": false,
+  "patterns": [],
+  "fallbackSchema": true
+}
