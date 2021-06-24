@@ -1,4 +1,4 @@
-from typing import Final, List, Optional
+from typing import Any, Dict, Final, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -120,13 +120,11 @@ def get_existing_dataset(ds_uuid: UUID) -> Optional[Dataset]:
 )
 def put_dataset(ds_uuid: UUID) -> bool:
     """
-    Try to submit dataset. If it validates fine, passed on to subprocessing.
+    Try to submit dataset. If it validates fine, trigger post-processing.
 
     If validation fails, returns 422 status code.
     """
 
-    ds = get_dataset(ds_uuid)
-    print(ds)
     return get_dataset(ds_uuid).complete()
 
 
@@ -141,14 +139,14 @@ def del_dataset(ds_uuid: UUID):
 def get_dataset_metadata(ds_uuid: UUID):
     """Return currently stored dataset root metadata JSON (null if nothing stored)."""
 
-    pass
+    return get_dataset(ds_uuid).rootMeta
 
 
 @ds_routes.put("/{ds_uuid}/meta")
-def put_dataset_metadata(ds_uuid: UUID):
+def put_dataset_metadata(ds_uuid: UUID, data: Dict[str, Any]):
     """Store a JSON file as dataset metadata (without validation)."""
 
-    pass
+    return get_dataset(ds_uuid).set_metadata(None, data)
 
 
 @ds_routes.get("/{ds_uuid}/meta/validate")
@@ -159,91 +157,90 @@ def validate_dataset_metadata(ds_uuid: UUID):
     (The client-side validation is not authoritative.)
     """
 
-    pass
+    return get_dataset(ds_uuid).validate_metadata(None)
 
 
 @ds_routes.get("/{ds_uuid}/files")
-def get_dataset_files(ds_uuid: UUID, format: Optional[str] = None):
+def get_dataset_files(ds_uuid: UUID):
     """
     Return dataset files and their corresponding checksums, if already available.
-
-    More specifically, returns by default of format=json
-    [{"filename": string, "checksum": string|null}, ...]
-
-    Otherwise, returns a plaintext response in a format that can be used with
-    a checksum tool (one file per line, file and checksum separated by 2 spaces).
     """
+
+    ret: Dict[str, Optional[str]] = {}
+    for name, dat in get_dataset(ds_uuid).files.items():
+        ret[name] = dat.checksum
+    return ret
+
+
+def dataset_file_exists(ds_uuid: UUID, filename: str):
+    """Raises HTTP exception if referenced file does not exist in dataset."""
+
+    if filename not in get_dataset(ds_uuid).files:
+        raise HTTPException(status_code=404, detail="File not found in dataset")
 
 
 FILES = "/{ds_uuid}/files"
 file_routes: APIRouter = APIRouter(
     prefix=FILES,
-    dependencies=[],  # TODO: add "file exists" check
-    responses={404: {"description": "File not found"}},
+    dependencies=[Depends(dataset_file_exists)],
+    responses={404: {"description": "File not found in dataset"}},
 )
 
 
 @file_routes.delete("/{filename}")
-def del_file(filename: str):
+def del_file(ds_uuid: UUID, filename: str):
     """
     IRREVERSIBLY delete the file, metadata and checksum from dataset, if it exists.
     """
 
-    pass
+    return get_dataset(ds_uuid).delete_file(filename)
 
 
 @file_routes.get("/{filename}/checksum")
-def get_file_checksum(filename: str):
+def get_file_checksum(ds_uuid: UUID, filename: str):
     """
     Get checksum of this file (as computed by the algorithm attached to the dataset).
 
     Can be used for polling while waiting for hash computation of a new upload.
     """
 
-    pass
+    return get_dataset(ds_uuid).files[filename].checksum
 
 
 @file_routes.patch("/{filename}/rename-to/{new_filename}")
-def rename_file(filename: str, new_filename: str):
+def rename_file(ds_uuid: UUID, filename: str, new_filename: str):
     """
     If the file exists, rename to new filename and fix all attached information.
 
     Client is responsible for synchronizing the local representation on success.
     """
 
-    pass
+    return get_dataset(ds_uuid).rename_file(filename, new_filename)
 
 
 @file_routes.get("/{filename}/meta")
-def get_file_metadata(filename: str):
+def get_file_metadata(ds_uuid: UUID, filename: str):
     """Get currently stored JSON metadata of selected file, if it exists (can be null)."""
 
-    pass
+    return get_dataset(ds_uuid).files[filename].metadata
 
 
 @file_routes.put("/{filename}/meta")
-def put_file_metadata(filename: str):
+def put_file_metadata(ds_uuid: UUID, filename: str, metadata: Dict[str, Any]):
     """Set currently stored JSON metadata of selected file, if it exists."""
 
-    pass
+    return get_dataset(ds_uuid).set_metadata(filename, metadata)
 
 
 @file_routes.get("/{filename}/meta/validate")
-def validate_file_metadata(filename: str):
+def validate_file_metadata(ds_uuid: UUID, filename: str):
     """
     Validate current file metadata using server-side validation, according to profile.
 
     (The client-side validation is not authoritative.)
     """
 
-    pass
-
-
-@file_routes.get("/{filename}/echo")
-def test(ds_uuid: UUID, filename: str):
-    """Test that we can inherit path parameters, yeah!"""
-
-    return {"ds": ds_uuid, "fn": filename}
+    return get_dataset(ds_uuid).validate_metadata(filename)
 
 
 ds_routes.include_router(file_routes)

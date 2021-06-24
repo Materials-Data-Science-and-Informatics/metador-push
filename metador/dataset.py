@@ -58,7 +58,7 @@ class FileInfo(BaseModel):
     checksum: Optional[str] = None
 
     #: metadata, if attached
-    meta: UnsafeJSON = None
+    metadata: UnsafeJSON = None
 
 
 class DatasetInfo(BaseModel):
@@ -137,24 +137,30 @@ class Dataset(BaseModel):
             file.write(self.json())
             file.flush()
 
-    def validate(self) -> Dict[Optional[str], Optional[str]]:
+    def validate_metadata(self, file: Optional[str]) -> Optional[str]:
+        """Validate a file of given name, or the root metadata otherwise."""
+
+        metadata = self.files[file].metadata if file else self.rootMeta
+        return util.validate_json(metadata, self.profile.get_schema_for(file))
+
+    def validate(self) -> Dict[str, Optional[str]]:
         """
         Validate the dataset, collect error messages.
 
         On success, the returned dict is empty, otherwise it contains
-        the error message per file (or None for the root metadata).
+        the error message per file (empty filename = root metadata validation result).
         """
 
-        errors: Dict[Optional[str], Optional[str]] = {}
-        err = util.validate_json(self.rootMeta, self.profile.get_schema_for(None))
+        errors: Dict[str, Optional[str]] = {}
+        err = self.validate_metadata(None)
         if err is not None:
-            errors[None] = err  # dataset "root" metadata errors
+            errors[""] = err  # dataset "root" metadata errors
 
         # file-specific metadata
-        for file, dat in self.files.items():
-            err = util.validate_json(dat.meta, self.profile.get_schema_for(file))
+        for name in self.files.keys():
+            err = self.validate_metadata(name)
             if err is not None:
-                errors[file] = err
+                errors[name] = err
 
         return errors
 
@@ -319,9 +325,9 @@ class Dataset(BaseModel):
                 outfile.flush()
 
         for filename, dat in self.files.items():
-            if dat.meta is not None:
+            if dat.metadata is not None:
                 with open(target_dir / (filename + METADATA_SUF), "w") as outfile:
-                    json.dump(dat.meta, outfile)
+                    json.dump(dat.metadata, outfile)
                     outfile.flush()
 
         # create a checksum file (e.g. sha256sums.txt)
