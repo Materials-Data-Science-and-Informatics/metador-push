@@ -5,6 +5,7 @@ from typing import Any, List, Mapping, Optional, Union
 
 import jsonschema
 from jsonschema.exceptions import ValidationError
+from pydantic import BaseModel
 
 from .log import log
 
@@ -15,6 +16,12 @@ UnsafeJSON = Union[JSON_v, List[JSON_v], Mapping[str, Any]]
 
 #: recursive type alias for JSON (the one we'd like to use, but makes problems)
 # JSON = Union[None, bool, int, float, str, List["JSON"], Mapping[str, "JSON"]]
+
+
+def save_json(obj: BaseModel, filepath: Path):
+    with open(filepath, "w") as file:
+        file.write(obj.json())
+        file.flush()
 
 
 def load_json(filename: Path) -> UnsafeJSON:

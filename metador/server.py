@@ -11,6 +11,7 @@ from .config import conf
 from .log import init_logger
 from .orcid import api as orcid_api
 from .orcid import mock
+from .profile import Profile
 
 app = FastAPI(title="Metador")
 
@@ -30,6 +31,7 @@ app.include_router(api.routes)
 def on_startup():
     # must (re-)init logging here (otherwise won't work properly with uvicorn reload)
     init_logger(conf().metador.log.level.value, conf().metador.log.file)
+    Profile.load_profiles(conf().metador.profile_dir)
 
 
 @app.on_event("shutdown")

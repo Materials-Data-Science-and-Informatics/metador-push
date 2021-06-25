@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from .dataset import Dataset, get_dataset, get_datasets
 from .orcid import get_session
 from .orcid.auth import Session
-from .profile import Profile, get_profile, get_profiles
+from .profile import Profile
 
 # from . import dataset
 # from .config import conf
@@ -37,14 +37,14 @@ def get_profile_list() -> List[str]:
     Only used for the client to select which kind of dataset they desire to create.
     """
 
-    return get_profiles()
+    return Profile.get_profiles()
 
 
 @routes.get("/profiles/{pr_name}")
 def get_profile_instance(pr_name: str) -> Optional[Profile]:
     """Returns the profile."""
 
-    return get_profile(pr_name)
+    return Profile.get_profile(pr_name)
 
 
 ####
@@ -63,7 +63,7 @@ def new_dataset(
     Returns its UUID as string.
     """
 
-    prf = get_profile(profile)
+    prf = Profile.get_profile(profile)
     if prf is None:
         raise HTTPException(
             status_code=404, detail=f"Profile '{profile}' does not exist."
@@ -125,7 +125,11 @@ def put_dataset(ds_uuid: UUID) -> bool:
     If validation fails, returns 422 status code.
     """
 
-    return get_dataset(ds_uuid).complete()
+    path = get_dataset(ds_uuid).complete()
+    if path is None:
+        return False
+    # TODO: launch postprocessing
+    return True
 
 
 @ds_routes.delete("/{ds_uuid}")
@@ -253,33 +257,3 @@ async def invalid_api_endpoint():
     """Catch unknown API endpoint."""
 
     raise HTTPException(status_code=404, detail="API endpoint not found")
-
-
-# TODO: start implementing all this stuff
-# TODO: foralize MetadorProfile JSON Schema
-# {
-#     name: string, <- local alphanumeric identifier ^\w+$
-#     title: string, <- human title for this profile (optional, by default equals name)
-#     rootSchema: JSONSchema,
-#     patterns: [
-#         {pattern: ECMA 262 regex pattern-str (implicitly /^...$/)
-#          schema: JSONSchema
-#          },
-#         ...
-#     ]
-#     fallback: JSONSchema <- optional, not given = null = falsy = failure
-#     metaSuffix: "_meta.json" <- optional, this is default value
-# }
-# the record directory must have a _meta.json file that is checked against the root
-# schema, otherwise null is taken as metadata
-# could turn this into json-ld later on
-
-# JSONSchema must be a jsonschema object or a $ref string
-
-# files are checked by first json schema whose pattern matched the filename
-# for file FILENAME there must be a schema FILENAME_meta.json
-# if filename is called something_meta.json, then its metadata is something_meta.json_meta.json
-# what about files not matching? must be checked by fallback (true = anything goes, false = unmatching forbidden)
-
-# todo: add checksum_tool option to config
-# create Dirschema json schema and allow conf to read it

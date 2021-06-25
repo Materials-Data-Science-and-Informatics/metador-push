@@ -2,6 +2,7 @@
 Utility CLI for the application.
 """
 
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -12,6 +13,7 @@ from . import config as c
 from . import core
 from .log import patch_uvicorn_log_format
 from .orcid.util import orcid_redir
+from .upload import TUSD_HOOK_ROUTE
 
 app = typer.Typer()
 
@@ -32,17 +34,17 @@ def default_conf() -> None:
 
 
 @app.command()
-def tusd_hook_url(config: Optional[str] = None) -> None:
+def tusd_hook_url(config: Optional[Path] = None) -> None:
     """
     Output the route to construct a hook path for tusd.
     """
 
     c.init_conf(config)  # correct result depends on configured metador.site
-    print(c.conf().metador.site + c.TUSD_HOOK_ROUTE)
+    print(c.conf().metador.site + TUSD_HOOK_ROUTE)
 
 
 @app.command()
-def orcid_redir_url(config: Optional[str] = None) -> None:
+def orcid_redir_url(config: Optional[Path] = None) -> None:
     """
     URL that should be registered as the ORCID API redirect.
     """
@@ -52,7 +54,7 @@ def orcid_redir_url(config: Optional[str] = None) -> None:
 
 
 @app.command()
-def run(config: Optional[str] = None) -> None:
+def run(config: Optional[Path] = None) -> None:
     """Serve application using uvicorn."""
 
     c.init_conf(config)

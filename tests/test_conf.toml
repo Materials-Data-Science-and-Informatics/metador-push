@@ -1,0 +1,7 @@
+[metador.log]
+level = 'DEBUG'
+file = 'test_metador.log'
+
+[orcid]
+enabled = true
+use_fake = true

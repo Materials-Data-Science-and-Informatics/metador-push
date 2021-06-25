@@ -25,9 +25,6 @@ DEF_CONFIG_FILE: Final[Path] = __basepath__ / "metador.def.toml"
 #: Environment variable name to pass or store config location (needed for restarts!)
 CONFFILE_ENVVAR: Final[str] = "METADOR_CONF"
 
-#: API route to handle tusd events (TODO: move to another module?)
-TUSD_HOOK_ROUTE: Final[str] = "/tusd-events"
-
 ################################################################
 # Models for configuration that is available to user.
 # For more info about the fields, see the default TOML file.
@@ -142,7 +139,7 @@ def read_user_config(conffile: str) -> Conf:
         sys.exit(1)
 
 
-def init_conf(conffile: Optional[str] = None) -> None:
+def init_conf(conffile: Optional[Path] = None) -> None:
     """
     Load config from passed filename, or else from environment variable,
     or else the built-in defaults.
@@ -160,7 +157,7 @@ def init_conf(conffile: Optional[str] = None) -> None:
 
     # If we get a filename passed, it always overrides the env var
     if conffile:
-        os.environ[CONFFILE_ENVVAR] = conffile
+        os.environ[CONFFILE_ENVVAR] = str(conffile)
 
     # load the config from filename stored in env var
     if CONFFILE_ENVVAR in os.environ:

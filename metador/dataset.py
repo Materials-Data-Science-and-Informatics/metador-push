@@ -291,12 +291,12 @@ class Dataset(BaseModel):
 
     ####
 
-    def complete(self) -> bool:
+    def complete(self) -> Optional[Path]:
         """
         Validate metadata and check that all checksums are present.
 
         On success, remove files and data from 'staging' directory
-        and produce the directory in the 'complete' directory.
+        and produce the directory in the 'complete' directory. Return path.
         """
 
         global _datasets
@@ -305,12 +305,12 @@ class Dataset(BaseModel):
         val_errors = self.validate()
         if len(val_errors) != 0:
             log.error(f"Cannot complete dataset, validation failed: {val_errors}")
-            return False
+            return None
 
         for file, dat in self.files.items():
             if dat.checksum is None:
                 log.error(f"Cannot complete dataset, missing checksum for {file}")
-                return False
+                return None
 
         upload_dir: Final[Path] = Dataset.upload_dir(self.id)
         target_dir: Final[Path] = Dataset.target_dir(self.id)
@@ -344,11 +344,13 @@ class Dataset(BaseModel):
             outfile.write(dsinfo.json())
             outfile.flush()
 
+        # TODO: store the profile
+
         _ds_uuids.remove(self.id)
         del _datasets[self.id]
 
         log.info(f"Dataset {self.id} completed.")
-        return True
+        return target_dir
 
     def delete(self) -> None:
         """

@@ -1,7 +1,8 @@
 {
-  "title": "Generic text files dataset",
-  "description": "This dataset may only contain text files with some metadata and images.",
+  "title": "Example dataset",
+  "description": "This dataset is used to test internal/external schema resolving.",
   "schemas": {
+    "false.schema.json": true,
     "embeddedSchema": {
       "type": "object",
       "description": "A dummy object to test embedded schemas",
@@ -17,7 +18,8 @@
   "rootSchema": "embeddedSchema",
   "patterns": [
     {"pattern": ".*\\.txt", "useSchema": "generic.schema.json"},
-    {"pattern": ".*\\.jpg", "useSchema": true}
+    {"pattern": ".*\\.jpg", "useSchema": "false.schema.json"},
+    {"pattern": ".*\\.mp4", "useSchema": "true.schema.json"}
   ],
   "fallbackSchema": false
 }
