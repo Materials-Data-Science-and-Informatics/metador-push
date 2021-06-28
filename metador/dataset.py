@@ -1,5 +1,7 @@
 """
 Dataset management and serialization.
+
+The function `load_datasets` must be called before using other functions.
 """
 
 from __future__ import annotations
@@ -9,7 +11,7 @@ import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Final, List, Optional, Set, Type, TypeVar
+from typing import Dict, Final, List, Optional, Type, TypeVar
 from uuid import UUID, uuid1
 
 from pydantic import BaseModel
@@ -20,86 +22,69 @@ from .log import log
 from .orcid.auth import OrcidStr
 from .profile import Profile, UnsafeJSON
 
-#: suffix of serialized staging dataset file
 DATASET_SUF: Final[str] = ".dataset.json"
+"""Suffix of serialized staging dataset file."""
 
 METADATA_SUF: Final[str] = "_meta.json"
+"""Suffix of metadata file added to filenames of data files."""
 
 
-def find_staging_datasets() -> List[str]:
+def find_staging_datasets() -> List[UUID]:
     """Get UUIDs of datasets with serialized data in the staging directory."""
 
     files = list(core.staging_dir().glob("*" + DATASET_SUF))
-    return list(map(lambda x: re.sub(DATASET_SUF + "$", "", x.name), files))
-
-
-#: Cache of known (staging) dataset UUIDs (to avoid I/O)
-_ds_uuids: Set[UUID] = set(map(UUID, find_staging_datasets()))
-
-
-def fresh_dataset_id() -> UUID:
-    """
-    Generate a new UUID not currently used for an existing dataset.
-    Create a directory file for it, return the UUID.
-    """
-
-    fresh = uuid1()
-    while fresh in _ds_uuids:
-        fresh = uuid1()
-
-    _ds_uuids.add(fresh)
-    return fresh
+    return list(map(lambda x: UUID(re.sub(DATASET_SUF + "$", "", x.name)), files))
 
 
 class FileInfo(BaseModel):
     """Information about an existing file."""
 
-    #: checksum, if computed
     checksum: Optional[str] = None
+    """Checksum (according to configured algorithm), if computed."""
 
-    #: metadata, if attached
     metadata: UnsafeJSON = None
+    """Attached metadata."""
 
 
 class DatasetInfo(BaseModel):
     """Reduced form of Dataset that is used to create dataset.json file."""
 
-    #: Creator of the dataset (also only person allowed to edit, if set)
     creator: Optional[OrcidStr]
+    """Creator of the dataset (also only person allowed to edit, if set)."""
 
-    #: Creation time
     created: datetime
+    """Creation time."""
 
-    #: copy of the profile embedded into dataset
     profile: Profile
+    """Copy of the profile embedded into dataset."""
 
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
 class Dataset(BaseModel):
     """Represents a dataset instance with files and metadata before completion."""
 
-    #: ID of the dataset
     id: UUID
+    """ID of the dataset."""
 
-    #: Creator of the dataset (also only person allowed to edit, if set)
     creator: Optional[OrcidStr]
+    """Creator of the dataset (also only person except for admins allowed to edit)."""
 
-    #: Creation time
     created: datetime
+    """Creation date and time."""
 
-    #: copy of the profile embedded into dataset (for same reason as checksum)
-    profile: Profile
-
-    #: fix checksum tool in a dataset (should stay consistent throughout config change)
     checksumTool: ChecksumTool
+    """Fix checksum tool in a dataset (should stay consistent throughout config change)."""
 
-    #: Metadata about the dataset in general
+    profile: Profile
+    """Copy of the profile embedded into dataset (for same reason as checksum)."""
+
     rootMeta: UnsafeJSON = None
+    """Metadata about the dataset in general."""
 
-    #: filename -> Metadata and checksum
     files: Dict[str, FileInfo] = {}
+    """Filename -> Metadata + checksum"""
 
     ####
 
@@ -300,7 +285,6 @@ class Dataset(BaseModel):
         """
 
         global _datasets
-        global _ds_uuids
 
         val_errors = self.validate()
         if len(val_errors) != 0:
@@ -346,7 +330,6 @@ class Dataset(BaseModel):
 
         # TODO: store the profile
 
-        _ds_uuids.remove(self.id)
         del _datasets[self.id]
 
         log.info(f"Dataset {self.id} completed.")
@@ -364,13 +347,12 @@ class Dataset(BaseModel):
 
         Dataset.persist_filename(self.id).unlink()
 
-        _ds_uuids.remove(self.id)
         del _datasets[self.id]
 
         log.info(f"Data of {self.id} deleted.")
 
     @classmethod
-    def load(cls: Type[T], ds_id: UUID) -> Optional[T]:
+    def load(cls: Type[_T], ds_id: UUID) -> Optional[_T]:
         persist_file = Dataset.persist_filename(ds_id)
         if not persist_file.is_file():
             log.error(f"Failed loading, {str(persist_file)} not found.")
@@ -407,15 +389,28 @@ class Dataset(BaseModel):
         return ds
 
 
-#: In-memory rep of existing datasets
 _datasets: Dict[UUID, Dataset] = {}
+"""In-memory cache of existing loaded datasets"""
+
+
+def fresh_dataset_id() -> UUID:
+    """
+    Generate a new UUID not currently used for an existing dataset.
+    Create a directory file for it, return the UUID.
+    """
+
+    fresh = uuid1()
+    while fresh in _datasets:
+        fresh = uuid1()
+
+    return fresh
 
 
 def load_datasets() -> None:
     """Load datasets for which a persistence file exists."""
 
     global _datasets
-    for ds_id in _ds_uuids:
+    for ds_id in find_staging_datasets():
         log.debug(f"Loading dataset {ds_id} from file.")
         ds = Dataset.load(ds_id)
         if ds is not None:

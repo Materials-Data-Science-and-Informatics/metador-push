@@ -4,19 +4,20 @@ from fastapi import Cookie, HTTPException, status
 
 from .auth import Auth, Session, SessionID
 
-####
-# var for singleton instance
-
-
 _auth = None
+"""Var for singleton instance of Auth."""
 
 
 def init_auth(*args, **kwargs) -> None:
+    """Initialize Auth singleton."""
+
     global _auth
     _auth = Auth(*args, **kwargs)
 
 
 def get_auth() -> Auth:
+    """Return singleton Auth instance."""
+
     global _auth
     if _auth is None:
         raise RuntimeError("Auth singleton not initialized!")

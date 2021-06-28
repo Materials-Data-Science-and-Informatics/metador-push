@@ -201,10 +201,11 @@ mandatory.
 
 Before commiting, run `pytest` and make sure you did not break anything.
 
+To generate documentation, run `pdoc -o docs metador`
+
 To check coverage, use `pytest --cov-report term-missing:skip-covered --cov=metador tests/`
 
-Also verify that the pre-commit hooks are run, which includes `mypy` for type checking and
-`black` and `flake8` for formatting.
+Also verify that the pre-commit hooks are run successfully.
 
 ## Copyright and Licence
 

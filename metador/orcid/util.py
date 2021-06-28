@@ -1,13 +1,13 @@
 from typing import Final, Optional
 
-#: route prefix for all auth-related things
 AUTH_PREF: Final[str] = "/oauth"
+"""Route prefix for all auth-related things."""
 
-#: endpoint for auth redirection (visited from UI, later redirected back to it from ORCID)
 ORCID_ENDPOINT: Final[str] = "/orcid"
+"""Endpoint for auth redirection (visited from UI + redirected back to it from ORCID)."""
 
-#: endpoint for fake ORCID auth server (if used)
 MOCK_ORCID_ENDPOINT: Final[str] = "/fakeid"
+"""Endpoint for fake ORCID auth server (if used)."""
 
 
 def orcid_redir(pref) -> str:

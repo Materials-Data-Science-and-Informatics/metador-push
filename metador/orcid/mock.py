@@ -11,6 +11,7 @@ from .auth import OrcidBearerToken
 from .util import MOCK_ORCID_ENDPOINT
 
 routes = APIRouter(prefix=MOCK_ORCID_ENDPOINT, tags=["orcid-server-mock"])
+"""Routes to be added to application for Mock ORCID authentication (for development)."""
 
 
 @routes.get(

@@ -26,8 +26,8 @@ LOG_FMT: Final[str] = re.sub(r"<\w+>", "", META_FMT)
 FORMATTER_CLR: Final[Formatter] = ColoredFormatter(LOG_FMT_CLR, datefmt=FMT_DATE)
 FORMATTER: Final[Formatter] = logging.Formatter(LOG_FMT, datefmt=FMT_DATE)
 
-# our application-wide logger
 log: Final[Logger] = logging.getLogger("metador")
+"""Our application-wide logger. Import and use this."""
 
 
 def init_logger(
@@ -53,7 +53,7 @@ def init_logger(
 
 
 def patch_uvicorn_log_format() -> None:
-    """Add date and time to uvicorn log."""
+    """Add date and time to uvicorn log (call before running uvicorn)."""
 
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = (
         "%(asctime)s.%(msecs)03d %(levelprefix)s "

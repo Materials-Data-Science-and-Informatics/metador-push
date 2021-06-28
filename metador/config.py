@@ -19,11 +19,11 @@ from .orcid import auth
 
 # some constants not exposed to the user
 
-#: Default name of config file. used by CLI
 DEF_CONFIG_FILE: Final[Path] = __basepath__ / "metador.def.toml"
+"""Default name of config file, used e.g. by CLI to provide the user a skeleton."""
 
-#: Environment variable name to pass or store config location (needed for restarts!)
 CONFFILE_ENVVAR: Final[str] = "METADOR_CONF"
+"""Environment variable name to pass or store config location (needed for restarts!)"""
 
 ################################################################
 # Models for configuration that is available to user.
@@ -107,10 +107,11 @@ class Conf(BaseModel):
     uvicorn: UvicornConf = UvicornConf()
 
 
-# The actual config variable. We hide it, because once imported
-# somewhere else, the call-site won't see a redefinition (that we need to do at runtime).
-# We expose the config using the methods below to have a kind of magic singleton.
 _conf: Conf
+"""
+The actual config variable singleton. We hide it, because once imported
+somewhere else, the call-site won't see a redefinition (that we need to do at runtime).
+"""
 
 
 ################################################################

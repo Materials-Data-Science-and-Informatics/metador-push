@@ -11,8 +11,8 @@ from . import get_auth
 from .auth import Session, SessionID
 from .util import AUTH_PREF, ORCID_ENDPOINT
 
-#: Routes to be added to the app to provide the authentication flow.
 routes: APIRouter = APIRouter(prefix=AUTH_PREF, tags=["orcid-auth-client"])
+"""Routes to be added to the app to provide the authentication flow."""
 
 
 def set_paranoid_cookie(res: Response, key: str, value: str, **kwargs) -> None:

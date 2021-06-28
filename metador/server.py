@@ -14,23 +14,21 @@ from .orcid import mock
 from .profile import Profile
 
 app = FastAPI(title="Metador")
+"""The main server app that collects all server routes."""
 
-# add dummy-ORCID routes for development (they always sign in a dummy user)
-if conf().orcid.use_fake:
-    app.include_router(mock.routes)
-
-# initialize authentication based on config file
-orcid.init_auth(conf().metador.site, conf().orcid, conf().metador.data_dir)
-app.include_router(orcid_api.routes)
-
-# actual backend interface used by SPA
-app.include_router(api.routes)
+# must include routes here, because of catch-all later
+# (cannot put this into on_startup)
+app.include_router(mock.routes)  # mock ORCID for dev (always sign in dummy user)
+app.include_router(orcid_api.routes)  # auth
+app.include_router(api.routes)  # backend
 
 
 @app.on_event("startup")
 def on_startup():
     # must (re-)init logging here (otherwise won't work properly with uvicorn reload)
     init_logger(conf().metador.log.level.value, conf().metador.log.file)
+    # prepare stuff as configured
+    orcid.init_auth(conf().metador.site, conf().orcid, conf().metador.data_dir)
     Profile.load_profiles(conf().metador.profile_dir)
 
 
@@ -66,6 +64,6 @@ async def site_base():
 # must come last
 @app.get("/{anything_else:path}")
 async def catch_all():
-    """Catch-all redirect of unknown routes to SPA UI."""
+    """Catch-all redirect (must come last!) of all still unmatched routes to SPA UI."""
 
     return FileResponse(pkg_res("static/index.html"))

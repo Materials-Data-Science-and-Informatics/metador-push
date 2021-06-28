@@ -8,14 +8,12 @@ from .orcid import get_session
 from .orcid.auth import Session
 from .profile import Profile
 
-# from . import dataset
-# from .config import conf
-
 API_PREF: Final[str] = "/api"
 
 routes: APIRouter = APIRouter(
     prefix=API_PREF, dependencies=[Depends(get_session)], tags=["backend"]
 )
+"""Backend routes (to be mounted by server app)."""
 
 
 @routes.get("/")

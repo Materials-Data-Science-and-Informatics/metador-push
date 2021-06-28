@@ -9,22 +9,25 @@ from pydantic import BaseModel
 
 from .log import log
 
-#: JSON primitives
 JSON_v = Union[None, bool, int, float, str]
-#: Superficial JSON type (not recursive!) to have at least some annotations
+"""JSON primitive values."""
+
 UnsafeJSON = Union[JSON_v, List[JSON_v], Mapping[str, Any]]
+"""Superficial JSON type (not recursive!) to have at least some annotations."""
 
 #: recursive type alias for JSON (the one we'd like to use, but makes problems)
 # JSON = Union[None, bool, int, float, str, List["JSON"], Mapping[str, "JSON"]]
 
 
 def save_json(obj: BaseModel, filepath: Path):
+    """Helper. Store a pydantic model serialized to JSON into a file."""
     with open(filepath, "w") as file:
         file.write(obj.json())
         file.flush()
 
 
 def load_json(filename: Path) -> UnsafeJSON:
+    """Helper. Load JSON from a file."""
     with open(filename, "r") as file:
         return json.load(file)
 
@@ -40,5 +43,11 @@ def validate_json(instance: UnsafeJSON, schema: UnsafeJSON) -> Optional[str]:
 
 
 def critical_exit(msg: str) -> None:
+    """
+    Show critical error message and terminate application.
+
+    Only to be used for misconfiguration errors on startup.
+    """
+
     log.critical(msg)
     sys.exit(1)

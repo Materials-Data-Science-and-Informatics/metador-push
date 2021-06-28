@@ -33,11 +33,11 @@ from pydantic import (
 from ..log import log
 from .util import orcid_redir, orcid_server_pref
 
-#: Regex matching an ORCID
 ORCID_PAT: str = r"\d{4}-\d{4}-\d{4}-\d{4}"
+"""Regex matching an ORCID."""
 
-#: Type alias for Pydantic checks
 OrcidStr = Annotated[str, Field(regex=ORCID_PAT)]
+"""Type alias for Pydantic checks."""
 
 
 class OrcidBearerToken(BaseModel):
@@ -81,29 +81,32 @@ class OrcidConf(BaseModel):
     """Configuration of ORCID authentication."""
 
     class Config:
-        #: complain about unknown fields (likely a mistake!)
         extra = Extra.forbid
+        """Complain about unknown fields (likely a mistake!)"""
 
-    #: is authentication enabled?
     enabled: bool = False
+    """Is authentication enabled?"""
 
-    #: use sandbox ORCID servers? use production server if False
     sandbox: bool = False
+    """Use sandbox ORCID servers? Use production server if `False`."""
 
-    #: use fake mock servers? (overrides sandbox setting)
     use_fake: bool = False
+    """Use fake mock servers? (overrides `sandbox` setting)"""
 
-    #: ORCID API credentials: registered ID
     client_id: str = ""
-    #: ORCID API credentials: the corresponding secret
+    """ORCID API credentials: registered ID"""
+
     client_secret: str = ""
+    """ORCID API credentials: the corresponding secret"""
 
-    #: minutes after which the session expires
     auth_expire_after: int = 180
+    """minutes after which the session expires"""
 
-    #: Filename of ORCID whitelist (one ORCID per line).
-    #  If not provided, every authentic ORCID is accepted.
     allowlist_file: Optional[FilePath] = None
+    """
+    Filename of ORCID whitelist (one ORCID per line).
+    If not provided, every authentic ORCID is accepted.
+    """
 
 
 def load_allowlist(filename: Optional[str]) -> Optional[List[OrcidStr]]:
@@ -147,24 +150,27 @@ class Auth:
         and the directory where the session is presisted on server restarts.
         """
 
-        #: global in-memory session storage. Only access through lookup_session!
         self.sessions: Dict[SessionID, Session] = {}
+        """Global in-memory session storage. Only access through lookup_session!"""
 
-        #: From main app config. We need that actually only for the mock server.
         self.site_prefix: str = site
+        """From main app config. We need that actually only for the mock server."""
 
-        #: Provided orcid-specific config.
         self.orcid_conf: OrcidConf = conf
+        """Provided orcid-specific config."""
 
-        #: Directory where the sessions are persisted between server restarts.
         self.persist_dir: Optional[Path] = None
+        """Directory where the sessions are persisted between server restarts."""
+
         if persist_dir:
             self.persist_dir = persist_dir
             self.load_sessions()
 
-        #: List of permitted ORCIDs.
-        #  If None, every ORCID is allowed. If empty list, all ORCIDs are forbidden.
         self.allow_list: Optional[List[str]] = None
+        """
+        List of permitted ORCIDs.
+        If `None`, every ORCID is allowed. If empty list, all ORCIDs are forbidden.
+        """
 
         if conf.allowlist_file:
             self.allow_list = load_allowlist(str(conf.allowlist_file))

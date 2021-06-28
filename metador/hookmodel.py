@@ -1,6 +1,6 @@
 """
 Pydantic model to parse JSON passed by tusd to hook handler.
-Based on description in: https://github.com/tus/tusd/blob/master/docs/hooks.md
+Based on [tusd documentation](https://github.com/tus/tusd/blob/master/docs/hooks.md)
 """
 
 from enum import Enum
