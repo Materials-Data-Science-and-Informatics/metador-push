@@ -9,6 +9,7 @@ from typing import Optional
 import pytest
 
 import metador.config as config
+import metador.log
 from metador import pkg_res
 from metador.config import LogLevel, conf
 from metador.profile import Profile
@@ -34,8 +35,11 @@ def test_config(tmp_path_factory):
     config.init_conf()
     conf().orcid.enabled = True
     conf().orcid.use_fake = True
+
     conf().metador.log.level = LogLevel.DEBUG
     conf().metador.log.file = Path("test_metador.log")
+    metador.log.init_logger(conf().metador.log.level.value, conf().metador.log.file)
+
     conf().metador.profile_dir = pkg_res("profiles")
     conf().metador.data_dir = tmp_path_factory.mktemp("metador_test_datadir")
     yield conf()

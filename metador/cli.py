@@ -53,7 +53,7 @@ def orcid_redir_url(config: Optional[Path] = None) -> None:
 
 
 @app.command()
-def run(config: Optional[Path] = None) -> None:
+def run(config: Optional[Path] = None) -> None:  # pragma: no cover
     """Serve application using uvicorn."""
 
     c.init_conf(config)
@@ -72,5 +72,5 @@ def run(config: Optional[Path] = None) -> None:
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     app()

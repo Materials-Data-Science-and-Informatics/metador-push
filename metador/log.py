@@ -52,7 +52,7 @@ def init_logger(
         log.addHandler(fh)
 
 
-def patch_uvicorn_log_format() -> None:
+def patch_uvicorn_log_format() -> None:  # pragma: no cover
     """Add date and time to uvicorn log (call before running uvicorn)."""
 
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = (

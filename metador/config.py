@@ -117,7 +117,7 @@ somewhere else, the call-site won't see a redefinition (that we need to do at ru
 ################################################################
 
 
-def read_user_config(conffile: str) -> Conf:
+def read_user_config(conffile: Path) -> Conf:
     """
     Tries to parse the given config file and attach it to the global scope.
     Called when the server is started up.
@@ -163,7 +163,7 @@ def init_conf(conffile: Optional[Path] = None) -> None:
     # load the config from filename stored in env var
     if CONFFILE_ENVVAR in os.environ:
         log.info(f"(Re-)Loading configuration from {os.environ[CONFFILE_ENVVAR]}")
-        _conf = read_user_config(os.environ[CONFFILE_ENVVAR])
+        _conf = read_user_config(Path(os.environ[CONFFILE_ENVVAR]))
     else:
         log.warning("No configuration file passed, using defaults.")
         _conf = Conf()

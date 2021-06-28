@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import toml
 
 import metador
@@ -14,6 +15,27 @@ def test_global_def_conf():
     del c._conf  # unload default config again
 
 
+def test_read_user_config_failures(tmp_path):
+    with pytest.raises(SystemExit):
+        c.read_user_config("non existing")
+
+    broken = tmp_path / "broken.toml"
+    with open(broken, "w") as file:
+        file.write("broken =")
+        file.flush()
+
+    with pytest.raises(SystemExit):
+        c.read_user_config(broken)
+
+    invalid = tmp_path / "invalid.toml"
+    with open(invalid, "w") as file:
+        file.write("unknown_key = 123")
+        file.flush()
+
+    with pytest.raises(SystemExit):
+        c.read_user_config(invalid)
+
+
 def test_toml_pydantic_consistent():
     """
     Verify that the defaults in the example config file are exactly the same
@@ -22,8 +44,15 @@ def test_toml_pydantic_consistent():
     this is not high on the priority list.)
     """
 
+    # prevent loading from env var (which dominates if set)
+    if c.CONFFILE_ENVVAR in os.environ:
+        del os.environ[c.CONFFILE_ENVVAR]
+
+    c.init_conf()  # init defaults (without path or envvar will load builtin values)
+
     # this should raise no exceptions
-    tomlconf = toml.load(os.path.join(metador.__basepath__, "metador.def.toml"))
+    tomlconf = toml.load(metador.pkg_res("metador.def.toml"))
+
     # loading toml defaults onto the builtin defaults should make no difference
     # as we have Extra.forbid in the pydantic model,
     # the other direction should be ok too (no unknown fields are there)
