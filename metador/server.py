@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import api, orcid, pkg_res
 from .config import conf
+from .dataset import Dataset
 from .log import init_logger
 from .orcid import api as orcid_api
 from .orcid import mock
@@ -30,6 +31,7 @@ def on_startup():
     # prepare stuff as configured
     orcid.init_auth(conf().metador.site, conf().orcid, conf().metador.data_dir)
     Profile.load_profiles(conf().metador.profile_dir)
+    Dataset.load_datasets()
 
 
 @app.on_event("shutdown")

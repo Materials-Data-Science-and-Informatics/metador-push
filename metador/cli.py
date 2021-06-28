@@ -10,7 +10,6 @@ import uvicorn  # type: ignore
 
 from . import __pkg_path__, __version__
 from . import config as c
-from . import core
 from .log import patch_uvicorn_log_format
 from .orcid.util import orcid_redir
 from .upload import TUSD_HOOK_ROUTE
@@ -58,7 +57,6 @@ def run(config: Optional[Path] = None) -> None:
     """Serve application using uvicorn."""
 
     c.init_conf(config)
-    core.prepare_dirs()
 
     # add date and time to uvicorn log
     patch_uvicorn_log_format()

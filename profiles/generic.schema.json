@@ -20,7 +20,7 @@
       "title": "Author E-Mail",
       "description": "E-Mail address of the author",
       "type": "string",
-      "format": "email"
+      "pattern": "^[^@]+@[^@]+$"
     }
   },
   "required": ["authorName", "authorEmail"]

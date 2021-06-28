@@ -358,6 +358,14 @@ MarkupSafe = ">=0.23"
 i18n = ["Babel (>=0.8)"]
 
 [[package]]
+name = "jsonpointer"
+version = "2.1"
+description = "Identify specific nodes in a JSON document (RFC 6901)"
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
 name = "jsonschema"
 version = "3.2.0"
 description = "An implementation of JSON Schema validation for Python"
@@ -367,8 +375,13 @@ python-versions = "*"
 
 [package.dependencies]
 attrs = ">=17.4.0"
+idna = {version = "*", optional = true, markers = "extra == \"format\""}
+jsonpointer = {version = ">1.13", optional = true, markers = "extra == \"format\""}
 pyrsistent = ">=0.14.0"
+rfc3987 = {version = "*", optional = true, markers = "extra == \"format\""}
 six = ">=1.11.0"
+strict-rfc3339 = {version = "*", optional = true, markers = "extra == \"format\""}
+webcolors = {version = "*", optional = true, markers = "extra == \"format\""}
 
 [package.extras]
 format = ["idna", "jsonpointer (>1.13)", "rfc3987", "strict-rfc3339", "webcolors"]
@@ -614,6 +627,14 @@ idna = {version = "*", optional = true, markers = "extra == \"idna2008\""}
 idna2008 = ["idna"]
 
 [[package]]
+name = "rfc3987"
+version = "1.3.8"
+description = "Parsing and validation of URIs (RFC 3986) and IRIs (RFC 3987)"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "rx"
 version = "1.6.1"
 description = "Reactive Extensions (Rx) for Python"
@@ -647,6 +668,14 @@ python-versions = ">=3.6"
 
 [package.extras]
 full = ["aiofiles", "graphene", "itsdangerous", "jinja2", "python-multipart", "pyyaml", "requests"]
+
+[[package]]
+name = "strict-rfc3339"
+version = "0.7"
+description = "Strict, simple, lightweight RFC3339 functions"
+category = "dev"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "toml"
@@ -764,6 +793,14 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "webcolors"
+version = "1.11.1"
+description = "A library for working with color names and color values formats defined by HTML and CSS."
+category = "dev"
+optional = false
+python-versions = ">=3.5,"
+
+[[package]]
 name = "websockets"
 version = "8.1"
 description = "An implementation of the WebSocket Protocol (RFC 6455 & 7692)"
@@ -774,7 +811,7 @@ python-versions = ">=3.6.1"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "809135e1bfa0b21ce53a15b232e7a6ca7b0a1547320397d977af9957daa24c68"
+content-hash = "573139159a34965f9f0b95d859295d7b6546f2c3aeb425be35cf12894055159b"
 
 [metadata.files]
 aiofiles = [
@@ -968,6 +1005,10 @@ jinja2 = [
     {file = "Jinja2-2.11.3-py2.py3-none-any.whl", hash = "sha256:03e47ad063331dd6a3f04a43eddca8a966a26ba0c5b7207a9a9e4e08f1b29419"},
     {file = "Jinja2-2.11.3.tar.gz", hash = "sha256:a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6"},
 ]
+jsonpointer = [
+    {file = "jsonpointer-2.1-py2.py3-none-any.whl", hash = "sha256:150f80c5badd02c757da6644852f612f88e8b4bc2f9852dcbf557c8738919686"},
+    {file = "jsonpointer-2.1.tar.gz", hash = "sha256:5a34b698db1eb79ceac454159d3f7c12a451a91f6334a4f638454327b7a89962"},
+]
 jsonschema = [
     {file = "jsonschema-3.2.0-py2.py3-none-any.whl", hash = "sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163"},
     {file = "jsonschema-3.2.0.tar.gz", hash = "sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a"},
@@ -1146,6 +1187,10 @@ rfc3986 = [
     {file = "rfc3986-1.5.0-py2.py3-none-any.whl", hash = "sha256:a86d6e1f5b1dc238b218b012df0aa79409667bb209e58da56d0b94704e712a97"},
     {file = "rfc3986-1.5.0.tar.gz", hash = "sha256:270aaf10d87d0d4e095063c65bf3ddbc6ee3d0b226328ce21e036f946e421835"},
 ]
+rfc3987 = [
+    {file = "rfc3987-1.3.8-py2.py3-none-any.whl", hash = "sha256:10702b1e51e5658843460b189b185c0366d2cf4cff716f13111b0ea9fd2dce53"},
+    {file = "rfc3987-1.3.8.tar.gz", hash = "sha256:d3c4d257a560d544e9826b38bc81db676890c79ab9d7ac92b39c7a253d5ca733"},
+]
 rx = [
     {file = "Rx-1.6.1-py2.py3-none-any.whl", hash = "sha256:7357592bc7e881a95e0c2013b73326f704953301ab551fbc8133a6fadab84105"},
     {file = "Rx-1.6.1.tar.gz", hash = "sha256:13a1d8d9e252625c173dc795471e614eadfe1cf40ffc684e08b8fff0d9748c23"},
@@ -1161,6 +1206,9 @@ sniffio = [
 starlette = [
     {file = "starlette-0.14.2-py3-none-any.whl", hash = "sha256:3c8e48e52736b3161e34c9f0e8153b4f32ec5d8995a3ee1d59410d92f75162ed"},
     {file = "starlette-0.14.2.tar.gz", hash = "sha256:7d49f4a27f8742262ef1470608c59ddbc66baf37c148e938c7038e6bc7a998aa"},
+]
+strict-rfc3339 = [
+    {file = "strict-rfc3339-0.7.tar.gz", hash = "sha256:5cad17bedfc3af57b399db0fed32771f18fc54bbd917e85546088607ac5e1277"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
@@ -1225,6 +1273,10 @@ virtualenv = [
 watchgod = [
     {file = "watchgod-0.7-py3-none-any.whl", hash = "sha256:d6c1ea21df37847ac0537ca0d6c2f4cdf513562e95f77bb93abbcf05573407b7"},
     {file = "watchgod-0.7.tar.gz", hash = "sha256:48140d62b0ebe9dd9cf8381337f06351e1f2e70b2203fa9c6eff4e572ca84f29"},
+]
+webcolors = [
+    {file = "webcolors-1.11.1-py3-none-any.whl", hash = "sha256:b8cd5d865a25c51ff1218f0c90d0c0781fc64312a49b746b320cf50de1648f6e"},
+    {file = "webcolors-1.11.1.tar.gz", hash = "sha256:76f360636957d1c976db7466bc71dcb713bb95ac8911944dffc55c01cb516de6"},
 ]
 websockets = [
     {file = "websockets-8.1-cp36-cp36m-macosx_10_6_intel.whl", hash = "sha256:3762791ab8b38948f0c4d281c8b2ddfa99b7e510e46bd8dfa942a5fff621068c"},

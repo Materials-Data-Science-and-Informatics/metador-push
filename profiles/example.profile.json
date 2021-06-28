@@ -12,7 +12,8 @@
           "minimum": 0,
           "exclusiveMaximum": 100
         }
-      }
+      },
+      "required": ["validNumber"]
     }
   },
   "rootSchema": "embeddedSchema",

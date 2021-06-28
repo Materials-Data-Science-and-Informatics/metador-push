@@ -11,6 +11,8 @@ def test_global_def_conf():
 
     assert c.Conf().dict() == c.conf().dict()
 
+    del c._conf  # unload default config again
+
 
 def test_toml_pydantic_consistent():
     """
@@ -27,3 +29,5 @@ def test_toml_pydantic_consistent():
     # the other direction should be ok too (no unknown fields are there)
     loadedConf = c.Conf().parse_obj(tomlconf)
     assert loadedConf == c.conf()
+
+    del c._conf  # unload default config again

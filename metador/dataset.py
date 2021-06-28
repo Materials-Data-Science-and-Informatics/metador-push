@@ -1,7 +1,7 @@
 """
 Dataset management and serialization.
 
-The function `load_datasets` must be called before using other functions.
+The function `Dataset.load_datasets` must be called before using other functions.
 """
 
 from __future__ import annotations
@@ -11,12 +11,12 @@ import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Final, List, Optional, Type, TypeVar
+from typing import Dict, Final, List, Optional
 from uuid import UUID, uuid1
 
 from pydantic import BaseModel
 
-from . import core, util
+from . import util
 from .config import ChecksumTool, conf
 from .log import log
 from .orcid.auth import OrcidStr
@@ -29,11 +29,11 @@ METADATA_SUF: Final[str] = "_meta.json"
 """Suffix of metadata file added to filenames of data files."""
 
 
-def find_staging_datasets() -> List[UUID]:
-    """Get UUIDs of datasets with serialized data in the staging directory."""
+STAGING_DIR_NAME: Final[str] = "staging"
+"""Sub-directory in data dir for non-completed datasets."""
 
-    files = list(core.staging_dir().glob("*" + DATASET_SUF))
-    return list(map(lambda x: UUID(re.sub(DATASET_SUF + "$", "", x.name)), files))
+COMPLETE_DIR_NAME: Final[str] = "complete"
+"""Sub-directory in data dir for completed datasets to be handled by post-processing."""
 
 
 class FileInfo(BaseModel):
@@ -57,9 +57,6 @@ class DatasetInfo(BaseModel):
 
     profile: Profile
     """Copy of the profile embedded into dataset."""
-
-
-_T = TypeVar("_T")
 
 
 class Dataset(BaseModel):
@@ -89,25 +86,35 @@ class Dataset(BaseModel):
     ####
 
     @classmethod
-    def persist_filename(cls, id) -> Path:
+    def _staging_dir(cls) -> Path:
+        """Return directory for incomplete datasets (editable by client)."""
+
+        return conf().metador.data_dir / STAGING_DIR_NAME
+
+    @classmethod
+    def _complete_dir(cls) -> Path:
+        """Return directory for complete datasets (handled by post-processing)."""
+
+        return conf().metador.data_dir / COMPLETE_DIR_NAME
+
+    @classmethod
+    def _persist_filename(cls, ds_id: UUID) -> Path:
         """Location where metadata is stored until completion."""
-        return core.staging_dir() / (str(id) + DATASET_SUF)
+        return cls._staging_dir() / (str(ds_id) + DATASET_SUF)
 
-    @classmethod
-    def upload_dir(cls, id) -> Path:
+    def _upload_dir(self) -> Path:
         """Location where uploaded files are stored."""
-        return core.staging_dir() / str(id)
+        return self._staging_dir() / str(self.id)
 
-    @classmethod
-    def target_dir(cls, id) -> Path:
+    def _target_dir(self) -> Path:
         """Location where the dataset will go on completion."""
-        return core.complete_dir() / str(id)
+        return self._complete_dir() / str(self.id)
+
+    def _upload_filepath(self, filename: str) -> Path:
+        """Return the filepath where a file with a certain name must be."""
+        return self._upload_dir() / filename
 
     ####
-
-    def upload_filepath(self, filename: str) -> Path:
-        """Return the filepath where a file with a certain name must be."""
-        return self.upload_dir(self.id) / filename
 
     def is_expired(self) -> bool:
         """Returns true if dataset is expired according to current config."""
@@ -118,9 +125,7 @@ class Dataset(BaseModel):
     def save(self) -> None:
         """Serialize the current state into a file."""
 
-        with open(Dataset.persist_filename(self.id), "w") as file:
-            file.write(self.json())
-            file.flush()
+        util.save_json(self, self._persist_filename(self.id))
 
     def validate_metadata(self, file: Optional[str]) -> Optional[str]:
         """Validate a file of given name, or the root metadata otherwise."""
@@ -151,10 +156,29 @@ class Dataset(BaseModel):
 
     ####
 
+    def set_metadata(self, filename: Optional[str], metadata: UnsafeJSON) -> bool:
+        """
+        Assign provided metadata to file (or dataset root, if filename=None).
+
+        No validation is done at this step. Fails only if file does not exist.
+        """
+
+        if filename is not None and filename not in self.files:
+            log.error(f"Cannot assign metadata to {filename}, file does not exist!")
+            return False
+
+        if filename is None:
+            self.rootMeta = metadata
+        else:
+            self.files[filename].metadata = metadata
+
+        self.save()
+        return True
+
     def delete_file(self, name: str) -> bool:
         """Delete file and its data, if it exists."""
 
-        filepath = self.upload_filepath(name)
+        filepath = self._upload_filepath(name)
         if name not in self.files:
             log.warning(f"Cannot delete non-existing file {name} from {self.id}")
             return False
@@ -175,14 +199,14 @@ class Dataset(BaseModel):
         Return True if file exists, can be moved, and won't overwrite existing file.
         """
 
-        target = self.upload_filepath(filepath.name)
-
-        if filepath.name in self.files or target.is_file():
-            log.error(f"Cannot import file {filepath}, file with that name exists!")
-            return False
+        target = self._upload_filepath(filepath.name)
 
         if not filepath.is_file():
             log.error(f"File {filepath} cannot be imported, not a file!")
+            return False
+
+        if filepath.name in self.files or target.is_file():
+            log.error(f"Cannot import file {filepath}, file with that name exists!")
             return False
 
         filepath.rename(target)
@@ -195,10 +219,12 @@ class Dataset(BaseModel):
         """
         Run checksum tool on file and assign checksum.
         """
-        filepath = self.upload_filepath(filename)
+        filepath = self._upload_filepath(filename)
 
-        if filename not in self.files or not filepath.is_file():
-            log.error(f"Cannot compute checksum for {filename}, file does not exist!")
+        if filename not in self.files:
+            log.error(
+                f"Cannot compute checksum for {filename}, no such file in dataset!"
+            )
             return False
 
         try:
@@ -208,31 +234,15 @@ class Dataset(BaseModel):
                 capture_output=True,
                 encoding="utf-8",
             ).stdout.split()
-            assert ret[1] == filepath  # sanity-check
+            assert Path(ret[1]) == filepath  # sanity-check
             file_checksum = ret[0]
             self.files[filename].checksum = file_checksum
+        except FileNotFoundError:
+            log.error(f"Tool {self.checksumTool} not found!")
+            return False
         except subprocess.CalledProcessError:
             log.error(f"Failed {self.checksumTool} on {filepath}: non-zero exit code!")
             return False
-
-        self.save()
-        return True
-
-    def set_metadata(self, filename: Optional[str], metadata: UnsafeJSON) -> bool:
-        """
-        Assign provided metadata to file (or dataset root, if filename=None).
-
-        No validation is done at this step. Fails only if file does not exist.
-        """
-
-        if filename is not None and filename not in self.files:
-            log.error(f"Cannot assign metadata to {filename}, file does not exist!")
-            return False
-
-        if filename is None:
-            self.rootMeta = metadata
-        else:
-            self.files[filename].metadata = metadata
 
         self.save()
         return True
@@ -244,28 +254,29 @@ class Dataset(BaseModel):
         Returns True on success, i.e. file and its data exists and new name is free.
         """
 
+        if name not in self.files:
+            log.warning(f"Cannot rename non-existing file {name} from {self.id}")
+            return False
+
         if name == new_name:
             log.info(f"Rename {name}->{new_name} in {self.id}: nothing to do.")
             return True
 
-        if name not in self.files:
-            log.warning(f"Cannot rename non-existing file {name} from {self.id}")
-            return False
         if new_name in self.files:
-            log.warning(
-                f"Cannot rename {name}->{new_name} in {self.id}, target exists!"
-            )
+            log.warning(f"Can't rename {name}->{new_name} in {self.id}, target exists!")
             return False
 
-        oldpath = self.upload_filepath(name)
-        newpath = self.upload_filepath(new_name)
+        oldpath = self._upload_filepath(name)
+        newpath = self._upload_filepath(new_name)
 
         if not oldpath.is_file():
-            log.error(f"File {oldpath} does not exists, although referenced!")
-            return False
+            msg = f"File {oldpath} does not exists, although referenced!"
+            log.error(msg)
+            raise FileNotFoundError(msg)
         if newpath.is_file():
-            log.error(f"File {newpath} exists, but not referenced! Abort rename.")
-            return False
+            msg = f"File {newpath} exists, but not referenced! Abort rename."
+            log.error(msg)
+            raise FileExistsError(msg)
 
         oldpath.rename(newpath)
         self.files[new_name] = self.files[name]
@@ -296,8 +307,8 @@ class Dataset(BaseModel):
                 log.error(f"Cannot complete dataset, missing checksum for {file}")
                 return None
 
-        upload_dir: Final[Path] = Dataset.upload_dir(self.id)
-        target_dir: Final[Path] = Dataset.target_dir(self.id)
+        upload_dir: Final[Path] = self._upload_dir()
+        target_dir: Final[Path] = self._target_dir()
 
         # move the files
         upload_dir.rename(target_dir)
@@ -316,7 +327,7 @@ class Dataset(BaseModel):
 
         # create a checksum file (e.g. sha256sums.txt)
         with open(target_dir / (self.checksumTool + "s.txt"), "w") as outfile:
-            for name, dat in self.files.items():
+            for name, dat in sorted(self.files.items()):
                 outfile.write(f"{name}  {dat.checksum}\n")
                 outfile.flush()
 
@@ -328,7 +339,7 @@ class Dataset(BaseModel):
             outfile.write(dsinfo.json())
             outfile.flush()
 
-        # TODO: store the profile
+        # TODO: store the profile (as dirschema?)
 
         del _datasets[self.id]
 
@@ -340,34 +351,46 @@ class Dataset(BaseModel):
         IRREVERSIBLY delete information about this dataset and all its files.
         """
 
-        upload_dir: Final[Path] = Dataset.upload_dir(self.id)
+        upload_dir: Final[Path] = self._upload_dir()
         for uploaded_file in upload_dir.glob("*"):
             uploaded_file.unlink()
         upload_dir.rmdir()
 
-        Dataset.persist_filename(self.id).unlink()
+        self._persist_filename(self.id).unlink()
 
         del _datasets[self.id]
 
         log.info(f"Data of {self.id} deleted.")
 
     @classmethod
-    def load(cls: Type[_T], ds_id: UUID) -> Optional[_T]:
-        persist_file = Dataset.persist_filename(ds_id)
+    def load(cls, ds_id: UUID) -> Optional[Dataset]:
+        persist_file = Dataset._persist_filename(ds_id)
         if not persist_file.is_file():
             log.error(f"Failed loading, {str(persist_file)} not found.")
             return None
 
-        ds = cls.parse_file(Dataset.persist_filename(ds_id))  # type: ignore
-        if not Dataset.upload_dir(ds_id).is_dir():
+        ds = Dataset.parse_file(Dataset._persist_filename(ds_id))
+        if len(ds.files) == 0 and not ds._upload_dir().is_dir():
             log.warning(f"Upload dir {ds_id} not found! This is odd. Will create one.")
-            Dataset.upload_dir(ds.id).mkdir()
+            ds._upload_dir().mkdir()
 
-        # TODO: check that files in metadata refer to files in upload dir and vice versa
+        # check that for each entry the files do exist
+        for fname in ds.files.keys():
+            if not ds._upload_filepath(fname).is_file():
+                # this really should not happen that files just vanish... real exception!
+                msg = f"File {fname} referenced in dataset, but not existing!"
+                log.error(msg)
+                raise FileNotFoundError(msg)
+
+        # for each additional file without an entry, create one
+        for filepath in ds._upload_dir().glob("*"):
+            if filepath.name not in ds.files:
+                ds.files[filepath.name] = FileInfo()
+
         return ds
 
     @classmethod
-    def create(cls, profile: Profile, creator: Optional[OrcidStr] = None):
+    def create(cls, profile: Profile, creator: Optional[OrcidStr] = None) -> Dataset:
         """
         Creates a new dataset and create its directory + persistence file.
 
@@ -375,75 +398,85 @@ class Dataset(BaseModel):
         """
 
         ds = cls(
-            id=fresh_dataset_id(),
+            id=uuid1(),
             creator=creator,
             created=datetime.now(),
             profile=profile,
             checksumTool=conf().metador.checksum_tool,
-        )  # type: ignore
+        )
 
-        Dataset.upload_dir(ds.id).mkdir()  # create underlying upload directory
+        ds._upload_dir().mkdir()  # create underlying upload directory
         ds.save()  # create underlying file
         _datasets[ds.id] = ds  # register in loaded list
         log.info(f"New dataset {ds.id} created.")
         return ds
 
+    @classmethod
+    def load_datasets(cls) -> None:
+        """Load datasets for which a persistence file exists."""
+
+        global _datasets
+        cls._prepare_dirs()
+        for ds_id in cls._find_staging_datasets():
+            log.debug(f"Loading dataset {ds_id} from file.")
+            ds = Dataset.load(ds_id)
+            if ds is not None:
+                _datasets[ds_id] = ds
+
+    @classmethod
+    def get_datasets(cls, creator: Optional[OrcidStr] = None) -> List[UUID]:
+        """Return a list of dataset ids (possibly filtered by creator)."""
+
+        if creator is None:  # list all datasets
+            return list(_datasets.keys())
+        else:  # return datasets created by certain user
+            return list(
+                map(
+                    lambda x: x.id,
+                    filter(lambda x: x.creator == creator, _datasets.values()),
+                )
+            )
+
+    @classmethod
+    def get_dataset(cls, ds_id: UUID) -> Dataset:
+        """
+        Return a dataset if it exists and is not expired (throws if it does not exist).
+
+        If it is expired, it is cleaned up and treated like it does not exist.
+        This is better than giving it out, as a cleaning job could delete it any moment.
+        """
+
+        ds = _datasets[ds_id]
+        if ds.is_expired():
+            ds.delete()
+            raise KeyError
+        return ds
+
+    @classmethod
+    def _prepare_dirs(cls) -> None:
+        """Create directory structure for datasets at location specified in config."""
+
+        data_dir = conf().metador.data_dir
+        if not data_dir.is_dir():
+            util.critical_exit(
+                f"Configured data directory '{data_dir}' does not exist!"
+            )
+
+        if not cls._staging_dir().is_dir():
+            cls._staging_dir().mkdir()
+        if not cls._complete_dir().is_dir():
+            cls._complete_dir().mkdir()
+
+    @classmethod
+    def _find_staging_datasets(cls) -> List[UUID]:
+        """
+        Given the configured data dir,
+        get UUIDs of datasets with serialized data in the staging directory.
+        """
+
+        files = list(cls._staging_dir().glob("*" + DATASET_SUF))
+        return list(map(lambda x: UUID(re.sub(DATASET_SUF + "$", "", x.name)), files))
+
 
 _datasets: Dict[UUID, Dataset] = {}
 """In-memory cache of existing loaded datasets"""
-
-
-def fresh_dataset_id() -> UUID:
-    """
-    Generate a new UUID not currently used for an existing dataset.
-    Create a directory file for it, return the UUID.
-    """
-
-    fresh = uuid1()
-    while fresh in _datasets:
-        fresh = uuid1()
-
-    return fresh
-
-
-def load_datasets() -> None:
-    """Load datasets for which a persistence file exists."""
-
-    global _datasets
-    for ds_id in find_staging_datasets():
-        log.debug(f"Loading dataset {ds_id} from file.")
-        ds = Dataset.load(ds_id)
-        if ds is not None:
-            _datasets[ds_id] = ds
-
-
-def get_datasets(creator: Optional[OrcidStr] = None) -> List[UUID]:
-    """Return a list of dataset ids (possibly filtered by creator)."""
-
-    if creator is None:  # list all datasets
-        return list(_datasets.keys())
-    else:  # return datasets created by certain user
-        return list(
-            map(
-                lambda x: x.id,
-                filter(lambda x: x.creator == creator, _datasets.values()),
-            )
-        )
-
-
-def get_dataset(ds_id: UUID) -> Dataset:
-    """
-    Return a dataset if it exists and is not expired (throws if it does not exist).
-
-    If it is expired, it is cleaned up and treated like it does not exist.
-    This is better than giving it out, as a cleaning job could delete it any moment.
-    """
-
-    ds = _datasets[ds_id]
-    if ds.is_expired():
-        ds.delete()
-        raise KeyError
-    return ds
-
-
-load_datasets()

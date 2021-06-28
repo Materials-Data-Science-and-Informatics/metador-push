@@ -24,3 +24,6 @@ def test_helpers():
     file = open(c.DEF_CONFIG_FILE, "r").read()
     output = runner.invoke(app, "default-conf").stdout
     assert output == file
+
+    # cleanup (remove loaded config)
+    del c._conf

@@ -23,7 +23,8 @@ def test_load_get_profiles(test_config, tmp_path):
     # test that profile directory loads properly
     assert Profile.get_profiles() == ["anything", "empty", "example", "unsat"]
     assert Profile.get_profile("empty") is not None
-    assert Profile.get_profile("non-existing profile") is None
+    with pytest.raises(KeyError):
+        Profile.get_profile("non-existing profile")
 
 
 def test_get_schema_for(test_config):

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from .dataset import Dataset, get_dataset, get_datasets
+from .dataset import Dataset
 from .orcid import get_session
 from .orcid.auth import Session
 from .profile import Profile
@@ -79,7 +79,7 @@ def get_user_datasets(session: Optional[Session] = Depends(get_session)) -> List
     if session is None:
         return []  # if unauthenticated, do not return a list of datasets
 
-    return get_datasets(session.orcid)
+    return Dataset.get_datasets(session.orcid)
 
 
 ####
@@ -88,7 +88,7 @@ def get_user_datasets(session: Optional[Session] = Depends(get_session)) -> List
 def dataset_exists(ds_uuid: UUID):
     """Helper dependency. requires existence of referenced dataset."""
     try:
-        get_dataset(ds_uuid)
+        Dataset.get_dataset(ds_uuid)
     except KeyError:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
@@ -109,7 +109,7 @@ def get_existing_dataset(ds_uuid: UUID) -> Optional[Dataset]:
     And also checksum algorithm and data file checksums.
     """
 
-    return get_dataset(ds_uuid)
+    return Dataset.get_dataset(ds_uuid)
 
 
 @ds_routes.put(
@@ -123,7 +123,7 @@ def put_dataset(ds_uuid: UUID) -> bool:
     If validation fails, returns 422 status code.
     """
 
-    path = get_dataset(ds_uuid).complete()
+    path = Dataset.get_dataset(ds_uuid).complete()
     if path is None:
         return False
     # TODO: launch postprocessing
@@ -134,21 +134,21 @@ def put_dataset(ds_uuid: UUID) -> bool:
 def del_dataset(ds_uuid: UUID):
     """IRREVERSIBLY(!!!) delete the dataset and all related data."""
 
-    get_dataset(ds_uuid).delete()
+    Dataset.get_dataset(ds_uuid).delete()
 
 
 @ds_routes.get("/{ds_uuid}/meta")
 def get_dataset_metadata(ds_uuid: UUID):
     """Return currently stored dataset root metadata JSON (null if nothing stored)."""
 
-    return get_dataset(ds_uuid).rootMeta
+    return Dataset.get_dataset(ds_uuid).rootMeta
 
 
 @ds_routes.put("/{ds_uuid}/meta")
 def put_dataset_metadata(ds_uuid: UUID, data: Dict[str, Any]):
     """Store a JSON file as dataset metadata (without validation)."""
 
-    return get_dataset(ds_uuid).set_metadata(None, data)
+    return Dataset.get_dataset(ds_uuid).set_metadata(None, data)
 
 
 @ds_routes.get("/{ds_uuid}/meta/validate")
@@ -159,7 +159,7 @@ def validate_dataset_metadata(ds_uuid: UUID):
     (The client-side validation is not authoritative.)
     """
 
-    return get_dataset(ds_uuid).validate_metadata(None)
+    return Dataset.get_dataset(ds_uuid).validate_metadata(None)
 
 
 @ds_routes.get("/{ds_uuid}/files")
@@ -169,7 +169,7 @@ def get_dataset_files(ds_uuid: UUID):
     """
 
     ret: Dict[str, Optional[str]] = {}
-    for name, dat in get_dataset(ds_uuid).files.items():
+    for name, dat in Dataset.get_dataset(ds_uuid).files.items():
         ret[name] = dat.checksum
     return ret
 
@@ -177,7 +177,7 @@ def get_dataset_files(ds_uuid: UUID):
 def dataset_file_exists(ds_uuid: UUID, filename: str):
     """Raises HTTP exception if referenced file does not exist in dataset."""
 
-    if filename not in get_dataset(ds_uuid).files:
+    if filename not in Dataset.get_dataset(ds_uuid).files:
         raise HTTPException(status_code=404, detail="File not found in dataset")
 
 
@@ -195,7 +195,7 @@ def del_file(ds_uuid: UUID, filename: str):
     IRREVERSIBLY delete the file, metadata and checksum from dataset, if it exists.
     """
 
-    return get_dataset(ds_uuid).delete_file(filename)
+    return Dataset.get_dataset(ds_uuid).delete_file(filename)
 
 
 @file_routes.get("/{filename}/checksum")
@@ -206,7 +206,7 @@ def get_file_checksum(ds_uuid: UUID, filename: str):
     Can be used for polling while waiting for hash computation of a new upload.
     """
 
-    return get_dataset(ds_uuid).files[filename].checksum
+    return Dataset.get_dataset(ds_uuid).files[filename].checksum
 
 
 @file_routes.patch("/{filename}/rename-to/{new_filename}")
@@ -217,21 +217,21 @@ def rename_file(ds_uuid: UUID, filename: str, new_filename: str):
     Client is responsible for synchronizing the local representation on success.
     """
 
-    return get_dataset(ds_uuid).rename_file(filename, new_filename)
+    return Dataset.get_dataset(ds_uuid).rename_file(filename, new_filename)
 
 
 @file_routes.get("/{filename}/meta")
 def get_file_metadata(ds_uuid: UUID, filename: str):
     """Get currently stored JSON metadata of selected file, if it exists (can be null)."""
 
-    return get_dataset(ds_uuid).files[filename].metadata
+    return Dataset.get_dataset(ds_uuid).files[filename].metadata
 
 
 @file_routes.put("/{filename}/meta")
 def put_file_metadata(ds_uuid: UUID, filename: str, metadata: Dict[str, Any]):
     """Set currently stored JSON metadata of selected file, if it exists."""
 
-    return get_dataset(ds_uuid).set_metadata(filename, metadata)
+    return Dataset.get_dataset(ds_uuid).set_metadata(filename, metadata)
 
 
 @file_routes.get("/{filename}/meta/validate")
@@ -242,7 +242,7 @@ def validate_file_metadata(ds_uuid: UUID, filename: str):
     (The client-side validation is not authoritative.)
     """
 
-    return get_dataset(ds_uuid).validate_metadata(filename)
+    return Dataset.get_dataset(ds_uuid).validate_metadata(filename)
 
 
 ds_routes.include_router(file_routes)

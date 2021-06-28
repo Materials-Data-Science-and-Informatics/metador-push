@@ -10,11 +10,12 @@ Profiles must be valid according to the [Profile Schema](../../profile.schema.js
 `Profile.load_profiles` must be called with the profile directory as argument
 at the start of the application.
 """
+from __future__ import annotations
 
 import re
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import Any, Dict, Final, List, Mapping, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Final, List, Mapping, Optional, Union
 
 from pydantic import BaseModel
 
@@ -51,8 +52,6 @@ _profiles_json: Dict[str, Mapping[str, UnsafeJSON]] = {}
 
 _profiles: Dict[str, "Profile"] = {}
 """In-memory cache: profiles assembled from files, ready to be copied into datasets."""
-
-_T = TypeVar("_T")
 
 
 class PatternSchema(BaseModel):
@@ -295,16 +294,14 @@ class Profile(BaseModel):
         return list(sorted(_profiles.keys()))
 
     @classmethod
-    def get_profile(cls: Type[_T], name: str) -> Optional[_T]:
+    def get_profile(cls, name: str) -> Profile:
         """
-        Return a profile given its name.
+        Return a profile given its name (or raises error if no such profile).
 
         (works only after `Profile.load_profiles` was called to initialize)
         """
 
-        if name in _profiles:
-            return _profiles[name]  # type: ignore
-        return None
+        return _profiles[name]
 
 
 # TODO: What about non-self-contained JSON schemas? resolve refs and make self-contained!
