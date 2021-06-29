@@ -7,11 +7,11 @@ from metador.cli import app
 runner = CliRunner()
 
 
-def test_helpers(test_config):
+def test_helpers(testutils, test_config):
     """Check the trivial stuff. Not much to check for the CLI."""
 
     save_conf = test_config  # save config for these tests (they load themselves)
-    c.reset_conf()
+    testutils.reset_conf()
 
     def_conf = ["--config", str(c.DEF_CONFIG_FILE)]
 

@@ -10,8 +10,7 @@ from metador.dataset import Dataset
 from metador.profile import Profile
 from metador.util import load_json
 
-SOME_ORCID = "0123-4567-8910-1337"
-OTHER_ORCID = "0123-4567-8910-1338"
+from .test_auth import OTHER_ORCID, SOME_ORCID
 
 
 def test_dummy_file(dummy_file):

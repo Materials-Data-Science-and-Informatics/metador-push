@@ -7,12 +7,12 @@ import metador
 import metador.config as c
 
 
-def test_global_def_conf(test_config):
+def test_global_def_conf(testutils, test_config):
     """Test that the unmodified global config instance is found in the conf variable."""
 
     save_conf = test_config
 
-    c.reset_conf()
+    testutils.reset_conf()
     assert c.Conf().dict() == c.conf().dict()
     c._conf = save_conf
 
@@ -38,7 +38,7 @@ def test_read_user_config_failures(tmp_path):
         c.read_user_config(invalid)
 
 
-def test_toml_pydantic_consistent(test_config):
+def test_toml_pydantic_consistent(testutils, test_config):
     """
     Verify that the defaults in the example config file are exactly the same
     as in the actual internally used Pydantic model.
@@ -47,7 +47,7 @@ def test_toml_pydantic_consistent(test_config):
     """
 
     save_conf = test_config
-    c.reset_conf()
+    testutils.reset_conf()
 
     # this should raise no exceptions
     tomlconf = toml.load(metador.pkg_res("metador.def.toml"))

@@ -102,9 +102,7 @@ async def orcid_auth(code: Optional[str] = None, state: str = "/"):
 
     # this should give us a valid token, that we revoke immediately (we don't need it)
     orcidbearer = await auth.redeem_code(code)
-    revsuc = await auth.revoke_token(orcidbearer)
-    if not revsuc:
-        log.warning("ORCID token revoke failed! Strange, but not a problem.")
+    await auth.revoke_token(orcidbearer)  # revoke token (if it fails, does not matter)
 
     allow_list = auth.allow_list
     if allow_list is not None and orcidbearer.orcid not in allow_list:
@@ -121,3 +119,13 @@ async def orcid_auth(code: Optional[str] = None, state: str = "/"):
     maxage = auth.orcid_conf.auth_expire_after * 60
     set_paranoid_cookie(res, "session_id", str(session_id), max_age=maxage)
     return res
+
+
+# must come last
+@routes.get("/{anything_else:path}")
+async def orcid_catch_all():
+    """Catch-all redirect."""
+
+    return Response(
+        "Endpoint not found", status_code=status.HTTP_405_METHOD_NOT_ALLOWED
+    )

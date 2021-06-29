@@ -15,7 +15,6 @@ This module does not directly rely on Metador-specifics to simplify reuse.
 
 import re
 import secrets
-import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Annotated, Dict, Final, List, Literal, NewType, Optional
@@ -31,6 +30,7 @@ from pydantic import (
 )
 
 from ..log import log
+from ..util import critical_exit
 from .util import orcid_redir, orcid_server_pref
 
 ORCID_PAT: str = r"\d{4}-\d{4}-\d{4}-\d{4}"
@@ -109,16 +109,13 @@ class OrcidConf(BaseModel):
     """
 
 
-def load_allowlist(filename: Optional[str]) -> Optional[List[OrcidStr]]:
+def load_allowlist(filename: Path) -> List[OrcidStr]:
     """
     Load list of ORCIDs that should be allowed to sign in.
 
     Assumes that the provided path to the allowlist file exists
     (should be checked before).
     """
-
-    if filename is None or filename == "":
-        return None
 
     lines: List[str] = []
     with open(filename, "r") as file:
@@ -129,8 +126,7 @@ def load_allowlist(filename: Optional[str]) -> Optional[List[OrcidStr]]:
     noncommented = list(filter(lambda x: x[0] != "#", nonempty))
     invalid = list(filter(lambda oid: not re.match(ORCID_PAT, oid), noncommented))
     if len(invalid) > 0:
-        log.critical(ValueError(f"Invalid ORCIDs in allow list: {invalid}"))
-        sys.exit(1)
+        critical_exit(f"Invalid ORCIDs in allow list: {invalid}")
     return noncommented
 
 
@@ -173,7 +169,7 @@ class Auth:
         """
 
         if conf.allowlist_file:
-            self.allow_list = load_allowlist(str(conf.allowlist_file))
+            self.allow_list = load_allowlist(conf.allowlist_file)
 
     # functions handling actual ORCID business
 
@@ -245,9 +241,7 @@ class Auth:
                 headers=hdrs,
                 data=dat,
             )
-        if 200 <= r.status_code < 300:
-            return True
-        return False
+        return 200 <= r.status_code < 300
 
     ####
 
@@ -258,9 +252,7 @@ class Auth:
         Store it, return the SessionID.
         """
 
-        session_id = SessionID(secrets.token_urlsafe(32))
-        while session_id in self.sessions:  # just to be really sure...
-            session_id = SessionID(secrets.token_urlsafe(32))
+        session_id = SessionID(secrets.token_urlsafe(32))  # unique with huge likelihood
 
         now = datetime.today()
         self.sessions[session_id] = Session(
@@ -273,17 +265,18 @@ class Auth:
 
     ####
 
-    def persist_file_path(self) -> Optional[Path]:
-        if self.persist_dir is None:
-            return None
+    def persist_file_path(self) -> Path:
+        """Returns file for session serialization (if persist_dir is set)."""
+        assert self.persist_dir is not None
         return self.persist_dir / self.PERSIST_FILE
 
     def load_sessions(self) -> None:
-        """If persistence directory specified, try to load sessions."""
+        """
+        Try to load sessions (assuming persist_dir is set).
+
+        This is called by `init_auth`, which is to be called on startup.
+        """
         fname = self.persist_file_path()
-        if not fname:
-            log.debug("Session serialization is not enabled.")
-            return
 
         if not fname.is_file():
             log.debug("No serialized session file.")
@@ -294,16 +287,12 @@ class Auth:
 
     def dump_sessions(self) -> None:
         """
-        If persistence directory specified, dump current sessions to file.
+        Dump current sessions to file (assuming persist_dir is set).
 
         This should be called on shutdown of the app.
         """
 
         fname = self.persist_file_path()
-        if not fname:
-            log.info("No persistence directory given, nothing to do.")
-            return
-
         log.info(f"Serializing sessions to {fname}")
         serialized = Sessions(__root__=self.sessions).json()
         with open(fname, "w") as file:
@@ -328,8 +317,8 @@ class Auth:
 
         session = self.sessions[sess_id]
 
-        age = (session.expires - datetime.today()).total_seconds() <= 0
-        if age > self.orcid_conf.auth_expire_after:  # too old
+        session_expired = (session.expires - datetime.today()).total_seconds() <= 0
+        if session_expired:
             log.debug(f"Removing expired session {sess_id}.")
             del self.sessions[sess_id]
             return None

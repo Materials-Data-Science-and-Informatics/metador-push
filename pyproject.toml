@@ -11,16 +11,14 @@ fastapi = {extras = ["all"], version = "^0.65.1"}
 python-multipart = "^0.0.5"
 httpx = "^0.18.1"
 toml = "^0.10.2"
-pytest-cov = "^2.12.1"
 colorlog = "^5.0.1"
-pytest = "^6.2.4"
-jsonschema = "^3.2.0"
+jsonschema = {extras = ["format"], version = "^3.2.0"}
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.0"
-pre-commit = "^2.13.0"
 pdoc = "^7.1.1"
-jsonschema = {extras = ["format"], version = "^3.2.0"}
+pre-commit = "^2.13.0"
+pytest = "^6.2.4"
+pytest-cov = "^2.12.1"
 pytest-asyncio = "^0.15.1"
 
 [tool.poetry.scripts]

@@ -2,14 +2,14 @@
 
 from typing import Final, Optional
 
+MOCK_ORCID_PREF: Final[str] = "/fakeid"
+"""Endpoint for fake ORCID auth server (if used)."""
+
 AUTH_PREF: Final[str] = "/oauth"
 """Route prefix for all auth-related things."""
 
 ORCID_ENDPOINT: Final[str] = "/orcid"
 """Endpoint for auth redirection (visited from UI + redirected back to it from ORCID)."""
-
-MOCK_ORCID_ENDPOINT: Final[str] = "/fakeid"
-"""Endpoint for fake ORCID auth server (if used)."""
 
 
 def orcid_redir(pref) -> str:
@@ -33,7 +33,7 @@ def orcid_server_pref(sandbox: bool, site_pref: Optional[str] = None) -> str:
     """
 
     if site_pref:  # if given, we want to use our own fake-server for testing
-        return site_pref + MOCK_ORCID_ENDPOINT
+        return site_pref + MOCK_ORCID_PREF
 
     # use one of the two real servers
     sbx = "sandbox." if sandbox else ""
