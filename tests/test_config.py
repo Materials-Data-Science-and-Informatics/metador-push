@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 import toml
@@ -7,17 +7,19 @@ import metador
 import metador.config as c
 
 
-def test_global_def_conf():
+def test_global_def_conf(test_config):
     """Test that the unmodified global config instance is found in the conf variable."""
 
-    assert c.Conf().dict() == c.conf().dict()
+    save_conf = test_config
 
-    del c._conf  # unload default config again
+    c.reset_conf()
+    assert c.Conf().dict() == c.conf().dict()
+    c._conf = save_conf
 
 
 def test_read_user_config_failures(tmp_path):
     with pytest.raises(SystemExit):
-        c.read_user_config("non existing")
+        c.read_user_config(Path("non existing"))
 
     broken = tmp_path / "broken.toml"
     with open(broken, "w") as file:
@@ -36,7 +38,7 @@ def test_read_user_config_failures(tmp_path):
         c.read_user_config(invalid)
 
 
-def test_toml_pydantic_consistent():
+def test_toml_pydantic_consistent(test_config):
     """
     Verify that the defaults in the example config file are exactly the same
     as in the actual internally used Pydantic model.
@@ -44,11 +46,8 @@ def test_toml_pydantic_consistent():
     this is not high on the priority list.)
     """
 
-    # prevent loading from env var (which dominates if set)
-    if c.CONFFILE_ENVVAR in os.environ:
-        del os.environ[c.CONFFILE_ENVVAR]
-
-    c.init_conf()  # init defaults (without path or envvar will load builtin values)
+    save_conf = test_config
+    c.reset_conf()
 
     # this should raise no exceptions
     tomlconf = toml.load(metador.pkg_res("metador.def.toml"))
@@ -59,4 +58,4 @@ def test_toml_pydantic_consistent():
     loadedConf = c.Conf().parse_obj(tomlconf)
     assert loadedConf == c.conf()
 
-    del c._conf  # unload default config again
+    c._conf = save_conf

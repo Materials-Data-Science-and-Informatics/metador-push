@@ -1,3 +1,5 @@
+"""Must to put this stuff here to avoid circular imports."""
+
 from typing import Final, Optional
 
 AUTH_PREF: Final[str] = "/oauth"

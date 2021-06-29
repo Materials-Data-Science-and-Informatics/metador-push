@@ -7,8 +7,11 @@ from metador.cli import app
 runner = CliRunner()
 
 
-def test_helpers():
+def test_helpers(test_config):
     """Check the trivial stuff. Not much to check for the CLI."""
+
+    save_conf = test_config  # save config for these tests (they load themselves)
+    c.reset_conf()
 
     def_conf = ["--config", str(c.DEF_CONFIG_FILE)]
 
@@ -25,5 +28,5 @@ def test_helpers():
     output = runner.invoke(app, "default-conf").stdout
     assert output == file
 
-    # cleanup (remove loaded config)
-    del c._conf
+    # restore config
+    c._conf = save_conf

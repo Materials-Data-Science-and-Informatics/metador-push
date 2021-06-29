@@ -185,3 +185,17 @@ def conf() -> Conf:
         init_conf()  # reload configuration
 
     return _conf
+
+
+def reset_conf() -> None:
+    """Unload config (useful for testing)."""
+
+    global _conf
+
+    if CONFFILE_ENVVAR in os.environ:
+        del os.environ[CONFFILE_ENVVAR]
+
+    try:
+        del _conf
+    except NameError:
+        pass

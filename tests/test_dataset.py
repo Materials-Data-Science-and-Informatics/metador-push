@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from metador import dataset
-from metador.config import ChecksumTool, conf
+from metador.config import ChecksumTool
 from metador.dataset import Dataset
 from metador.profile import Profile
 from metador.util import load_json
@@ -26,15 +26,15 @@ def test_dummy_file(dummy_file):
     assert len(content) == 1024
 
 
-def test_load_datasets(test_profiles):
+def test_load_datasets(test_config):
     """Invalid data dir should throw, missing subdirs should be created."""
 
     # try initializing from non-existing data_dir
-    tmp = conf().metador.data_dir
+    tmp = test_config.metador.data_dir
     with pytest.raises(SystemExit):
-        conf().metador.data_dir = Path("some invalid dir")
+        test_config.metador.data_dir = Path("some invalid dir")
         Dataset.load_datasets()
-    conf().metador.data_dir = tmp
+    test_config.metador.data_dir = tmp
 
     # now init directories, check that they are still empty
     Dataset.load_datasets()
@@ -69,7 +69,7 @@ def test_load(test_profiles):
     ds.delete()  # clean up
 
 
-def test_create_load_get(test_profiles, dummy_file):
+def test_create_load_get(test_config, dummy_file):
     """Test general access to dataset collection."""
 
     pr = Profile.get_profile("example")
@@ -98,7 +98,7 @@ def test_create_load_get(test_profiles, dummy_file):
     del ds  # this one is old, now ds2 is the real object
 
     # check that auto-removing works (make expired)
-    surely_old = int(conf().metador.incomplete_expire_after / 24) + 2
+    surely_old = int(test_config.metador.incomplete_expire_after / 24) + 2
     ds2.created = datetime.now() - timedelta(days=surely_old)
     assert ds2.is_expired()
     with pytest.raises(KeyError):

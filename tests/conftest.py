@@ -23,16 +23,8 @@ def random_hex(length: int) -> str:
 def test_config(tmp_path_factory):
     """Initialize config for test environment."""
 
-    # just sanity-check that this is only loaded once
-    undef = False
-    try:
-        config._conf
-    except AttributeError:
-        undef = True
-    if not undef:
-        exit(1)
-
     config.init_conf()
+
     conf().orcid.enabled = True
     conf().orcid.use_fake = True
 
@@ -42,16 +34,17 @@ def test_config(tmp_path_factory):
 
     conf().metador.profile_dir = pkg_res("profiles")
     conf().metador.data_dir = tmp_path_factory.mktemp("metador_test_datadir")
+
     yield conf()
 
-    del config._conf
+    config.reset_conf()
 
 
 DUMMYFILE_NAMELEN = 8
 DUMMYFILE_SIZE = 1024
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def dummy_file(tmp_path_factory):
     """A dummy file factory. Creates dummy files and cleans them up in the end."""
 

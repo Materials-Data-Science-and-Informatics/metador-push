@@ -11,7 +11,7 @@ import uvicorn  # type: ignore
 from . import __pkg_path__, __version__
 from . import config as c
 from .log import patch_uvicorn_log_format
-from .orcid.util import orcid_redir
+from .orcid.auth import orcid_redir
 from .upload import TUSD_HOOK_ROUTE
 
 app = typer.Typer()
