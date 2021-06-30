@@ -4,17 +4,24 @@ Shared fixtures and helpers for a test environment.
 
 import os
 import secrets
+import subprocess
+import time
 from pathlib import Path
 from typing import Optional
 
 import pytest
+from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 import metador.config as config
 import metador.log
+import metador.server as server
 from metador import pkg_res
 from metador.config import LogLevel, conf
+from metador.orcid import get_auth, init_auth
 from metador.orcid.mock import MOCK_TOKEN
 from metador.profile import Profile
+from metador.upload import TUSD_HOOK_ROUTE
 
 
 class Util:
@@ -113,9 +120,57 @@ def dummy_file(testutils, tmp_path_factory):
 def test_profiles(test_config):
     """Initialize config and profiles for test environment."""
 
-    if len(Profile.get_profiles()) != 0:
-        # something is wrong. this should only be run once
-        # and no profiles were loaded before
-        exit(1)
-
     Profile.load_profiles(test_config.metador.profile_dir)
+
+
+@pytest.fixture
+async def async_client(test_config):
+    """Return an automatically closed async http client."""
+    async with AsyncClient(app=server.app, base_url=test_config.metador.site) as ac:
+        yield ac
+
+
+@pytest.fixture
+def sync_client():
+    """Return a client instance to access the backend."""
+    with TestClient(server.app) as client:
+        yield client
+
+
+@pytest.fixture
+def auth_cookie(test_config, sync_client):
+    """Initialize auth if necessary, fake-auth as a user, return cookie."""
+
+    try:
+        get_auth()
+    except RuntimeError:
+        init_auth(
+            test_config.metador.site, test_config.orcid, test_config.metador.data_dir
+        )
+
+    cookies = {}
+    cookies["session_id"] = get_auth().new_session(MOCK_TOKEN)
+    return cookies
+
+
+@pytest.fixture(scope="session")
+def tus_server(test_config, tmp_path_factory):
+    """
+    Launch a server for running tests.
+
+    Adapted from https://til.simonwillison.net/pytest/subprocess-server.
+    """
+
+    tusd_proc = subprocess.Popen(
+        ["tusd", "-hooks-http", test_config.metador.site + TUSD_HOOK_ROUTE],
+        cwd=tmp_path_factory.mktemp("tusd_test_dir"),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    # Give the server time to start
+    time.sleep(0.2)
+    # Check it started successfully
+    assert not tusd_proc.poll(), tusd_proc.stdout.read().decode("utf-8")
+    yield tusd_proc
+    # Shut it down at the end of the pytest session
+    tusd_proc.terminate()

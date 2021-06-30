@@ -34,8 +34,13 @@ data_dir = 'metador_data'
 # Checksum tool to use (sha256sum and sha512sum are supported).
 checksum_tool = 'sha256sum'
 
-# Script that is called when a dataset is complete, if provided.
-# It is passed the directory of the completed dataset as the sole argument.
+# If a HTTP(S) URL is provided, a POST request will be sent with 
+# a JSON body containing {"event": "newDataset", "location": DATASET_PATH}
+# where DATASET_PATH is the directory of the new dataset.
+# If it is not an URL, it is interpreted as a command line command
+# that is run when a dataset is complete with DATASET_PATH as extra positional argument.
+# Your script must be executable and on your PATH for this to work.
+# Your post-processing hook is responsible for (re)moving the passed directory.
 # completion_hook = 'your_script.py'
 
 [metador.log]

@@ -343,6 +343,9 @@ class Dataset(BaseModel):
 
         del _datasets[self.id]
 
+        # delete persistence file (we produced all derivative files already)
+        self._persist_filename(self.id).unlink()
+
         log.info(f"Dataset {self.id} completed.")
         return target_dir
 

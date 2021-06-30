@@ -358,6 +358,9 @@ def test_example_dataset(test_profiles, dummy_file):
     assert len(ds.validate()) == 0
     path = ds.complete()
     assert path is not None
+    assert not ds._persist_filename(ds.id).is_file()
+    assert not ds._upload_dir().is_dir()
+    assert path.is_dir()
 
     # dataset should not be listed anymore
     assert ds.id not in Dataset.get_datasets()

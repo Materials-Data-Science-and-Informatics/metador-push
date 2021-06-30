@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import api, orcid, pkg_res
+from . import api, orcid, pkg_res, upload
 from .config import conf
 from .dataset import Dataset
 from .log import init_logger
@@ -22,6 +22,7 @@ app = FastAPI(title="Metador")
 app.include_router(mock.routes)  # mock ORCID for dev (always sign in dummy user)
 app.include_router(orcid_api.routes)  # auth
 app.include_router(api.routes)  # backend
+app.include_router(upload.routes)  # tusd hook
 
 
 @app.on_event("startup")
@@ -41,12 +42,6 @@ def on_shutdown():
 
 
 app.mount("/static", StaticFiles(directory=pkg_res("static")), name="static")
-
-# @app.post(c.TUSD_HOOK_ROUTE)
-# async def tusd_hook(body: TusdEvent, hook_name: TusdHookName = Header(...)):
-#     log.debug(hook_name)
-#     log.debug(body)
-#     return "TODO"
 
 
 @app.get("/favicon.ico", response_class=FileResponse)

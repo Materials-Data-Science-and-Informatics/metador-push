@@ -75,7 +75,7 @@ class MetadorConf(BaseModel):
 
     checksum_tool: ChecksumTool = ChecksumTool.SHA256SUM
 
-    completion_hook: Optional[Path] = None
+    completion_hook: Optional[str] = None
 
     log: LogConf = LogConf()
 
