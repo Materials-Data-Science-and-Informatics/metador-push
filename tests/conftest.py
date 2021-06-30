@@ -23,6 +23,8 @@ from metador.orcid.mock import MOCK_TOKEN
 from metador.profile import Profile
 from metador.upload import TUSD_HOOK_ROUTE
 
+from .util import get_free_tcp_port
+
 
 class Util:
     """Helpers used in tests."""
@@ -69,6 +71,11 @@ def test_config(testutils, tmp_path_factory):
 
     conf().orcid.enabled = True
     conf().orcid.use_fake = True
+
+    # use different port than default for testing
+    # to not interfere with possibly running actual dev instance
+    conf().uvicorn.port = get_free_tcp_port()
+    conf().metador.site = f"http://localhost:{conf().uvicorn.port}"
 
     allowlistfile = tmpdir / "allowlist.txt"
     with open(allowlistfile, "w") as file:

@@ -1,7 +1,20 @@
 import asyncio
+import socket
 from typing import List, Optional
 
 import uvicorn
+
+
+# https://gist.github.com/gabrielfalcao/20e567e188f588b65ba2
+def get_free_tcp_port() -> int:
+    """Get a free port to bind to (this has a race condition, but it does not matter)."""
+
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    tcp.bind(("", 0))
+    port = tcp.getsockname()
+    tcp.close()
+    return port[1]
 
 
 # As the auth flow needs an ORCID server that responds to our backend,
