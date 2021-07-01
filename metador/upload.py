@@ -2,10 +2,11 @@
 Handle the upload per HTTP / tus
 """
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, Final, List, Literal, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Response
+from fastapi import APIRouter, BackgroundTasks, Header, Response
 from pydantic import BaseModel
 
 from .dataset import Dataset
@@ -22,7 +23,7 @@ class TusdHTTPRequest(BaseModel):
 # NOTE: we don't allow S3 buckets for our purposes
 class TusdStorage(BaseModel):
     Type: Literal["filestore"]
-    Path: str
+    Path: Path
 
 
 class TusdUpload(BaseModel):
@@ -58,34 +59,65 @@ class TusdEvent(BaseModel):
     HTTPRequest: TusdHTTPRequest
 
 
-#: API route to handle tusd events
-TUSD_HOOK_ROUTE: Final[str] = "/tusd-events"
-
 routes: APIRouter = APIRouter(tags=["tusd-hook"])
+
+TUSD_HOOK_ROUTE: Final[str] = "/tusd-events"
+"""API route to handle tusd events."""
+
+HDR_DATASET: Final[str] = "Dataset"
+HDR_FILENAME: Final[str] = "Filename"
+
+"""Header to be added to link an upload to a dataset."""
 
 
 @routes.post(TUSD_HOOK_ROUTE)
-async def tusd_hook(body: TusdEvent, hook_name: TusdHookName = Header(...)):
+async def tusd_hook(
+    background_tasks: BackgroundTasks,
+    body: TusdEvent,
+    hook_name: TusdHookName = Header(...),
+):
     """Hook to react on events signaled by tusd."""
+
+    client_reqhdr = body.HTTPRequest.Header
 
     log.debug(hook_name)
     log.debug(body)
 
+    if HDR_DATASET not in client_reqhdr or len(client_reqhdr[HDR_DATASET]) > 1:
+        return Response("Exactly one dataset ID must be in header.", status_code=400)
+    ds_id_str: str = client_reqhdr[HDR_DATASET][0]
+
+    if HDR_FILENAME not in client_reqhdr or len(client_reqhdr[HDR_FILENAME]) > 1:
+        return Response("Exactly one filename must be in header.", status_code=400)
+    filename: str = client_reqhdr[HDR_FILENAME][0]
+
+    if filename.find("/") >= 0:
+        return Response("Invalid filename: may not contain /", status_code=400)
+
+    try:
+        ds_id: UUID = UUID(ds_id_str)
+        ds: Dataset = Dataset.get_dataset(ds_id)
+    except (ValueError, AttributeError):
+        return Response(f"Invalid dataset ID: {ds_id_str}", status_code=422)
+    except KeyError:
+        return Response("No such dataset.", status_code=404)
+
     # reject files that are not in a known dataset
     # if a valid ID is given, accept (the ID is only known to the owner)
     if hook_name == TusdHookName.pre_create:
-        if "Dataset" not in body.HTTPRequest.Header:
-            return Response("No dataset ID given in header.", status_code=400)
-        try:
-            ds_id = UUID(body.HTTPRequest.Header["Dataset"])
-            Dataset.get_dataset(ds_id)
-        except AttributeError:
-            return Response("Invalid dataset ID", status_code=422)
-        except KeyError:
-            return Response("No such dataset.", status_code=404)
-        return None  # OK
-    # file complete -> import to dataset, compute checksum
+        if filename in ds.files:
+            return Response(
+                f"File {filename} already exists. Refused.", status_code=422
+            )
+        return None  # 200 OK, no body
+
+    # file complete -> import to dataset with original filename, compute checksum
     elif hook_name == TusdHookName.post_finish:
-        ds_id = UUID(body.HTTPRequest.Header["Dataset"])
-        Dataset.get_dataset(ds_id)
-        # TODO
+        assert body.Upload.Storage is not None
+        uplloc: Path = body.Upload.Storage.Path
+        renamed: Path = uplloc.parents[0] / filename
+        log.debug(f"Upl: {uplloc} -> {renamed}")
+        assert uplloc.is_file()
+        uplloc.rename(renamed)
+        ds.import_file(renamed)
+        background_tasks.add_task(ds.compute_checksum, filename)

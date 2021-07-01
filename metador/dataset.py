@@ -461,10 +461,7 @@ class Dataset(BaseModel):
 
         data_dir = conf().metador.data_dir
         if not data_dir.is_dir():
-            util.critical_exit(
-                f"Configured data directory '{data_dir}' does not exist!"
-            )
-
+            data_dir.mkdir()
         if not cls._staging_dir().is_dir():
             cls._staging_dir().mkdir()
         if not cls._complete_dir().is_dir():

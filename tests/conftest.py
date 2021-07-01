@@ -23,10 +23,10 @@ from metador.orcid.mock import MOCK_TOKEN
 from metador.profile import Profile
 from metador.upload import TUSD_HOOK_ROUTE
 
-from .util import get_free_tcp_port
+from .testutil import get_free_tcp_port
 
 
-class Util:
+class UtilFuncs:
     """Helpers used in tests."""
 
     @staticmethod
@@ -51,7 +51,7 @@ class Util:
 @pytest.fixture(scope="session")
 def testutils():
     """Fixture giving access to helper functions anywhere in test suite."""
-    return Util
+    return UtilFuncs
 
 
 @pytest.fixture(scope="session")
@@ -96,10 +96,10 @@ DUMMYFILE_SIZE = 1024
 def dummy_file(testutils, tmp_path_factory):
     """A dummy file factory. Creates dummy files and cleans them up in the end."""
 
-    dummy_base = tmp_path_factory.mktemp("dummy_files")
+    dummy_base: Path = tmp_path_factory.mktemp("dummy_files")
     files = []
 
-    def _dummy_file(name: Optional[str] = None, content: Optional[str] = None):
+    def _dummy_file(name: Optional[str] = None, content: Optional[str] = None) -> Path:
         if name in files:
             raise RuntimeError(f"Dummy file {name} already exists!")
 
@@ -176,8 +176,6 @@ def tus_server(test_config, tmp_path_factory):
     )
     # Give the server time to start
     time.sleep(0.2)
-    # Check it started successfully
-    assert not tusd_proc.poll(), tusd_proc.stdout.read().decode("utf-8")
     yield tusd_proc
     # Shut it down at the end of the pytest session
     tusd_proc.terminate()

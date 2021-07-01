@@ -20,7 +20,7 @@ from metador.orcid.util import (
 )
 from metador.server import app
 
-from .util import UvicornTestServer
+from .testutil import UvicornTestServer
 
 
 @pytest.fixture

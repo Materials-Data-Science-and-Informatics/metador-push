@@ -69,7 +69,6 @@ class MetadorConf(BaseModel):
 
     incomplete_expire_after: int = 48
 
-    # TODO: could use DirectoryPath, but then need some more fancy testing setup
     profile_dir: Path = Path("profiles")
     data_dir: Path = Path("metador_data")
 

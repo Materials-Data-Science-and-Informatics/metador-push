@@ -30,9 +30,8 @@ def test_load_datasets(test_config):
 
     # try initializing from non-existing data_dir
     tmp = test_config.metador.data_dir
-    with pytest.raises(SystemExit):
-        test_config.metador.data_dir = Path("some invalid dir")
-        Dataset.load_datasets()
+    test_config.metador.data_dir = Path("missing_dir")
+    Dataset.load_datasets()
     test_config.metador.data_dir = tmp
 
     # now init directories, check that they are still empty
