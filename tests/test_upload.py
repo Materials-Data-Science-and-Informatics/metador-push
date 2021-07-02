@@ -1,4 +1,3 @@
-import asyncio
 from uuid import uuid1
 
 import aiotus
@@ -8,7 +7,7 @@ from metador.dataset import Dataset
 from metador.profile import Profile
 from metador.server import app
 
-from .testutil import UvicornTestServer
+from .testutil import UvicornTestServer, wait_until
 
 
 @pytest.fixture
@@ -30,7 +29,7 @@ async def test_upload_tus(
     file = dummy_file("testupload.txt")
     tusd_url = test_config.metador.tusd_endpoint
 
-    # TODO: if aiotus is fixed to throw, also check http status codes
+    # TODO: if aiotus is fixed to throw errors, also check http status codes
 
     # try without required fields
     with open(file, "rb") as f:
@@ -65,19 +64,22 @@ async def test_upload_tus(
     assert ds.id in Dataset.get_datasets()
     assert ds == Dataset.get_dataset(ds.id)
 
+    lines = tus_server.readlines_nonblock()  # we don't care about previous stuff
+
     # upload a file into it
     with open(file, "rb") as f:
         hdrs = {"Dataset": str(ds.id), "Filename": file.name}
         location = await aiotus.upload(tusd_url, f, headers=hdrs)
         assert location is not None
-        await asyncio.sleep(0.2)  # otherwise post_finish hook is not sent yet
-        # TODO: more elegant: check live tusd stdout to see the event was triggered
-        # this is complicated and probably not worth it right now.
 
-    # now file is in dataset
-    assert file.name in ds.files
-    # and the checksum should also be computed by now
-    assert ds.files[file.name].checksum is not None
+    lines = tus_server.readlines_until(lambda x: x.find("post-finish") >= 0, 1)
+    assert lines[-1].find("post-finish") >= 0  # sanity-check: last line has the event
+
+    # make sure the hook was completed (file in dataset, checksum is computed)
+    success = await wait_until(
+        lambda: file.name in ds.files and ds.files[file.name].checksum is not None
+    )
+    assert success
 
     # try to upload a file with the same name again
     file.touch()

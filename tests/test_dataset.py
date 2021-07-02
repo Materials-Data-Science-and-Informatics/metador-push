@@ -1,16 +1,20 @@
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
+from queue import Queue
 
 import pytest
+from fastapi import FastAPI
 
-from metador import dataset
+from metador import dataset, pkg_res
 from metador.config import ChecksumTool
 from metador.dataset import Dataset
+from metador.postprocessing import DatasetNotification, pass_to_postprocessing
 from metador.profile import Profile
 from metador.util import load_json
 
 from .test_auth import OTHER_ORCID, SOME_ORCID
+from .testutil import UvicornTestServer, get_free_tcp_port, get_with_retries
 
 
 def test_dummy_file(dummy_file):
@@ -25,12 +29,12 @@ def test_dummy_file(dummy_file):
     assert len(content) == 1024
 
 
-def test_load_datasets(test_config):
+def test_load_datasets(test_config, tmp_path):
     """Invalid data dir should throw, missing subdirs should be created."""
 
     # try initializing from non-existing data_dir
     tmp = test_config.metador.data_dir
-    test_config.metador.data_dir = Path("missing_dir")
+    test_config.metador.data_dir = Path(tmp_path / "missing_dir")
     Dataset.load_datasets()
     test_config.metador.data_dir = tmp
 
@@ -399,3 +403,59 @@ def test_example_dataset(test_profiles, dummy_file):
     ]
     # have non-empty checksums
     assert all(map(lambda x: x[1] != "", chksums))
+
+
+@pytest.fixture
+async def mock_http_postproc(test_config):
+    """Mock postprocessing http hook endpoint that just collects events."""
+
+    q: Queue = Queue()
+
+    async def notify(notif: DatasetNotification):
+        q.put(notif)
+
+    app = FastAPI()
+    app.post("/notify")(notify)
+
+    port = get_free_tcp_port()
+    server = UvicornTestServer(app, host=test_config.uvicorn.host, port=port)
+
+    await server.up()
+    yield (f"http://localhost:{port}/notify", q)
+    await server.down()
+
+
+@pytest.mark.asyncio
+async def test_completion_hooks(test_profiles, mock_http_postproc):
+    pp_endpoint = mock_http_postproc[0]
+
+    pr = Profile.get_profile("anything")
+    ds = Dataset.create(pr, SOME_ORCID)
+    path = ds.complete()
+    assert path is not None
+
+    # notif = DatasetNotification(location=str(path))
+    # notif_json_str = notif.json().replace('"', '\\"')
+
+    success = await pass_to_postprocessing(
+        f"{pkg_res('tests/mock_postproc.sh')} {pp_endpoint}", path
+    )
+    assert success
+
+    # test that the curl command worked
+    ret = await get_with_retries(mock_http_postproc[1], None)
+    assert ret is not None
+
+    assert ret.event == "new_dataset"
+    assert Path(ret.location) == path
+
+    success = await pass_to_postprocessing("invalid script", path)
+    assert not success
+
+    success = await pass_to_postprocessing("http://invalid/endpoint", path)
+    assert not success
+
+    await pass_to_postprocessing(pp_endpoint, path)
+    ret = mock_http_postproc[1].get(timeout=1)
+    assert ret.event == "new_dataset"
+    assert Path(ret.location) == path

@@ -5,7 +5,6 @@ Shared fixtures and helpers for a test environment.
 import os
 import secrets
 import subprocess
-import time
 from pathlib import Path
 from typing import Optional
 
@@ -23,7 +22,7 @@ from metador.orcid.mock import MOCK_TOKEN
 from metador.profile import Profile
 from metador.upload import TUSD_HOOK_ROUTE
 
-from .testutil import get_free_tcp_port
+from .testutil import NonblockingStream, get_free_tcp_port
 
 
 class UtilFuncs:
@@ -162,20 +161,14 @@ def auth_cookie(test_config, sync_client):
 
 @pytest.fixture(scope="session")
 def tus_server(test_config, tmp_path_factory):
-    """
-    Launch a server for running tests.
-
-    Adapted from https://til.simonwillison.net/pytest/subprocess-server.
-    """
+    """Launch a tusd instance in the background for running tests."""
 
     tusd_proc = subprocess.Popen(
         ["tusd", "-hooks-http", test_config.metador.site + TUSD_HOOK_ROUTE],
         cwd=tmp_path_factory.mktemp("tusd_test_dir"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        encoding="utf-8",
     )
-    # Give the server time to start
-    time.sleep(0.2)
-    yield tusd_proc
-    # Shut it down at the end of the pytest session
-    tusd_proc.terminate()
+    yield NonblockingStream(tusd_proc.stdout)
+    tusd_proc.terminate()  # Shut it down at the end of the pytest session
