@@ -2,6 +2,17 @@
 
 **M**etadata **E**nrichment and **T**ransmission **A**ssistance for **D**igital **O**bjects in **R**esearch
 
+## TL;DR
+
+* **Summary:** File upload service with resumable uploads and rich metadata requirements
+* **Purpose:** Comfortably get data from outside while enforcing collection of certain metadata
+* Easy to set up, no mandatory non-Python dependencies
+* Metadata validation based on file name pattern matching and JSON Schema
+* Authentication via ORCID, with optional allowlist to restrict access
+* Successfully uploaded and annotated datasets are passed to postprocessing:
+  - Either launch a script to handle the completed dataset directory,
+  - or notify a different service via HTTP.
+
 ## Overview
 
 Metador is a metadata-aware mailbox for research data.
@@ -30,7 +41,7 @@ makes Metador **easy to integrate into your existing workflows**.
 
 To achieve these goals, Metador combines state-of-the-art resumable file-upload technology
 using [Uppy](https://uppy.io) and the [tus](https://tus.io/) protocol 
-with a JSON Schema driven metadata editor.
+with a [JSON Schema](https://json-schema.org/) driven metadata editor.
 
 ## Why not a different self-hosted file uploader?
 
@@ -108,6 +119,14 @@ For serious deployment into an existing infrastructure, some more steps are requ
 
 * Run Metador with your configuration: `metador-cli run --conf YOUR_CONFIG_FILE`
 
+## Setting up ORCID Authentication
+
+TODO link to the correct guide to get API token
+
+## Dataset profiles
+
+TODO explain profiles
+
 ## FAQ
 
 The following never actually asked questions might be of interest to you.
@@ -116,23 +135,21 @@ The following never actually asked questions might be of interest to you.
 
 This service is intended for use by human beings, to send you data that originally has
 ad-hoc or lacking metadata. If the dataset is already fully annotated, it probably should
-be transferred in a different and simpler way. If you insist on using this service
-mechanically, in fact it is designed to be as RESTful as possible so you might try to
-script an auto-uploader. However, there is no official support for this.
+be transferred in a different and simpler way. 
+
+If you insist on using this service mechanically, in fact it is designed to be as RESTful
+as possible so you might try to script an auto-uploader. The API is accessible under the
+`/docs` route. For uploads you would also need a 
+[tus client](https://tus.io/implementations.html). 
+The only difficult point would be the automated ORCID authentication that you must handle.
+There is no and probably will be no "API token" support.
 
 ### Feature: Will there be support for e.g. cloud-based storage?
 
-No, this service is meant to bring annotated data to **your** hard drives. Your
-post-processing script can do with completed datasets whatever it wants, including
+No, this service is meant to bring annotated data to **your** hard drives, that must be
+large enough to store the files at least temporarily.
+Your post-processing script can do with completed datasets whatever it wants, including
 moving it to arbitrary different locations.
-
-### Feature: Will there be support for HTTP-based post-processing hooks?
-
-No, the only kind of hook ever provided will be the automatic calling of a script. The
-datasets are located on the hard-drive, your post-processing needs access to it anyway. It
-makes no sense to involve networking, in the same way as it would be absurd to make `git`
-hooks use the network. Of course, you can write a hook script that uses networking
-yourself, e.g. to send a network request to trigger an E-Mail about the new dataset.
 
 ### Feature: Will there be support for authentication mechanisms besides ORCID?
 
@@ -141,8 +158,8 @@ to that in the research domain it should be sufficient. If you or your partners 
 have an ORCID yet, maybe now it is the time!
 
 If you want to restrict access to your instance to a narrow circle of persons, instead of
-allowing anyone with an ORCID to use your service, just use the provided **whitelist**
-functionality (TODO).
+allowing anyone with an ORCID to use your service, just use the provided **allowlist**
+functionality.
 
 It is **not** planned to add authentication that requires the user to register
 specifically to use this service. No one likes to create new accounts and invent new
@@ -201,7 +218,7 @@ mandatory.
 
 Before commiting, run `pytest` and make sure you did not break anything.
 
-To generate documentation, run `pdoc -o docs metador`
+To generate documentation, run `pdoc -o docs metador`.
 
 To check coverage, use `pytest --cov-report term-missing:skip-covered --cov=metador tests/`
 
@@ -217,7 +234,7 @@ See [LICENSE](./LICENSE).
 
 **CLI:** typer (MIT), toml (MIT), colorlog (MIT)
 
-**Backend:** FastAPI (MIT), pydantic (MIT), tusd (MIT), httpx (BSD-3), python-multipart (Apache 2.0)
+**Backend:** FastAPI (MIT), pydantic (MIT), tusd (MIT), httpx (BSD-3), python-multipart (Apache 2), aiotus (Apache 2)
 
 **Frontend:** uppy (MIT), Picnic CSS (MIT)
 
@@ -225,7 +242,7 @@ See [LICENSE](./LICENSE).
 
 #### Tools
 
-**Checked by:** pytest (MIT), pytest-cov (MIT), pre-commit (MIT), black (MIT), flake8 (MIT), mypy (MIT)
+**Checked by:** pytest (MIT), pytest-cov (MIT), pytest-asyncio (Apache 2), pre-commit (MIT), black (MIT), flake8 (MIT), mypy (MIT)
 
 **Packaged by:** poetry (MIT)
 
