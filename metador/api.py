@@ -1,11 +1,13 @@
 from typing import Any, Dict, Final, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 
+from .config import conf
 from .dataset import Dataset
 from .orcid import get_session
 from .orcid.auth import Session
+from .postprocessing import pass_to_postprocessing
 from .profile import Profile
 
 API_PREF: Final[str] = "/api"
@@ -116,7 +118,7 @@ def get_existing_dataset(ds_uuid: UUID) -> Optional[Dataset]:
     "/{ds_uuid}",
     responses={422: {"description": "Validation failed"}},
 )
-def put_dataset(ds_uuid: UUID) -> bool:
+async def put_dataset(ds_uuid: UUID):
     """
     Try to submit dataset. If it validates fine, trigger post-processing.
 
@@ -125,9 +127,18 @@ def put_dataset(ds_uuid: UUID) -> bool:
 
     path = Dataset.get_dataset(ds_uuid).complete()
     if path is None:
-        return False
-    # TODO: launch postprocessing
-    return True
+        return Response(
+            "Cannot complete dataset, invalid metadata or missing checksums!",
+            status_code=422,
+        )
+
+    compl_hook = conf().metador.completion_hook
+    if compl_hook is not None:
+        await pass_to_postprocessing(compl_hook, path)
+
+    # from the user's point of view, we are done
+    # the user does not care about possible problems in postprocessing
+    return Response("OK", status_code=200)
 
 
 @ds_routes.delete("/{ds_uuid}")

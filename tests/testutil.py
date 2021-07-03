@@ -1,8 +1,6 @@
 import asyncio
 import socket
-from queue import Empty, Queue
-from threading import Thread
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, TypeVar
 
 import uvicorn
 
@@ -63,90 +61,100 @@ class UvicornTestServer(uvicorn.Server):
         await self._serve_task
 
 
-# Live stdout streaming subprocess, based on
-# https://www.semicolonworld.com/question/42796/non-blocking-read-on-a-subprocess-pipe-in-python
-#
-# TODO: Maybe rewrite this to asyncio to have use just one concurrency mechanism.
-# But replacing it naively with create_task instead of thread leads to problems :/
+T = TypeVar("T")
 
 
-class NonblockingStream:
-    """Helper to read output from running processes."""
+async def with_retries(
+    f: Callable[[], Optional[T]],
+    num_retry: Optional[int] = 3,
+    sleep_before_retry: float = 0.1,
+) -> Optional[T]:
+    """
+    Try getting value from f, with possibility to retry a number of times.
+    If num_retry is None, will retry until success, with sleep in between.
+    """
 
-    q: Queue
+    ret: Optional[T] = None
+    while num_retry is None or num_retry > 0:
+        ret = f()
+        if ret is not None:
+            return ret
+        else:
+            await asyncio.sleep(sleep_before_retry)
+            if num_retry is not None:
+                num_retry -= 1
+    return ret
+
+
+async def wait_until(pred: Callable[[], bool], *args) -> bool:
+    """Repeatedly check a predicate until it is satisfied or number of retries exceeded."""
+
+    ret = await with_retries(lambda: True if pred() else None, *args)
+    return ret if ret else False
+
+
+async def get_with_retries(q: asyncio.Queue, *args) -> Optional[Any]:
+    """Repeatedly try reading from a Queue with retries and sleep in between."""
+
+    def try_to_get() -> Optional[Any]:
+        try:
+            return q.get_nowait()
+        except asyncio.QueueEmpty:
+            return None
+
+    return await with_retries(try_to_get, *args)
+
+
+class AsyncLiveStream:
+    """Helper to read output from running asyncio subprocesses."""
+
+    q: asyncio.Queue
     """Queue to store lines from process."""
 
-    def __init__(self, stream):
-        self.q = Queue()
+    t: asyncio.Task
+    """Running task shoveling lines from process into queue."""
+
+    def __init__(self, stream: asyncio.StreamReader):
+        self.q = asyncio.Queue()
+        self.t = asyncio.create_task(self._enqueue_output())
         self.stream = stream
-        t = Thread(target=self._enqueue_output)
-        t.daemon = True
-        t.start()
 
-    def _enqueue_output(self):
-        """Helper. Read lines and put into queue, until stream ends."""
-        for line in iter(self.stream.readline, ""):
-            self.q.put(line)
-        self.stream.close()
+    async def _enqueue_output(self):
+        """Helper. Read lines and put into queue."""
 
-    def readlines_nonblock(self) -> List[str]:
+        while True:
+            line = await self.stream.readline()
+            await self.q.put(line.decode("utf-8"))
+
+    async def readlines_nonblock(self) -> List[str]:
         """Return lines currently in the queue until it is empty."""
 
-        lines = []
+        lines: List[str] = []
         while not self.q.empty():
             try:
-                lines.append(self.q.get_nowait())
-            except Empty:
+                line = await self.q.get()
+                lines.append(line)
+                self.q.task_done()
+            except asyncio.QueueEmpty:
                 break
         return lines
 
-    def readlines_until(self, f, timeout) -> List[str]:
+    async def readlines_until(
+        self, predicate: Callable[[str], bool], timeout: int
+    ) -> List[str]:
         """
         Read lines in the queue until a read is too long (timeout)
         or the predicate is satisfied.
         """
 
-        lines = []
+        lines: List[str] = []
         while not self.q.empty():
             try:
-                lines.append(self.q.get(timeout=timeout))
-            except Empty:
+                line = await asyncio.wait_for(self.q.get(), timeout)
+                lines.append(line)
+                self.q.task_done()
+            except asyncio.QueueEmpty:
                 break
-            if f(lines[-1]):  # predicate satisfied
+            if predicate(lines[-1]):  # predicate satisfied
                 break
         return lines
-
-
-async def wait_until(
-    f: Callable[[], bool], num_retry: Optional[int] = 3, sleep_before_retry: float = 0.1
-) -> bool:
-    """Repeatedly check a predicate until it is satisfied or number of retries exceeded."""
-
-    while num_retry is None or num_retry > 0:
-        if f():
-            return True
-        else:
-            await asyncio.sleep(sleep_before_retry)
-            if num_retry is not None:
-                num_retry -= 1
-    return False
-
-
-async def get_with_retries(
-    q: Queue, num_retry: Optional[int] = 3, sleep_before_retry: float = 0.1
-) -> Optional[Any]:
-    """
-    Try reading from a Queue, with possibility to retry a number of times.
-    If num_retry is None, will retry until success, with sleep in between.
-    """
-
-    ret = None
-    while num_retry is None or num_retry > 0:
-        try:
-            ret = q.get_nowait()
-            return ret
-        except Empty:
-            await asyncio.sleep(sleep_before_retry)
-            if num_retry is not None:
-                num_retry -= 1
-    return ret

@@ -2,9 +2,9 @@
 Shared fixtures and helpers for a test environment.
 """
 
+import asyncio.subprocess
 import os
 import secrets
-import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -22,7 +22,7 @@ from metador.orcid.mock import MOCK_TOKEN
 from metador.profile import Profile
 from metador.upload import TUSD_HOOK_ROUTE
 
-from .testutil import NonblockingStream, get_free_tcp_port
+from .testutil import AsyncLiveStream, get_free_tcp_port
 
 
 class UtilFuncs:
@@ -159,16 +159,21 @@ def auth_cookie(test_config, sync_client):
     return cookies
 
 
-@pytest.fixture(scope="session")
-def tus_server(test_config, tmp_path_factory):
+@pytest.fixture
+async def tus_server(test_config, tmp_path_factory):
     """Launch a tusd instance in the background for running tests."""
 
-    tusd_proc = subprocess.Popen(
-        ["tusd", "-hooks-http", test_config.metador.site + TUSD_HOOK_ROUTE],
+    cmd = ["tusd", "-hooks-http", test_config.metador.site + TUSD_HOOK_ROUTE]
+    tusd_proc = await asyncio.subprocess.create_subprocess_exec(
+        *cmd,
         cwd=tmp_path_factory.mktemp("tusd_test_dir"),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        encoding="utf-8",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
     )
-    yield NonblockingStream(tusd_proc.stdout)
+    assert tusd_proc.stdout is not None
+    outreader = AsyncLiveStream(tusd_proc.stdout)
+    yield outreader
+
+    outreader.t.cancel()  # Cancel stream reader task
     tusd_proc.terminate()  # Shut it down at the end of the pytest session
+    await tusd_proc.wait()  # Wait for termination to complete

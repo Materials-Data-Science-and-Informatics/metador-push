@@ -64,7 +64,7 @@ async def test_upload_tus(
     assert ds.id in Dataset.get_datasets()
     assert ds == Dataset.get_dataset(ds.id)
 
-    lines = tus_server.readlines_nonblock()  # we don't care about previous stuff
+    lines = await tus_server.readlines_nonblock()  # we don't care about previous stuff
 
     # upload a file into it
     with open(file, "rb") as f:
@@ -72,7 +72,7 @@ async def test_upload_tus(
         location = await aiotus.upload(tusd_url, f, headers=hdrs)
         assert location is not None
 
-    lines = tus_server.readlines_until(lambda x: x.find("post-finish") >= 0, 1)
+    lines = await tus_server.readlines_until(lambda x: x.find("post-finish") >= 0, 1)
     assert lines[-1].find("post-finish") >= 0  # sanity-check: last line has the event
 
     # make sure the hook was completed (file in dataset, checksum is computed)

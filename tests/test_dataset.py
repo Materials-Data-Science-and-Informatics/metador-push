@@ -1,7 +1,7 @@
+import asyncio
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from queue import Queue
 
 import pytest
 from fastapi import FastAPI
@@ -409,10 +409,10 @@ def test_example_dataset(test_profiles, dummy_file):
 async def mock_http_postproc(test_config):
     """Mock postprocessing http hook endpoint that just collects events."""
 
-    q: Queue = Queue()
+    q: asyncio.Queue = asyncio.Queue()
 
     async def notify(notif: DatasetNotification):
-        q.put(notif)
+        await q.put(notif)
 
     app = FastAPI()
     app.post("/notify")(notify)
@@ -456,6 +456,6 @@ async def test_completion_hooks(test_profiles, mock_http_postproc):
     assert not success
 
     await pass_to_postprocessing(pp_endpoint, path)
-    ret = mock_http_postproc[1].get(timeout=1)
+    ret = await asyncio.wait_for(mock_http_postproc[1].get(), timeout=1)
     assert ret.event == "new_dataset"
     assert Path(ret.location) == path
