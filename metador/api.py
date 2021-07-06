@@ -1,7 +1,8 @@
-from typing import Any, Dict, Final, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from typing_extensions import Final
 
 from .config import conf
 from .dataset import Dataset

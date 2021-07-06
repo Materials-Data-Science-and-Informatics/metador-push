@@ -1,20 +1,12 @@
-# List of stages (jobs on the same stage run in parallel). Unused stages are ignored.
-# See https://docs.gitlab.com/ee/ci/yaml/#stages
 stages:
   - build
   - test
   - deploy
 
-# Set some environment variables based on Gitlab-specific variables
-# See https://docs.gitlab.com/ee/ci/variables/
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.cache/pre-commit"
 
-# Global cache settings for test jobs (each job by default uses own copy of these settings)
-# If key files do not change, restore the listed paths from cache (if cached).
-# At the end, store those directories in cache.
-# See https://docs.gitlab.com/ee/ci/caching/
 cache: &global-cache
   key:
     files:
@@ -27,31 +19,26 @@ cache: &global-cache
     - .poetry
   policy: pull-push
 
-# Setup environment with all required tools.
-# Defined as hidden job (starting with dot) + YAML anchor (for referencing)
-# See https://docs.gitlab.com/ee/ci/yaml/#anchors
 .prepare-env-template: &prepare-env
   before_script:
+    # install tusd
     - wget https://github.com/tus/tusd/releases/download/v1.6.0/tusd_linux_amd64.tar.gz
     - tar xf tusd_linux_amd64.tar.gz
     - mv tusd_linux_amd64/tusd /usr/bin
+    # install Python poetry
     - curl https://bootstrap.pypa.io/get-pip.py | python3
     - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3
     - source $HOME/.poetry/env
     - poetry --version
+    # install project deps
     - poetry config virtualenvs.in-project true
     - poetry install -vv
 
 # Generate documentation and expose as Gitlab job artifact, so that it can be downloaded.
-# (If Gitlab pages is enabled on the instance, better serve the documentation there!)
-# See https://docs.gitlab.com/ee/ci/pipelines/job_artifacts.html#access-the-latest-job-artifacts-by-url
 make-docs:
   image: python:latest
   stage: deploy
   <<: *prepare-env
-  cache:
-    <<: *global-cache
-    policy: pull
   script:
     - poetry run pdoc -o docs metador
     - pip install anybadge
@@ -62,7 +49,6 @@ make-docs:
       - docs-badge.svg
 
 # Run pre-commit, just to make sure the developers did not mess up.
-# It uses its own cache for its isolated environments (location: PRE_COMMIT_HOME).
 run-pre-commit:
   image: python:latest
   stage: test
@@ -94,7 +80,7 @@ run-pre-commit:
   stage: test
   <<: *prepare-env
   script:
-    - poetry run pytest --cov tests/
+    - poetry run pytest --cov=metador tests/
 
 # Base test job, defines cache that is shared among the others.
 run-pytest-3.7:

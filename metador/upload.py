@@ -3,11 +3,12 @@ Handle the upload per HTTP / tus
 """
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Final, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Header, Response
 from pydantic import BaseModel
+from typing_extensions import Final, Literal
 
 from .dataset import Dataset
 from .log import log

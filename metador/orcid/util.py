@@ -1,6 +1,8 @@
 """Must to put this stuff here to avoid circular imports."""
 
-from typing import Final, Optional
+from typing import Optional
+
+from typing_extensions import Final
 
 MOCK_ORCID_PREF: Final[str] = "/fakeid"
 """Endpoint for fake ORCID auth server (if used)."""

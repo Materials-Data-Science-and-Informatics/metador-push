@@ -1,11 +1,14 @@
+"""Log configuration for the application."""
+
 import logging
 import re
 import sys
 from logging import Formatter, Logger
 from pathlib import Path
-from typing import Final, Optional
+from typing import Optional
 
 from colorlog import ColoredFormatter
+from typing_extensions import Final
 from uvicorn.config import LOGGING_CONFIG
 
 # see https://docs.python.org/3/library/logging.html#logrecord-attributes

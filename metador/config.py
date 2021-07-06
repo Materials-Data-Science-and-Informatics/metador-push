@@ -6,10 +6,11 @@ import os
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import Final, Optional
+from typing import Optional
 
 import toml
 from pydantic import BaseModel, Extra, ValidationError
+from typing_extensions import Final
 
 from . import __basepath__
 from .log import init_logger, log

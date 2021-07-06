@@ -15,9 +15,10 @@ from __future__ import annotations
 import re
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import Any, Dict, Final, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from pydantic import BaseModel
+from typing_extensions import Final
 
 from . import pkg_res
 from .log import log

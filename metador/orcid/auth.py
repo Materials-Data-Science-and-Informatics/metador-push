@@ -17,7 +17,7 @@ import re
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Annotated, Dict, Final, List, Literal, NewType, Optional
+from typing import Dict, List, NewType, Optional
 
 import httpx
 from pydantic import (
@@ -28,6 +28,7 @@ from pydantic import (
     FilePath,
     validate_arguments,
 )
+from typing_extensions import Annotated, Final, Literal
 
 from ..log import log
 from ..util import critical_exit

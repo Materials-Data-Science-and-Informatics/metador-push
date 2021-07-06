@@ -1,9 +1,9 @@
 import os
 import sys
 from pathlib import Path
-from typing import Final
 
 import toml
+from typing_extensions import Final
 
 __pkg_path__: Final[Path] = Path(
     os.path.abspath(os.path.dirname(sys.modules[__name__].__file__))

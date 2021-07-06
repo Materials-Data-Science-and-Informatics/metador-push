@@ -2,10 +2,11 @@
 A mock ORCID server implementation. It just plays along with signin process.
 """
 
-from typing import Final, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Form, Response, status
 from fastapi.responses import PlainTextResponse, RedirectResponse
+from typing_extensions import Final
 
 from ..log import log
 from .auth import OrcidBearerToken

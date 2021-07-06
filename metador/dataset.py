@@ -11,10 +11,11 @@ import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 from uuid import UUID, uuid1
 
 from pydantic import BaseModel
+from typing_extensions import Final
 
 from . import util
 from .config import ChecksumTool, conf
@@ -57,6 +58,10 @@ class DatasetInfo(BaseModel):
 
     profile: Profile
     """Copy of the profile embedded into dataset."""
+
+
+_datasets: Dict[UUID, Dataset] = {}
+"""In-memory cache of existing loaded datasets"""
 
 
 class Dataset(BaseModel):
@@ -476,7 +481,3 @@ class Dataset(BaseModel):
 
         files = list(cls._staging_dir().glob("*" + DATASET_SUF))
         return list(map(lambda x: UUID(re.sub(DATASET_SUF + "$", "", x.name)), files))
-
-
-_datasets: Dict[UUID, Dataset] = {}
-"""In-memory cache of existing loaded datasets"""
