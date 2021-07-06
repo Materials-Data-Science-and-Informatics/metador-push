@@ -3,9 +3,10 @@ name = "metador"
 version = "0.1.0"
 description = "Metador is a metadata-aware mailbox for research data."
 authors = ["Anton Pirogov <a.pirogov@fz-juelich.de>"]
+license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 typer = "^0.3.2"
 fastapi = {extras = ["all"], version = "^0.65.1"}
 python-multipart = "^0.0.5"
@@ -21,6 +22,7 @@ pytest = "^6.2.4"
 pytest-cov = "^2.12.1"
 pytest-asyncio = "^0.15.1"
 aiotus = "^0.1.8"
+importlib-metadata = "^4.6.1"
 
 [tool.poetry.scripts]
 metador-cli = 'metador.cli:app'
@@ -30,7 +32,25 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
+# addopts = "--cov-report html"
+addopts = "--cov-report=term-missing:skip-covered"
 filterwarnings = [
   "ignore::DeprecationWarning:aiofiles.*",
   "ignore::DeprecationWarning:tenacity.*",
 ]
+
+[tool.coverage.run]
+source = ['metador']
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = true
+envlist = py37, py38, py39
+
+[testenv]
+whitelist_externals = poetry
+commands =
+    poetry install -v
+    poetry run pytest tests/
+"""

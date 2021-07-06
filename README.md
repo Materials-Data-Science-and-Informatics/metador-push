@@ -220,7 +220,7 @@ Before commiting, run `pytest` and make sure you did not break anything.
 
 To generate documentation, run `pdoc -o docs metador`.
 
-To check coverage, use `pytest --cov-report term-missing:skip-covered --cov=metador tests/`
+To check coverage, use `pytest --cov`
 
 Also verify that the pre-commit hooks are run successfully.
 
