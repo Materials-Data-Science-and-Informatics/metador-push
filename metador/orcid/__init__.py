@@ -1,3 +1,5 @@
+"""Entry points for using ORCID authentication."""
+
 from typing import Optional
 
 from fastapi import Cookie, HTTPException, status
@@ -10,14 +12,12 @@ _auth = None
 
 def init_auth(*args, **kwargs) -> None:
     """Initialize Auth singleton."""
-
     global _auth
     _auth = Auth(*args, **kwargs)
 
 
 def get_auth() -> Auth:
     """Return singleton Auth instance."""
-
     global _auth
     if _auth is None:
         raise RuntimeError("Auth singleton not initialized!")
@@ -31,11 +31,10 @@ def get_auth() -> Auth:
 
 def get_session(session_id: Optional[SessionID] = Cookie(None)) -> Optional[Session]:
     """
-    Checks out session (if available) and returns it, if cookie is set.
+    Check session (if available) and return it, if cookie is set.
 
     Returns 403 automatically if no valid session + authentication is enabled.
     """
-
     auth = get_auth()
     session = auth.lookup_session(session_id)
     if auth.orcid_conf.enabled and session is None:

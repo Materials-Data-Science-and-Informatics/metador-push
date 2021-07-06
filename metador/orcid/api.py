@@ -17,7 +17,6 @@ routes: APIRouter = APIRouter(prefix=AUTH_PREF, tags=["orcid-auth-client"])
 
 def set_paranoid_cookie(res: Response, key: str, value: str, **kwargs) -> None:
     """Set a very restrictive cookie, preventing many kinds of attacks."""
-
     res.set_cookie(
         key=key, value=value, httponly=True, secure=True, samesite="strict", **kwargs
     )
@@ -25,7 +24,6 @@ def set_paranoid_cookie(res: Response, key: str, value: str, **kwargs) -> None:
 
 def kill_cookie(res: Response, key: str) -> None:
     """Remove cookie by overwriting it and make it expire in a moment."""
-
     set_paranoid_cookie(res, key, "", max_age=2)
 
 
@@ -43,7 +41,6 @@ class AuthStatus(BaseModel):
 @routes.get("/status", response_model=AuthStatus)
 async def get_auth_info(session_id: Optional[SessionID] = Cookie(None)):
     """Return current authentication info to the client."""
-
     auth = get_auth()
     return {
         "orcid_enabled": auth.orcid_conf.enabled,
@@ -62,7 +59,6 @@ async def sign_out(session_id: Optional[SessionID] = Cookie(None)):
 
     Then, redirect to homepage.
     """
-
     auth = get_auth()
     if session_id is not None and session_id in auth.sessions:
         log.debug(f"Removing session {session_id} by user request.")
@@ -80,7 +76,7 @@ async def sign_out(session_id: Optional[SessionID] = Cookie(None)):
 )
 async def orcid_auth(code: Optional[str] = None, state: str = "/"):
     """
-    Main endpoint for ORCID authentication.
+    Handle ORCID three-legged authentication.
 
     If no code is given, redirect to configured ORCID server.
 
@@ -93,7 +89,6 @@ async def orcid_auth(code: Optional[str] = None, state: str = "/"):
 
     If no state given, redirection is back to homepage, otherwise to given route.
     """
-
     auth = get_auth()
 
     # no code -> redirect to orcid, which redirects back with code
@@ -125,7 +120,6 @@ async def orcid_auth(code: Optional[str] = None, state: str = "/"):
 @routes.get("/{anything_else:path}")
 async def orcid_catch_all():
     """Catch-all redirect."""
-
     return Response(
         "Endpoint not found", status_code=status.HTTP_405_METHOD_NOT_ALLOWED
     )

@@ -1,6 +1,4 @@
-"""
-Shared fixtures and helpers for a test environment.
-"""
+"""Shared fixtures and helpers for a test environment."""
 
 import asyncio.subprocess
 import os
@@ -30,12 +28,12 @@ class UtilFuncs:
 
     @staticmethod
     def random_hex(length: int) -> str:
+        """Return hex string of given length."""
         return secrets.token_hex(int(length / 2))
 
     @staticmethod
     def reset_conf() -> None:
         """Unload config (useful for testing)."""
-
         global _conf
 
         if config.CONFFILE_ENVVAR in os.environ:
@@ -56,7 +54,6 @@ def testutils():
 @pytest.fixture(scope="session")
 def test_config(testutils, tmp_path_factory):
     """Initialize config for test environment."""
-
     config.init_conf()
 
     tmpdir = tmp_path_factory.mktemp("metador_test_datadir")
@@ -93,8 +90,7 @@ DUMMYFILE_SIZE = 1024
 
 @pytest.fixture(scope="session")
 def dummy_file(testutils, tmp_path_factory):
-    """A dummy file factory. Creates dummy files and cleans them up in the end."""
-
+    """Create dummy files and clean them up in the end."""
     dummy_base: Path = tmp_path_factory.mktemp("dummy_files")
     files = []
 
@@ -125,7 +121,6 @@ def dummy_file(testutils, tmp_path_factory):
 @pytest.fixture(scope="session")
 def test_profiles(test_config):
     """Initialize config and profiles for test environment."""
-
     Profile.load_profiles(test_config.metador.profile_dir)
 
 
@@ -146,7 +141,6 @@ def sync_client():
 @pytest.fixture
 def auth_cookie(test_config, sync_client):
     """Initialize auth if necessary, fake-auth as a user, return cookie."""
-
     try:
         get_auth()
     except RuntimeError:
@@ -162,7 +156,6 @@ def auth_cookie(test_config, sync_client):
 @pytest.fixture
 async def tus_server(test_config, tmp_path_factory):
     """Launch a tusd instance in the background for running tests."""
-
     cmd = ["tusd", "-hooks-http", test_config.metador.site + TUSD_HOOK_ROUTE]
     tusd_proc = await asyncio.subprocess.create_subprocess_exec(
         *cmd,

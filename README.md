@@ -57,8 +57,8 @@ If you do not care about collecting metadata, feel free to pick a different solu
 
 ## Installation
 
-If you do not have a recent version of Python installed, you can use
-[`pyenv`](https://github.com/pyenv/pyenv) to install e.g. Python 3.9.0 and enable it.
+If you do not have a recent version of Python (>=3.7) installed, you can use
+[`pyenv`](https://github.com/pyenv/pyenv) to install e.g. Python 3.9 and enable it.
 
 Download and install [`tusd`](https://github.com/tus/tusd),
 the server component for the Tus protocol that will handle the low-level details

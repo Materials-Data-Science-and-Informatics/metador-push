@@ -1,6 +1,4 @@
-"""
-Utility CLI for the application.
-"""
+"""Utility CLI for the application."""
 
 from pathlib import Path
 from typing import Optional
@@ -20,34 +18,29 @@ app = typer.Typer()
 @app.command()
 def version() -> None:
     """Print current version."""
-
     print(__version__)
 
 
 @app.command()
 def default_conf() -> None:
-    """Output a default metador.toml file.
-    It contains  all available configuration options."""
+    """
+    Output a default metador.toml file.
 
+    It contains all available configuration options.
+    """
     print(open(c.DEF_CONFIG_FILE, "r").read(), end="")
 
 
 @app.command()
 def tusd_hook_url(config: Optional[Path] = None) -> None:
-    """
-    Output the route to construct a hook path for tusd.
-    """
-
+    """Output the route to construct a hook path for tusd."""
     c.init_conf(config)  # correct result depends on configured metador.site
     print(c.conf().metador.site + TUSD_HOOK_ROUTE)
 
 
 @app.command()
 def orcid_redir_url(config: Optional[Path] = None) -> None:
-    """
-    URL that should be registered as the ORCID API redirect.
-    """
-
+    """URL that should be registered as the ORCID API redirect."""
     c.init_conf(config)  # correct result depends on configured metador.site
     print(orcid_redir(c.conf().metador.site))
 
@@ -55,7 +48,6 @@ def orcid_redir_url(config: Optional[Path] = None) -> None:
 @app.command()
 def run(config: Optional[Path] = None) -> None:  # pragma: no cover
     """Serve application using uvicorn."""
-
     c.init_conf(config)
 
     # add date and time to uvicorn log

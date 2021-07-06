@@ -1,3 +1,5 @@
+"""Tests for the ORCID authentication."""
+
 from datetime import datetime, timedelta
 from urllib import parse
 
@@ -25,7 +27,7 @@ from .testutil import UvicornTestServer
 
 @pytest.fixture
 async def mock_orcid_server(test_config):
-    """Start server as test fixture and tear down after test"""
+    """Start server as test fixture and tear down after test."""
     app = FastAPI()
     app.include_router(metador.orcid.mock.routes)
     server = UvicornTestServer(
@@ -42,14 +44,12 @@ OTHER_ORCID = "0123-4567-8910-1338"  # this one is NOT on the allowlist
 
 
 def query_params(url: URL):
-    """Helper, returns query params from URL as dict."""
-
+    """Return query params from URL as dict."""
     return dict(parse.parse_qsl(parse.urlsplit(str(url)).query))
 
 
 def test_orcid_server_pref(test_config):
     """Test the helper function returning the ORCID server to use."""
-
     site = test_config.metador.site
     assert orcid_server_pref(True, site) == site + MOCK_ORCID_PREF
     assert orcid_server_pref(False, site) == site + MOCK_ORCID_PREF
@@ -60,7 +60,6 @@ def test_orcid_server_pref(test_config):
 @pytest.mark.asyncio
 async def test_mock_auth(test_config):
     """Test the mock routes imitating the ORCID servers."""
-
     pref = test_config.metador.site + MOCK_ORCID_PREF
     async with AsyncClient(app=app, base_url=pref) as ac:
 
@@ -103,7 +102,6 @@ async def test_mock_auth(test_config):
 @pytest.mark.asyncio
 async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
     """Test the ORCID flow (using the mock server)."""
-
     # no auth configured yet -> exception
     metador.orcid._auth = None
     with pytest.raises(RuntimeError):

@@ -1,6 +1,4 @@
-"""
-Handle the upload per HTTP / tus
-"""
+"""Handle the upload per HTTP / tus."""
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -15,6 +13,8 @@ from .log import log
 
 
 class TusdHTTPRequest(BaseModel):
+    """Request of client to tusd, passed over to us."""
+
     Method: str
     URI: str
     RemoteAddr: str
@@ -23,11 +23,15 @@ class TusdHTTPRequest(BaseModel):
 
 # NOTE: we don't allow S3 buckets for our purposes
 class TusdStorage(BaseModel):
+    """Location of the upload."""
+
     Type: Literal["filestore"]
     Path: Path
 
 
 class TusdUpload(BaseModel):
+    """Administrative information about the upload."""
+
     ID: str
     Size: int
     Offset: int
@@ -53,6 +57,7 @@ class TusdHookName(str, Enum):
 class TusdEvent(BaseModel):
     """
     Pydantic model to parse JSON passed by tusd to hook handler.
+
     Based on [tusd documentation](https://github.com/tus/tusd/blob/master/docs/hooks.md)
     """
 
@@ -77,8 +82,7 @@ async def tusd_hook(
     body: TusdEvent,
     hook_name: TusdHookName = Header(...),
 ):
-    """Hook to react on events signaled by tusd."""
-
+    """React to events signaled by tusd (this is registered in tusd as http hook)."""
     client_reqhdr = body.HTTPRequest.Header
 
     log.debug(hook_name)

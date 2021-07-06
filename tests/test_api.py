@@ -2,6 +2,7 @@
 
 
 def test_backend_sanity_check(auth_cookie, sync_client, test_config):
+    """Test the trivial routes and restricted access to backend."""
     # works without auth
     res = sync_client.get("/favicon.ico")
     assert res.status_code == 200

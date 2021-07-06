@@ -1,3 +1,5 @@
+"""Some useful helpers to access files shipped with package."""
+
 import os
 import sys
 from pathlib import Path
@@ -21,5 +23,4 @@ __version__: Final[str] = pyproject["tool"]["poetry"]["version"]
 
 def pkg_res(path: str) -> Path:
     """Return resource bundled with this package."""
-
     return __basepath__ / path

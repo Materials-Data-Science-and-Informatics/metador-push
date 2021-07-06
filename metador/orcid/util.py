@@ -1,4 +1,4 @@
-"""Must to put this stuff here to avoid circular imports."""
+"""Must put this stuff here, to avoid circular imports."""
 
 from typing import Optional
 
@@ -16,16 +16,16 @@ ORCID_ENDPOINT: Final[str] = "/orcid"
 
 def orcid_redir(pref) -> str:
     """
-    Returns a path that is supposed te be registered
-    as a valid redirect for use with the ORCID API client credentials.
-    """
+    Return a path that is supposed te be registered as a valid ORCID redirect.
 
+    For use with the ORCID API client credentials (register this redirect there).
+    """
     return pref + AUTH_PREF + ORCID_ENDPOINT
 
 
 def orcid_server_pref(sandbox: bool, site_pref: Optional[str] = None) -> str:
     """
-    Returns the oauth API entry point with or without sandbox, depending on config.
+    Return the oauth API entry point with or without sandbox, depending on config.
 
     When site_pref is set to a the base site prefix (it must be something starting with
     http(s)://...), it returns it with the appended minimal mock prefix.
@@ -33,7 +33,6 @@ def orcid_server_pref(sandbox: bool, site_pref: Optional[str] = None) -> str:
 
     This is basically a helper to hook up the Auth instance with different servers.
     """
-
     if site_pref:  # if given, we want to use our own fake-server for testing
         return site_pref + MOCK_ORCID_PREF
 

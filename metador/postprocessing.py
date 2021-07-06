@@ -1,4 +1,4 @@
-"""Functions for calling postprocessing after dataset completion"""
+"""Functions for calling postprocessing after dataset completion."""
 
 import subprocess
 from pathlib import Path
@@ -19,7 +19,6 @@ class DatasetNotification(BaseModel):
 
 async def notify_endpoint(endpoint: str, ds_location: Path) -> bool:
     """Notify an endpoint via POST request about new complete dataset at ds_location."""
-
     dat = DatasetNotification(location=str(ds_location))
     try:
         async with httpx.AsyncClient() as client:
@@ -32,7 +31,6 @@ async def notify_endpoint(endpoint: str, ds_location: Path) -> bool:
 
 def launch_script(command: str, ds_location: Path) -> bool:
     """Run a script with dataset location as extra argument and forget it."""
-
     try:
         subprocess.Popen(command.split() + [str(ds_location)], start_new_session=True)
     except FileNotFoundError as e:
@@ -43,7 +41,6 @@ def launch_script(command: str, ds_location: Path) -> bool:
 
 async def pass_to_postprocessing(target: str, ds_location: Path) -> bool:
     """If target is a HTTP(S) URL, issue a POST, else interpret as command and run it."""
-
     if parse.urlsplit(target).scheme.find("http") >= 0:
         log.debug(f"Notify postprocessing http hook {target}")
         ret = await notify_endpoint(target, ds_location)

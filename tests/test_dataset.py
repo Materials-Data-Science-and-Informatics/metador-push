@@ -1,3 +1,5 @@
+"""Tests for dataset class."""
+
 import asyncio
 import uuid
 from datetime import datetime, timedelta
@@ -19,7 +21,6 @@ from .testutil import UvicornTestServer, get_free_tcp_port, get_with_retries
 
 def test_dummy_file(dummy_file):
     """Check that dummy files work as expected."""
-
     filepath = dummy_file("my_dummy")
     content = ""
     with open(filepath, "r") as file:
@@ -31,7 +32,6 @@ def test_dummy_file(dummy_file):
 
 def test_load_datasets(test_config, tmp_path):
     """Invalid data dir should throw, missing subdirs should be created."""
-
     # try initializing from non-existing data_dir
     tmp = test_config.metador.data_dir
     test_config.metador.data_dir = Path(tmp_path / "missing_dir")
@@ -47,7 +47,6 @@ def test_load_datasets(test_config, tmp_path):
 
 def test_load(test_profiles):
     """Test loading a dataset with some surprises."""
-
     assert Dataset.load(uuid.uuid1()) is None
 
     # when we create a profile, the corresponding directory and file is created
@@ -73,7 +72,6 @@ def test_load(test_profiles):
 
 def test_create_load_get(test_config, dummy_file):
     """Test general access to dataset collection."""
-
     pr = Profile.get_profile("example")
 
     # check invalid -> keyerror
@@ -124,6 +122,7 @@ def test_create_load_get(test_config, dummy_file):
 
 
 def test_file_handling(test_profiles, dummy_file):
+    """Test adding and removing files to datasets."""
     pr = Profile.get_profile("anything")
 
     ds = Dataset.create(pr, SOME_ORCID)
@@ -219,7 +218,6 @@ def test_file_handling(test_profiles, dummy_file):
 
 def test_immediate_persist_metadata(test_profiles, dummy_file):
     """Changes to metadata are stored to file immediately."""
-
     file1 = dummy_file()
     pr = Profile.get_profile("anything")
     ds = Dataset.create(pr, SOME_ORCID)
@@ -237,63 +235,59 @@ def test_immediate_persist_metadata(test_profiles, dummy_file):
 
 def test_unsat_profile(test_profiles):
     """Test unsatisfiable profile with dataset."""
-
     unsat = Profile.get_profile("unsat")
     ds = Dataset.create(unsat, SOME_ORCID)
-    assert len(ds.validate()) != 0
+    assert len(ds.validate_dataset()) != 0
     ds.delete()
 
 
 def test_anything_profile(test_profiles, dummy_file):
     """Test trivial profile with dataset."""
-
     file1 = dummy_file()
     pr = Profile.get_profile("anything")
     # empty -> success
     ds = Dataset.create(pr, SOME_ORCID)
-    assert len(ds.validate()) == 0
+    assert len(ds.validate_dataset()) == 0
     # non-empty -> fails
     ds.import_file(file1)
-    assert len(ds.validate()) == 0
+    assert len(ds.validate_dataset()) == 0
     ds.delete()
 
 
 def test_empty_profile(test_profiles, dummy_file):
     """Test forced empty profile with dataset."""
-
     file1 = dummy_file()
     pr = Profile.get_profile("empty")
     # empty -> success
     ds = Dataset.create(pr, SOME_ORCID)
-    assert len(ds.validate()) == 0
+    assert len(ds.validate_dataset()) == 0
     # non-empty -> fails
     ds.import_file(file1)
-    assert len(ds.validate()) != 0
+    assert len(ds.validate_dataset()) != 0
     ds.delete()
 
 
 def test_example_dataset(test_profiles, dummy_file):
     """Test example profile with a dataset with some non-trivial constraints."""
-
     pr = Profile.get_profile("example")
     ds = Dataset.create(pr, SOME_ORCID)
 
     # check without root metadata
-    assert "" in ds.validate()
+    assert "" in ds.validate_dataset()
     # check with invalid metadata
     ds.set_metadata(None, True)
-    assert "" in ds.validate()
+    assert "" in ds.validate_dataset()
     ds.set_metadata(None, {"some": "key"})
-    assert "" in ds.validate()
+    assert "" in ds.validate_dataset()
     ds.set_metadata(None, {"validNumber": "value"})
-    assert "" in ds.validate()
+    assert "" in ds.validate_dataset()
     ds.set_metadata(None, {"validNumber": 100})
-    assert "" in ds.validate()
+    assert "" in ds.validate_dataset()
     ds.set_metadata(None, {"validNumber": -1})
-    assert "" in ds.validate()
+    assert "" in ds.validate_dataset()
     # check with valid metadata
     ds.set_metadata(None, {"validNumber": 0})
-    assert "" not in ds.validate()
+    assert "" not in ds.validate_dataset()
 
     # set metadata to invalid file
     assert not ds.set_metadata("missing file", True)
@@ -301,47 +295,47 @@ def test_example_dataset(test_profiles, dummy_file):
     # add unmatched file(name) (fallbackSchema=false must reject it)
     file1 = dummy_file("invalid.file")
     ds.import_file(file1)
-    assert file1.name in ds.validate()
+    assert file1.name in ds.validate_dataset()
     # remove it again
     ds.delete_file(file1.name)
-    assert len(ds.validate()) == 0
+    assert len(ds.validate_dataset()) == 0
 
     # add some pattern-matched files
 
     # mp4 -> true.schema.json -> true
     mp4file = dummy_file("video.mp4")
     ds.import_file(mp4file)
-    assert mp4file.name not in ds.validate()
+    assert mp4file.name not in ds.validate_dataset()
     ds.set_metadata(mp4file.name, False)
-    assert mp4file.name not in ds.validate()
+    assert mp4file.name not in ds.validate_dataset()
 
     # jpg -> false.schema.json (embedded) -> true
     jpgfile = dummy_file("image.jpg")
     ds.import_file(jpgfile)
-    assert jpgfile.name not in ds.validate()
+    assert jpgfile.name not in ds.validate_dataset()
     ds.set_metadata(jpgfile.name, False)
-    assert jpgfile.name not in ds.validate()
+    assert jpgfile.name not in ds.validate_dataset()
     ds.set_metadata(jpgfile.name, None)  # no metadata for this file!
 
     # txt -> generic.schema.json (from file)
     txtfile = dummy_file("document.txt")
     ds.import_file(txtfile)
-    assert txtfile.name in ds.validate()
+    assert txtfile.name in ds.validate_dataset()
     ds.set_metadata(txtfile.name, {"authorName": "John Doe"})
-    assert txtfile.name in ds.validate()
+    assert txtfile.name in ds.validate_dataset()
     ds.set_metadata(
         txtfile.name, {"authorName": "John Doe", "authorEmail": "invalidMail"}
     )
-    assert txtfile.name in ds.validate()
+    assert txtfile.name in ds.validate_dataset()
     ds.set_metadata(txtfile.name, {"authorName": 123, "authorEmail": "a@b.de"})
-    assert txtfile.name in ds.validate()
+    assert txtfile.name in ds.validate_dataset()
     ds.set_metadata(txtfile.name, {"authorName": "John Doe", "authorEmail": "a@b.de"})
-    assert txtfile.name not in ds.validate()
+    assert txtfile.name not in ds.validate_dataset()
     ds.set_metadata(
         txtfile.name,
         {"authorName": "John Doe", "authorEmail": "a@b.de", "authorOrcid": "orcid"},
     )
-    assert txtfile.name in ds.validate()
+    assert txtfile.name in ds.validate_dataset()
     assert ds.complete() is None  # cannot complete with validation errors
 
     valid_txt_meta = {
@@ -350,7 +344,7 @@ def test_example_dataset(test_profiles, dummy_file):
         "authorOrcid": "0000-0000-0000-0000",
     }
     ds.set_metadata(txtfile.name, valid_txt_meta)
-    assert txtfile.name not in ds.validate()
+    assert txtfile.name not in ds.validate_dataset()
 
     # missing checksums
     assert ds.complete() is None
@@ -358,7 +352,7 @@ def test_example_dataset(test_profiles, dummy_file):
         ds.compute_checksum(fname)
 
     # now completion should work
-    assert len(ds.validate()) == 0
+    assert len(ds.validate_dataset()) == 0
     path = ds.complete()
     assert path is not None
     assert not ds._persist_filename(ds.id).is_file()
@@ -408,7 +402,6 @@ def test_example_dataset(test_profiles, dummy_file):
 @pytest.fixture
 async def mock_http_postproc(test_config):
     """Mock postprocessing http hook endpoint that just collects events."""
-
     q: asyncio.Queue = asyncio.Queue()
 
     async def notify(notif: DatasetNotification):
@@ -427,6 +420,7 @@ async def mock_http_postproc(test_config):
 
 @pytest.mark.asyncio
 async def test_completion_hooks(test_profiles, mock_http_postproc):
+    """Test the triggering of the supported types of postprocessing."""
     pp_endpoint = mock_http_postproc[0]
 
     pr = Profile.get_profile("anything")

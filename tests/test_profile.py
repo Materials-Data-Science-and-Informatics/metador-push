@@ -1,3 +1,5 @@
+"""Tests for Profile class."""
+
 from pathlib import Path
 
 import pytest
@@ -8,6 +10,7 @@ from metador.util import load_json
 
 
 def test_load_get_profiles(test_config, tmp_path):
+    """Try loading profiles from (non-)existing directories."""
     # non-existing dir
     with pytest.raises(SystemExit):
         Profile.load_profiles(Path("non-existing dir"))
@@ -27,6 +30,7 @@ def test_load_get_profiles(test_config, tmp_path):
 
 
 def test_get_schema_for(test_config):
+    """Check that resolving embedded/external schemas works correctly."""
     pr = Profile.get_profile("example")
 
     # should be false.schema.json, which is embedded as true (ignoring the external one)
@@ -44,6 +48,7 @@ def test_get_schema_for(test_config):
 
 
 def test_get_schema_json(test_config):
+    """Try loading invalid or missing schemas."""
     # not existing file
     with pytest.raises(SystemExit):
         Profile.get_schema_json("not_existing_file")
@@ -56,6 +61,7 @@ def test_get_schema_json(test_config):
 
 
 def test_get_profile_json(test_config):
+    """Try loading invalid or missing profiles."""
     with pytest.raises(SystemExit):
         Profile.get_profile_json("non-existing profile")
 
@@ -72,6 +78,7 @@ def test_get_profile_json(test_config):
 
 
 def test_profile_load(test_config):
+    """Check that the profiles are assembled correctly."""
     pr = Profile.get_profile("example")
 
     # these are always there
@@ -105,7 +112,7 @@ def test_profile_load(test_config):
 
 
 def test_schema_save_load(test_config, tmp_path):
-    # test serializing and loading back (might be of interest for post-proc)
+    """Test serializing and loading back (might be of interest for post-proc)."""
     pr = Profile.get_profile("example")
     pr.save(tmp_path / "example_dump.profile.json")
     pr2 = Profile.load(tmp_path / "example_dump.profile.json")

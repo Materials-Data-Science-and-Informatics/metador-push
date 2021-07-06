@@ -82,8 +82,9 @@ class OrcidConf(BaseModel):
     """Configuration of ORCID authentication."""
 
     class Config:
+        """Complain about unknown fields (likely a mistake!)."""
+
         extra = Extra.forbid
-        """Complain about unknown fields (likely a mistake!)"""
 
     enabled: bool = False
     """Is authentication enabled?"""
@@ -117,7 +118,6 @@ def load_allowlist(filename: Path) -> List[OrcidStr]:
     Assumes that the provided path to the allowlist file exists
     (should be checked before).
     """
-
     lines: List[str] = []
     with open(filename, "r") as file:
         lines = file.readlines()
@@ -132,6 +132,7 @@ def load_allowlist(filename: Path) -> List[OrcidStr]:
 
 
 class Auth:
+    """Class handling the ORCID authentication and managing sessions."""
 
     PERSIST_FILE: Final[str] = "active_sessions.json"
 
@@ -146,7 +147,6 @@ class Auth:
         the Orcid specific conf (which servers to use, expiry times, etc),
         and the directory where the session is presisted on server restarts.
         """
-
         self.sessions: Dict[SessionID, Session] = {}
         """Global in-memory session storage. Only access through lookup_session!"""
 
@@ -175,10 +175,7 @@ class Auth:
     # functions handling actual ORCID business
 
     def orcid_server_pref(self) -> str:
-        """
-        Convenience wrapper. Calls the actual prefix function with params.
-        """
-
+        """Call the actual prefix function with params (convenience wrapper)."""
         sandbox = self.orcid_conf.sandbox
         use_fake = self.orcid_conf.use_fake
         return orcid_server_pref(sandbox, self.site_prefix if use_fake else None)
@@ -186,12 +183,12 @@ class Auth:
     def userauth_url(self, state: Optional[str] = None) -> str:
         """
         Construct an URL for login via ORCID for the user to click on.
+
         For this to work, you must first register your Metadir instance in
         the developer tools in the ORCID account.
         Input: -
         Output: URL for frontend use.
         """
-
         auth_url = self.orcid_server_pref() + "/authorize"
         auth_url += "?response_type=code&scope=/authenticate"
 
@@ -203,10 +200,11 @@ class Auth:
 
     async def redeem_code(self, code: str) -> OrcidBearerToken:
         """
-        Input: the 6-digit code from ORCID
+        Swap code received from ORCID server against a authenticated ORCID token.
+
+        Input: the 6-digit code from ORCID.
         Output: Bearer token from ORCID certifying that the user logged into ORCID.
         """
-
         hdrs = {
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
@@ -229,7 +227,6 @@ class Auth:
 
     async def revoke_token(self, tok: OrcidBearerToken) -> bool:
         """Invalidate an access token. Return success value."""
-
         hdrs = {"Accept": "application/json"}
         dat = {
             "client_id": self.orcid_conf.client_id,
@@ -248,11 +245,10 @@ class Auth:
 
     def new_session(self, tok: OrcidBearerToken) -> SessionID:
         """
-        From ORCID token, generate a new session with timestamp.
+        Generate a new session with timestamp from given ORCID token.
 
         Store it, return the SessionID.
         """
-
         session_id = SessionID(secrets.token_urlsafe(32))  # unique with huge likelihood
 
         now = datetime.today()
@@ -267,7 +263,7 @@ class Auth:
     ####
 
     def persist_file_path(self) -> Path:
-        """Returns file for session serialization (if persist_dir is set)."""
+        """Return file path for session serialization (if persist_dir is set)."""
         assert self.persist_dir is not None
         return self.persist_dir / self.PERSIST_FILE
 
@@ -292,7 +288,6 @@ class Auth:
 
         This should be called on shutdown of the app.
         """
-
         fname = self.persist_file_path()
         log.info(f"Serializing sessions to {fname}")
         serialized = Sessions(__root__=self.sessions).json()
@@ -302,11 +297,10 @@ class Auth:
 
     def lookup_session(self, session_id: Optional[SessionID]) -> Optional[Session]:
         """
-        Given a session id, return session if it is still valid.
+        Return session, if it is still valid.
 
         Otherwise, the session is removed from list (expired, not allowed, etc.).
         """
-
         if session_id is None or session_id == "":  # no session id passed
             return None
 

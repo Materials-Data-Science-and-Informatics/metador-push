@@ -1,3 +1,5 @@
+"""Tests for the CLI utility."""
+
 from typer.testing import CliRunner
 
 import metador
@@ -9,7 +11,6 @@ runner = CliRunner()
 
 def test_helpers(testutils, test_config):
     """Check the trivial stuff. Not much to check for the CLI."""
-
     save_conf = test_config  # save config for these tests (they load themselves)
     testutils.reset_conf()
 

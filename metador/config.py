@@ -1,6 +1,4 @@
-"""
-Globally accessible location for the configuration.
-"""
+"""Globally accessible location for the configuration."""
 
 import os
 import sys
@@ -52,6 +50,8 @@ class LogConf(BaseModel):
     """Configuration of the used logger."""
 
     class Config:
+        """No unknown fields allowed."""
+
         extra = Extra.forbid
 
     level: LogLevel = LogLevel.INFO
@@ -62,6 +62,8 @@ class MetadorConf(BaseModel):
     """Configuration of the Metador server itself."""
 
     class Config:
+        """No unknown fields allowed."""
+
         extra = Extra.forbid
 
     site: str = "http://localhost:8000"
@@ -82,11 +84,14 @@ class MetadorConf(BaseModel):
 
 class UvicornConf(BaseModel):
     """
-    The host and port used by uvicorn for binding.
+    Host and port used by uvicorn for binding.
+
     These are only respected if you launch your application using `metador-cli run`.
     """
 
     class Config:
+        """No unknown fields allowed."""
+
         extra = Extra.forbid
 
     host: str = "0.0.0.0"
@@ -100,6 +105,8 @@ class Conf(BaseModel):
     """The complete application configuration."""
 
     class Config:
+        """No unknown fields allowed."""
+
         extra = Extra.forbid
 
     orcid: auth.OrcidConf = auth.OrcidConf()
@@ -119,10 +126,10 @@ somewhere else, the call-site won't see a redefinition (that we need to do at ru
 
 def read_user_config(conffile: Path) -> Conf:
     """
-    Tries to parse the given config file and attach it to the global scope.
+    Try to parse the given config file and attach it to the global scope.
+
     Called when the server is started up.
     """
-
     global _conf
     try:
         userconf = toml.load(conffile)
@@ -142,13 +149,11 @@ def read_user_config(conffile: Path) -> Conf:
 
 def init_conf(conffile: Optional[Path] = None) -> None:
     """
-    Load config from passed filename, or else from environment variable,
-    or else the built-in defaults.
+    Load config from filename, or else from env variable, or else the built-in defaults.
 
     This must be called with an argument by the CLI entry point,
     to put the passed config filename "into the loop".
     """
-
     global _conf
 
     init_logger()  # bootstrap default logger (will be re-configured by user conf)
@@ -172,10 +177,10 @@ def init_conf(conffile: Optional[Path] = None) -> None:
 def conf() -> Conf:
     """
     Access the configuration object only through this object.
+
     It ensures that the user-provided configuration works correctly,
     even surviving auto-reloads of the application.
     """
-
     global _conf
     try:
         _conf

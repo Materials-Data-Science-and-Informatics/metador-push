@@ -57,8 +57,9 @@ _profiles: Dict[str, "Profile"] = {}
 
 class PatternSchema(BaseModel):
     """
-    A pairing representing that the schema is to be applied,
-    if the pattern matches the whole file path.
+    Pair of a regex pattern and a schema name.
+
+    The schema is to be applied, if the pattern matches the whole file path.
     """
 
     pattern: str
@@ -95,12 +96,10 @@ class Profile(BaseModel):
 
     def get_schema_for(self, filename: Optional[str]) -> UnsafeJSON:
         """
-        Given a filename, return first schema where pattern completely matches,
-        or otherwise the fallback schema.
+        Return first schema where pattern completely matches filename.
 
-        If no path given, returns the root schema.
+        Otherwise, returns the fallback schema. If no path given, returns the root schema.
         """
-
         if filename is None:
             return self.schemas[self.rootSchema]
         for pat in self.patterns:
@@ -115,11 +114,9 @@ class Profile(BaseModel):
     ) -> UnsafeJSON:
         """
         If a schema with that name is not loaded yet, load, validate and cache.
-        (Set `force_reload=True` to force a reload from file.)
 
-        Return schema on success.
+        Return schema on success. Set `force_reload=True` to force a reload from file.
         """
-
         global _schemas_json
 
         if not force_reload and filename in _schemas_json:
@@ -142,7 +139,6 @@ class Profile(BaseModel):
 
     def save(self, filepath: Path) -> None:
         """Serialize the current state into a file."""
-
         save_json(self, filepath)
 
     @classmethod
@@ -155,7 +151,6 @@ class Profile(BaseModel):
         Also loads, validaties and caches referenced JSON Schemas.
         If loaded (and not forcing reload), returns cached version.
         """
-
         global _profiles_json
 
         if not force_reload and filename in _profiles_json:
@@ -183,8 +178,7 @@ class Profile(BaseModel):
 
     @classmethod
     def schema_filename(cls, val: Union[bool, str]) -> str:
-        """Helper to treat trivial (bool) and non-trivial (reference str) schema uniformly."""
-
+        """Resolve trivial (bool) and non-trivial (reference str) schemas."""
         if isinstance(val, str):
             return val
         return TRIV_TRUE if val else TRIV_FALSE
@@ -199,7 +193,6 @@ class Profile(BaseModel):
         Also handles the special filenames for the trivial true/false schema,
         for consistent treatment.
         """
-
         if filename == TRIV_TRUE:
             return True
         elif filename == TRIV_FALSE:
@@ -212,11 +205,10 @@ class Profile(BaseModel):
     @classmethod
     def load(cls, filename: str):
         """
-        Given a profile filename (relative to profile dir), construct a self-contained
-        "normalized" profile from the loaded JSON profiles and schemas
-        (i.e. load and piece together).
-        """
+        Construct a self-contained profile from file (filename relative to profile dir).
 
+        Embeds referenced schemas and produces a kind-of "normal form".
+        """
         profile: Mapping[str, Any] = cls.get_profile_json(filename)
 
         title: str = profile["title"] if profile["title"] is not None else filename
@@ -263,7 +255,6 @@ class Profile(BaseModel):
 
         Also loads and validates the referenced JSON Schemas.
         """
-
         global _PROFILE_DIR
         _PROFILE_DIR = profile_dir
 
@@ -291,7 +282,6 @@ class Profile(BaseModel):
 
         (works only after `Profile.load_profiles` was called to initialize)
         """
-
         return list(sorted(_profiles.keys()))
 
     @classmethod
@@ -299,9 +289,8 @@ class Profile(BaseModel):
         """
         Return a profile given its name (or raises error if no such profile).
 
-        (works only after `Profile.load_profiles` was called to initialize)
+        (Works only after `Profile.load_profiles` was called to initialize)
         """
-
         return _profiles[name]
 
 

@@ -93,13 +93,11 @@ class Dataset(BaseModel):
     @classmethod
     def _staging_dir(cls) -> Path:
         """Return directory for incomplete datasets (editable by client)."""
-
         return conf().metador.data_dir / STAGING_DIR_NAME
 
     @classmethod
     def _complete_dir(cls) -> Path:
         """Return directory for complete datasets (handled by post-processing)."""
-
         return conf().metador.data_dir / COMPLETE_DIR_NAME
 
     @classmethod
@@ -122,30 +120,26 @@ class Dataset(BaseModel):
     ####
 
     def is_expired(self) -> bool:
-        """Returns true if dataset is expired according to current config."""
-
+        """Return true if dataset is expired according to current config."""
         age_hours = (datetime.now() - self.created).total_seconds() / 3600
         return age_hours > conf().metador.incomplete_expire_after
 
     def save(self) -> None:
         """Serialize the current state into a file."""
-
         util.save_json(self, self._persist_filename(self.id))
 
     def validate_metadata(self, file: Optional[str]) -> Optional[str]:
         """Validate a file of given name, or the root metadata otherwise."""
-
         metadata = self.files[file].metadata if file else self.rootMeta
         return util.validate_json(metadata, self.profile.get_schema_for(file))
 
-    def validate(self) -> Dict[str, Optional[str]]:
+    def validate_dataset(self) -> Dict[str, Optional[str]]:
         """
         Validate the dataset, collect error messages.
 
         On success, the returned dict is empty, otherwise it contains
         the error message per file (empty filename = root metadata validation result).
         """
-
         errors: Dict[str, Optional[str]] = {}
         err = self.validate_metadata(None)
         if err is not None:
@@ -167,7 +161,6 @@ class Dataset(BaseModel):
 
         No validation is done at this step. Fails only if file does not exist.
         """
-
         if filename is not None and filename not in self.files:
             log.error(f"Cannot assign metadata to {filename}, file does not exist!")
             return False
@@ -182,7 +175,6 @@ class Dataset(BaseModel):
 
     def delete_file(self, name: str) -> bool:
         """Delete file and its data, if it exists."""
-
         filepath = self._upload_filepath(name)
         if name not in self.files:
             log.warning(f"Cannot delete non-existing file {name} from {self.id}")
@@ -203,7 +195,6 @@ class Dataset(BaseModel):
 
         Return True if file exists, can be moved, and won't overwrite existing file.
         """
-
         target = self._upload_filepath(filepath.name)
 
         if not filepath.is_file():
@@ -221,9 +212,7 @@ class Dataset(BaseModel):
         return True
 
     def compute_checksum(self, filename: str) -> bool:
-        """
-        Run checksum tool on file and assign checksum.
-        """
+        """Run checksum tool on file and assign checksum."""
         filepath = self._upload_filepath(filename)
 
         if filename not in self.files:
@@ -258,7 +247,6 @@ class Dataset(BaseModel):
 
         Returns True on success, i.e. file and its data exists and new name is free.
         """
-
         if name not in self.files:
             log.warning(f"Cannot rename non-existing file {name} from {self.id}")
             return False
@@ -299,10 +287,9 @@ class Dataset(BaseModel):
         On success, remove files and data from 'staging' directory
         and produce the directory in the 'complete' directory. Return path.
         """
-
         global _datasets
 
-        val_errors = self.validate()
+        val_errors = self.validate_dataset()
         if len(val_errors) != 0:
             log.error(f"Cannot complete dataset, validation failed: {val_errors}")
             return None
@@ -355,10 +342,7 @@ class Dataset(BaseModel):
         return target_dir
 
     def delete(self) -> None:
-        """
-        IRREVERSIBLY delete information about this dataset and all its files.
-        """
-
+        """Delete information about this dataset and all its files IRREVERSIBLY."""
         upload_dir: Final[Path] = self._upload_dir()
         for uploaded_file in upload_dir.glob("*"):
             uploaded_file.unlink()
@@ -372,6 +356,7 @@ class Dataset(BaseModel):
 
     @classmethod
     def load(cls, ds_id: UUID) -> Optional[Dataset]:
+        """Load a dataset from the corresponding serialization file."""
         persist_file = Dataset._persist_filename(ds_id)
         if not persist_file.is_file():
             log.error(f"Failed loading, {str(persist_file)} not found.")
@@ -399,12 +384,7 @@ class Dataset(BaseModel):
 
     @classmethod
     def create(cls, profile: Profile, creator: Optional[OrcidStr] = None) -> Dataset:
-        """
-        Creates a new dataset and create its directory + persistence file.
-
-        Returns the dataset object.
-        """
-
+        """Create a new dataset and its directory + persistence file, return it."""
         ds = cls(
             id=uuid1(),
             creator=creator,
@@ -422,7 +402,6 @@ class Dataset(BaseModel):
     @classmethod
     def load_datasets(cls) -> None:
         """Load datasets for which a persistence file exists."""
-
         global _datasets
         cls._prepare_dirs()
         for ds_id in cls._find_staging_datasets():
@@ -434,7 +413,6 @@ class Dataset(BaseModel):
     @classmethod
     def get_datasets(cls, creator: Optional[OrcidStr] = None) -> List[UUID]:
         """Return a list of dataset ids (possibly filtered by creator)."""
-
         if creator is None:  # list all datasets
             return list(_datasets.keys())
         else:  # return datasets created by certain user
@@ -453,7 +431,6 @@ class Dataset(BaseModel):
         If it is expired, it is cleaned up and treated like it does not exist.
         This is better than giving it out, as a cleaning job could delete it any moment.
         """
-
         ds = _datasets[ds_id]
         if ds.is_expired():
             ds.delete()
@@ -463,7 +440,6 @@ class Dataset(BaseModel):
     @classmethod
     def _prepare_dirs(cls) -> None:
         """Create directory structure for datasets at location specified in config."""
-
         data_dir = conf().metador.data_dir
         if not data_dir.is_dir():
             data_dir.mkdir()
@@ -474,10 +450,6 @@ class Dataset(BaseModel):
 
     @classmethod
     def _find_staging_datasets(cls) -> List[UUID]:
-        """
-        Given the configured data dir,
-        get UUIDs of datasets with serialized data in the staging directory.
-        """
-
+        """Get UUIDs of datasets with serialized data in the staging directory."""
         files = list(cls._staging_dir().glob("*" + DATASET_SUF))
         return list(map(lambda x: UUID(re.sub(DATASET_SUF + "$", "", x.name)), files))

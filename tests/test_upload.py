@@ -1,3 +1,5 @@
+"""Test uploads via tus protocol."""
+
 from uuid import uuid1
 
 import aiotus
@@ -12,8 +14,7 @@ from .testutil import UvicornTestServer, wait_until
 
 @pytest.fixture
 async def mock_server(test_config):
-    """Start server as test fixture and tear down after test"""
-
+    """Start server as test fixture and tear down after test."""
     server = UvicornTestServer(
         app, host=test_config.uvicorn.host, port=test_config.uvicorn.port
     )
@@ -26,6 +27,7 @@ async def mock_server(test_config):
 async def test_upload_tus(
     test_config, test_profiles, tus_server, mock_server, dummy_file
 ):
+    """Try uploading files with valid and invalid metadata."""
     file = dummy_file("testupload.txt")
     tusd_url = test_config.metador.tusd_endpoint
 

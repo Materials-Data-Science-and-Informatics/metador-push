@@ -37,7 +37,6 @@ def init_logger(
     level: str = logging.getLevelName(logging.INFO), logfile: Optional[Path] = None
 ):
     """Init logger for console and file output."""
-
     # more low-level log msgs logged by this are ignored
     log.setLevel(level)
     # reset (if already configured)
@@ -57,7 +56,6 @@ def init_logger(
 
 def patch_uvicorn_log_format() -> None:  # pragma: no cover
     """Add date and time to uvicorn log (call before running uvicorn)."""
-
     LOGGING_CONFIG["formatters"]["access"]["fmt"] = (
         "%(asctime)s.%(msecs)03d %(levelprefix)s "
         '%(client_addr)s - "%(request_line)s" %(status_code)s'

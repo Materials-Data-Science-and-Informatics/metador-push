@@ -1,6 +1,4 @@
-"""
-A mock ORCID server implementation. It just plays along with signin process.
-"""
+"""A mock ORCID server implementation. It just plays along with signin process."""
 
 from typing import Optional
 
@@ -32,8 +30,7 @@ MOCK_TOKEN: Final[OrcidBearerToken] = OrcidBearerToken(
     response_class=PlainTextResponse,
 )
 async def mock_redir_dummy():
-    """Endpoint to test that redirection works correctly. Returns 418 with text "dummy"."""
-
+    """Return 418 with text "dummy". Endpoint to test that redirection works correctly."""
     return Response("dummy", status_code=status.HTTP_418_IM_A_TEAPOT)
 
 
@@ -43,8 +40,7 @@ async def mock_redir_dummy():
     response_class=RedirectResponse,
 )
 async def mock_orcid_authorize(redirect_uri: str, state: Optional[str] = None):
-    """Redirects back to given URI with a dummy code added as query parameter."""
-
+    """Redirect back to given URI with a dummy code added as query parameter."""
     st_param = "" if not state else f"&state={state}"
     code = "123456"
     if state:
@@ -58,15 +54,13 @@ async def mock_orcid_authorize(redirect_uri: str, state: Optional[str] = None):
 
 @routes.post("/revoke", status_code=status.HTTP_204_NO_CONTENT)
 async def mock_orcid_revoke():
-    """Does nothing."""
-
+    """Do nothing."""
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @routes.post("/token", response_model=OrcidBearerToken)
 async def mock_orcid_token(code: str = Form(...)) -> OrcidBearerToken:
-    """Returns dummy token to sign in as a dummy user."""
-
+    """Return dummy token to sign in as a dummy user."""
     if code == "123456":
         return MOCK_TOKEN
 
@@ -80,7 +74,6 @@ async def mock_orcid_token(code: str = Form(...)) -> OrcidBearerToken:
 @routes.get("/{anything_else:path}")
 async def mock_catch_all():
     """Catch-all redirect."""
-
     return Response(
         "Endpoint not found", status_code=status.HTTP_405_METHOD_NOT_ALLOWED
     )

@@ -1,3 +1,5 @@
+"""Core backend API exposing functionality to the frontend."""
+
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -22,7 +24,6 @@ routes: APIRouter = APIRouter(
 @routes.get("/")
 def api_info():
     """Entry point into backend API."""
-
     # TODO: maybe give some HATEOAS navigation (possible actions...)
     return "This is the Metador backend. If you see this, then you are authenticated."
 
@@ -37,14 +38,12 @@ def get_profile_list() -> List[str]:
 
     Only used for the client to select which kind of dataset they desire to create.
     """
-
     return Profile.get_profiles()
 
 
 @routes.get("/profiles/{pr_name}")
 def get_profile_instance(pr_name: str) -> Optional[Profile]:
-    """Returns the profile."""
-
+    """Return the profile."""
     return Profile.get_profile(pr_name)
 
 
@@ -59,11 +58,10 @@ def new_dataset(
     profile: str, session: Optional[Session] = Depends(get_session)
 ) -> UUID:
     """
-    Creates a new dataset to be validated according to selected profile (query param).
+    Create a new dataset to be validated according to selected profile (query param).
 
     Returns its UUID as string.
     """
-
     prf = Profile.get_profile(profile)
     if prf is None:
         raise HTTPException(
@@ -78,7 +76,6 @@ def new_dataset(
 @routes.get(DATASETS)
 def get_user_datasets(session: Optional[Session] = Depends(get_session)) -> List[UUID]:
     """Return list of staging dataset UUIDs owned by the user."""
-
     if session is None:
         return []  # if unauthenticated, do not return a list of datasets
 
@@ -89,7 +86,7 @@ def get_user_datasets(session: Optional[Session] = Depends(get_session)) -> List
 
 
 def dataset_exists(ds_uuid: UUID):
-    """Helper dependency. requires existence of referenced dataset."""
+    """Throw exception if dataset does not exist, to be used as dependency."""
     try:
         Dataset.get_dataset(ds_uuid)
     except KeyError:
@@ -111,7 +108,6 @@ def get_existing_dataset(ds_uuid: UUID) -> Optional[Dataset]:
     This includes file names, metadata, profile, schemas, etc.
     And also checksum algorithm and data file checksums.
     """
-
     return Dataset.get_dataset(ds_uuid)
 
 
@@ -125,7 +121,6 @@ async def put_dataset(ds_uuid: UUID):
 
     If validation fails, returns 422 status code.
     """
-
     path = Dataset.get_dataset(ds_uuid).complete()
     if path is None:
         return Response(
@@ -144,22 +139,19 @@ async def put_dataset(ds_uuid: UUID):
 
 @ds_routes.delete("/{ds_uuid}")
 def del_dataset(ds_uuid: UUID):
-    """IRREVERSIBLY(!!!) delete the dataset and all related data."""
-
+    """Delete the dataset and all related data IRREVERSIBLY(!!!)."""
     Dataset.get_dataset(ds_uuid).delete()
 
 
 @ds_routes.get("/{ds_uuid}/meta")
 def get_dataset_metadata(ds_uuid: UUID):
     """Return currently stored dataset root metadata JSON (null if nothing stored)."""
-
     return Dataset.get_dataset(ds_uuid).rootMeta
 
 
 @ds_routes.put("/{ds_uuid}/meta")
 def put_dataset_metadata(ds_uuid: UUID, data: Dict[str, Any]):
     """Store a JSON file as dataset metadata (without validation)."""
-
     return Dataset.get_dataset(ds_uuid).set_metadata(None, data)
 
 
@@ -170,16 +162,12 @@ def validate_dataset_metadata(ds_uuid: UUID):
 
     (The client-side validation is not authoritative.)
     """
-
     return Dataset.get_dataset(ds_uuid).validate_metadata(None)
 
 
 @ds_routes.get("/{ds_uuid}/files")
 def get_dataset_files(ds_uuid: UUID):
-    """
-    Return dataset files and their corresponding checksums, if already available.
-    """
-
+    """Return dataset files and their corresponding checksums, if already available."""
     ret: Dict[str, Optional[str]] = {}
     for name, dat in Dataset.get_dataset(ds_uuid).files.items():
         ret[name] = dat.checksum
@@ -187,8 +175,7 @@ def get_dataset_files(ds_uuid: UUID):
 
 
 def dataset_file_exists(ds_uuid: UUID, filename: str):
-    """Raises HTTP exception if referenced file does not exist in dataset."""
-
+    """Raise HTTP exception if referenced file does not exist in dataset (use as dep)."""
     if filename not in Dataset.get_dataset(ds_uuid).files:
         raise HTTPException(status_code=404, detail="File not found in dataset")
 
@@ -203,10 +190,7 @@ file_routes: APIRouter = APIRouter(
 
 @file_routes.delete("/{filename}")
 def del_file(ds_uuid: UUID, filename: str):
-    """
-    IRREVERSIBLY delete the file, metadata and checksum from dataset, if it exists.
-    """
-
+    """Delete the file (+ checksum + metadata) IRREVERSIBLYfrom dataset, if it exists."""
     return Dataset.get_dataset(ds_uuid).delete_file(filename)
 
 
@@ -217,7 +201,6 @@ def get_file_checksum(ds_uuid: UUID, filename: str):
 
     Can be used for polling while waiting for hash computation of a new upload.
     """
-
     return Dataset.get_dataset(ds_uuid).files[filename].checksum
 
 
@@ -228,21 +211,18 @@ def rename_file(ds_uuid: UUID, filename: str, new_filename: str):
 
     Client is responsible for synchronizing the local representation on success.
     """
-
     return Dataset.get_dataset(ds_uuid).rename_file(filename, new_filename)
 
 
 @file_routes.get("/{filename}/meta")
 def get_file_metadata(ds_uuid: UUID, filename: str):
     """Get currently stored JSON metadata of selected file, if it exists (can be null)."""
-
     return Dataset.get_dataset(ds_uuid).files[filename].metadata
 
 
 @file_routes.put("/{filename}/meta")
 def put_file_metadata(ds_uuid: UUID, filename: str, metadata: Dict[str, Any]):
     """Set currently stored JSON metadata of selected file, if it exists."""
-
     return Dataset.get_dataset(ds_uuid).set_metadata(filename, metadata)
 
 
@@ -253,7 +233,6 @@ def validate_file_metadata(ds_uuid: UUID, filename: str):
 
     (The client-side validation is not authoritative.)
     """
-
     return Dataset.get_dataset(ds_uuid).validate_metadata(filename)
 
 
@@ -265,5 +244,4 @@ routes.include_router(ds_routes)
 @routes.get("/{anything_else:path}")
 async def invalid_api_endpoint():
     """Catch unknown API endpoint."""
-
     raise HTTPException(status_code=404, detail="API endpoint not found")
