@@ -80,7 +80,12 @@ run-pre-commit:
   stage: test
   <<: *prepare-env
   script:
-    - poetry run pytest --cov=metador tests/
+    - poetry run pytest --cov=metador tests/ --junitxml=report.xml
+  # for Gitlab integration of test results
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 
 # Base test job, defines cache that is shared among the others.
 run-pytest-3.7:
