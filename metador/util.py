@@ -40,7 +40,7 @@ def validate_json(instance: UnsafeJSON, schema: UnsafeJSON) -> Optional[str]:
         jsonschema.validate(instance, schema)
         return None
     except ValidationError as e:
-        return e.message
+        return str(e)
 
 
 def critical_exit(msg: str) -> None:

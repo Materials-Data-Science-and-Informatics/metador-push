@@ -331,7 +331,7 @@ class Dataset(BaseModel):
             outfile.write(dsinfo.json())
             outfile.flush()
 
-        # TODO: store the profile (as dirschema?)
+        # TODO: this is the point where we could store the profile as  e.g. dirschema
 
         del _datasets[self.id]
 

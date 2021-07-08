@@ -1,9 +1,9 @@
 """Core backend API exposing functionality to the frontend."""
 
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from typing_extensions import Final
 
 from .config import conf
@@ -24,7 +24,6 @@ routes: APIRouter = APIRouter(
 @routes.get("/")
 def api_info():
     """Entry point into backend API."""
-    # TODO: maybe give some HATEOAS navigation (possible actions...)
     return "This is the Metador backend. If you see this, then you are authenticated."
 
 
@@ -44,7 +43,10 @@ def get_profile_list() -> List[str]:
 @routes.get("/profiles/{pr_name}")
 def get_profile_instance(pr_name: str) -> Optional[Profile]:
     """Return the profile."""
-    return Profile.get_profile(pr_name)
+    try:
+        return Profile.get_profile(pr_name)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"No such profile: '{pr_name}'")
 
 
 ####
@@ -62,11 +64,10 @@ def new_dataset(
 
     Returns its UUID as string.
     """
-    prf = Profile.get_profile(profile)
-    if prf is None:
-        raise HTTPException(
-            status_code=404, detail=f"Profile '{profile}' does not exist."
-        )
+    try:
+        prf = Profile.get_profile(profile)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"No such profile: '{profile}'")
 
     orcid = session.orcid if session else None
     ds = Dataset.create(prf, orcid)
@@ -140,7 +141,7 @@ async def put_dataset(ds_uuid: UUID):
 @ds_routes.delete("/{ds_uuid}")
 def del_dataset(ds_uuid: UUID):
     """Delete the dataset and all related data IRREVERSIBLY(!!!)."""
-    Dataset.get_dataset(ds_uuid).delete()
+    return Dataset.get_dataset(ds_uuid).delete()
 
 
 @ds_routes.get("/{ds_uuid}/meta")
@@ -150,9 +151,9 @@ def get_dataset_metadata(ds_uuid: UUID):
 
 
 @ds_routes.put("/{ds_uuid}/meta")
-def put_dataset_metadata(ds_uuid: UUID, data: Dict[str, Any]):
+def put_dataset_metadata(ds_uuid: UUID, metadata: dict = Body(...)):
     """Store a JSON file as dataset metadata (without validation)."""
-    return Dataset.get_dataset(ds_uuid).set_metadata(None, data)
+    return Dataset.get_dataset(ds_uuid).set_metadata(None, metadata)
 
 
 @ds_routes.get("/{ds_uuid}/meta/validate")
@@ -221,7 +222,7 @@ def get_file_metadata(ds_uuid: UUID, filename: str):
 
 
 @file_routes.put("/{filename}/meta")
-def put_file_metadata(ds_uuid: UUID, filename: str, metadata: Dict[str, Any]):
+def put_file_metadata(ds_uuid: UUID, filename: str, metadata: dict = Body(...)):
     """Set currently stored JSON metadata of selected file, if it exists."""
     return Dataset.get_dataset(ds_uuid).set_metadata(filename, metadata)
 

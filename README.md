@@ -102,17 +102,13 @@ For serious deployment into an existing infrastructure, some more steps are requ
    3. The file upload directory of `tusd` is accessible (read + write) by Metador.
 
 * Use `metador-cli default-conf > metador.toml` to get a copy of the default config file,
-  add your JSON schemas (TODO: explain how) and
+  add your JSON schemas and
   at least change the `metadir.site` and `tusd.endpoint` entries according to your
   planned setup (you will probably at least change the domain, and maybe the ports).
   You can delete everything in your config that you do not want to override.
 
 * *Optional:* For ORCID integration, you need access to the ORCID public API.
 
-  Follow instructions given e.g. 
-  [here](https://info.orcid.org/documentation/integration-guide/registering-a-public-api-client/)
-  As redirect URL you should register the value you get from `metador-cli orcid-redir-url`.
-  Afterwards, fill out the `orcid` section of your Metadir configuration accordingly.
 
 * Run `tusd` as required with your setup, passing 
   `-hooks-http "$(metador-cli tusd-hook-url)"` as argument.
@@ -121,11 +117,21 @@ For serious deployment into an existing infrastructure, some more steps are requ
 
 ## Setting up ORCID Authentication
 
-TODO link to the correct guide to get API token
+Follow instructions given e.g. 
+[here](https://info.orcid.org/documentation/integration-guide/registering-a-public-api-client/)
+As redirect URL you should register the value you get from `metador-cli orcid-redir-url`.
 
-## Dataset profiles
+Afterwards, fill out the `orcid` section of your Metadir configuration accordingly,
+adding your client ID and secret token.
 
-TODO explain profiles
+If you register on the ORCID sandox server, do not forget to set `sandbox=true`!
+
+## Dataset profiles and JSON Schemas
+
+In your configuration you must provide an existing directory that contains your
+dataset profiles and (local) JSON Schemas that are referenced in the profiles.
+
+TODO explain profiles, example
 
 ## FAQ
 

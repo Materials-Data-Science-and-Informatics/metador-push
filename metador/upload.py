@@ -97,7 +97,7 @@ async def tusd_hook(
     filename: str = client_reqhdr[HDR_FILENAME][0]
 
     if filename.find("/") >= 0:
-        return Response("Invalid filename: may not contain /", status_code=400)
+        return Response("Invalid filename: may not contain /", status_code=422)
 
     try:
         ds_id: UUID = UUID(ds_id_str)
@@ -107,12 +107,17 @@ async def tusd_hook(
     except KeyError:
         return Response("No such dataset.", status_code=404)
 
-    # reject files that are not in a known dataset
-    # if a valid ID is given, accept (the ID is only known to the owner)
     if hook_name == TusdHookName.pre_create:
         if filename in ds.files:
             return Response(
                 f"File {filename} already exists. Refused.", status_code=422
+            )
+        # NOTE: we cover only the trivial false schema, allowing to reject files on purpose
+        # It is overkill trying to detect complex logically unsatisfiable schemas.
+        if ds.profile.get_schema_for(filename) == False:
+            return Response(
+                f"A file called {filename} is forbidden in this dataset.",
+                status_code=422,
             )
         return None  # 200 OK, no body
 

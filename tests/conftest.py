@@ -1,5 +1,6 @@
 """Shared fixtures and helpers for a test environment."""
 
+import asyncio
 import asyncio.subprocess
 import os
 import secrets
@@ -7,7 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
-from fastapi.testclient import TestClient
+from fastapi import FastAPI
 from httpx import AsyncClient
 
 import metador.config as config
@@ -15,12 +16,19 @@ import metador.log
 import metador.server as server
 from metador import pkg_res
 from metador.config import LogLevel, conf
-from metador.orcid import get_auth, init_auth
+from metador.dataset import Dataset
 from metador.orcid.mock import MOCK_TOKEN
+from metador.postprocessing import DatasetNotification
 from metador.profile import Profile
 from metador.upload import TUSD_HOOK_ROUTE
 
-from .testutil import AsyncLiveStream, get_free_tcp_port
+from .testutil import (
+    AsyncLiveStream,
+    UvicornTestServer,
+    can_connect,
+    get_free_tcp_port,
+    wait_until,
+)
 
 
 class UtilFuncs:
@@ -125,32 +133,20 @@ def test_profiles(test_config):
 
 
 @pytest.fixture
+def test_datasets(test_profiles):
+    """Initialize config and datasets for test environment, clean up datasets afterwards."""
+    Dataset.load_datasets()
+    yield
+    for ds in Dataset.get_datasets():
+        Dataset.get_dataset(ds).delete()
+    assert len(Dataset.get_datasets()) == 0
+
+
+@pytest.fixture
 async def async_client(test_config):
     """Return an automatically closed async http client."""
     async with AsyncClient(app=server.app, base_url=test_config.metador.site) as ac:
         yield ac
-
-
-@pytest.fixture
-def sync_client():
-    """Return a client instance to access the backend."""
-    with TestClient(server.app) as client:
-        yield client
-
-
-@pytest.fixture
-def auth_cookie(test_config, sync_client):
-    """Initialize auth if necessary, fake-auth as a user, return cookie."""
-    try:
-        get_auth()
-    except RuntimeError:
-        init_auth(
-            test_config.metador.site, test_config.orcid, test_config.metador.data_dir
-        )
-
-    cookies = {}
-    cookies["session_id"] = get_auth().new_session(MOCK_TOKEN)
-    return cookies
 
 
 @pytest.fixture
@@ -165,8 +161,35 @@ async def tus_server(test_config, tmp_path_factory):
     )
     assert tusd_proc.stdout is not None
     outreader = AsyncLiveStream(tusd_proc.stdout)
+
+    # wait until server is up
+    await outreader.readlines_until(lambda x: x.find("now upload files to:") >= 0, 5)
+
+    # without this delay, apparently there is a race condition in CI tests...
+    # do 12 retries, 0.25 second delay between, waiting for server to listen
+    await wait_until(lambda: can_connect("localhost", 1080), 12, 0.25)
+
     yield outreader
 
     outreader.t.cancel()  # Cancel stream reader task
     tusd_proc.terminate()  # Shut it down at the end of the pytest session
     await tusd_proc.wait()  # Wait for termination to complete
+
+
+@pytest.fixture
+async def mock_http_postproc(test_config):
+    """Mock postprocessing http hook endpoint that just collects events."""
+    q: asyncio.Queue = asyncio.Queue()
+
+    async def notify(notif: DatasetNotification):
+        await q.put(notif)
+
+    app = FastAPI()
+    app.post("/notify")(notify)
+
+    port = get_free_tcp_port()
+    server = UvicornTestServer(app, host=test_config.uvicorn.host, port=port)
+
+    await server.up()
+    yield (f"http://localhost:{port}/notify", q)
+    await server.down()

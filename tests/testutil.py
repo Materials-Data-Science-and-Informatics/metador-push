@@ -2,6 +2,7 @@
 
 import asyncio
 import socket
+from contextlib import closing
 from typing import Any, Callable, List, Optional, TypeVar
 
 import uvicorn
@@ -16,6 +17,13 @@ def get_free_tcp_port() -> int:
     port = tcp.getsockname()
     tcp.close()
     return port[1]
+
+
+# adapted from https://stackoverflow.com/a/35370008/432908
+def can_connect(host, port):
+    """Check that given host:port combination is listening for clients."""
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        return sock.connect_ex((host, port)) == 0
 
 
 # As the auth flow needs an ORCID server that responds to our backend,

@@ -6,17 +6,16 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-from fastapi import FastAPI
 
 from metador import dataset, pkg_res
 from metador.config import ChecksumTool
 from metador.dataset import Dataset
-from metador.postprocessing import DatasetNotification, pass_to_postprocessing
+from metador.postprocessing import pass_to_postprocessing
 from metador.profile import Profile
 from metador.util import load_json
 
 from .test_auth import OTHER_ORCID, SOME_ORCID
-from .testutil import UvicornTestServer, get_free_tcp_port, get_with_retries
+from .testutil import get_with_retries
 
 
 def test_dummy_file(dummy_file):
@@ -109,14 +108,14 @@ def test_create_load_get(test_config, dummy_file):
     # test filtering of get_datasets by ORCID
     assert SOME_ORCID != OTHER_ORCID
     ds = Dataset.create(pr, SOME_ORCID)
-    ds.id in Dataset.get_datasets()
-    ds.id in Dataset.get_datasets(SOME_ORCID)
-    ds.id not in Dataset.get_datasets(OTHER_ORCID)
+    assert ds.id in Dataset.get_datasets()
+    assert ds.id in Dataset.get_datasets(SOME_ORCID)
+    assert ds.id not in Dataset.get_datasets(OTHER_ORCID)
 
     # test clean-up
     ds.import_file(dummy_file())
     ds.delete()
-    ds.id not in Dataset.get_datasets()
+    assert ds.id not in Dataset.get_datasets()
     assert not ds._upload_dir().is_dir()
     assert not Dataset._persist_filename(ds.id).is_file()
 
@@ -397,25 +396,6 @@ def test_example_dataset(test_profiles, dummy_file):
     ]
     # have non-empty checksums
     assert all(map(lambda x: x[1] != "", chksums))
-
-
-@pytest.fixture
-async def mock_http_postproc(test_config):
-    """Mock postprocessing http hook endpoint that just collects events."""
-    q: asyncio.Queue = asyncio.Queue()
-
-    async def notify(notif: DatasetNotification):
-        await q.put(notif)
-
-    app = FastAPI()
-    app.post("/notify")(notify)
-
-    port = get_free_tcp_port()
-    server = UvicornTestServer(app, host=test_config.uvicorn.host, port=port)
-
-    await server.up()
-    yield (f"http://localhost:{port}/notify", q)
-    await server.down()
 
 
 @pytest.mark.asyncio
