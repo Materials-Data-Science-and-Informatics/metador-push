@@ -146,13 +146,14 @@ async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
         assert res.status_code == 403
 
         # try with a whitelisted ORCID (from the default MOCK_TOKEN)
-        params = {"state": "/redir"}
+        target_redir = MOCK_ORCID_PREF + "/dummy"
+        params = {"state": target_redir}
         res = await ac.get(ORCID_ENDPOINT, params=params)
         # the cookie has been set before redirecting
         assert res.history[-1].cookies["session_id"]
         # we arrive where we expect to (the route passed to state)
-        assert parse.urlparse(str(res.url)).path == "/redir"
-        assert res.status_code == 200
+        assert parse.urlparse(str(res.url)).path == target_redir
+        assert res.status_code == 418  # I am a teapot
 
         # the session creation must have been successful.
         # now serialize + re-init (test persistence)

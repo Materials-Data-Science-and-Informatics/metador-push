@@ -37,13 +37,17 @@ async def test_backend_sanity_check(auth_cookie, async_client, test_config):
     res = await async_client.get("/site-base")
     assert res.json() == test_config.metador.site
 
+    # invalid -> should return SPA
+    res = await async_client.get("/invalid/route")
+    assert res.text.find("bundle.js") >= 0
+
     # try the "hello backend" route
     res = await async_client.get("/api/")
     assert res.status_code == 403
     res = await async_client.get("/api/", cookies=auth_cookie)
     assert res.status_code == 200
 
-    # try invalid routes
+    # try invalid backend routes
     res = await async_client.get("/api/invalid/route")
     assert res.status_code == 403
     res = await async_client.get("/api/invalid/route", cookies=auth_cookie)

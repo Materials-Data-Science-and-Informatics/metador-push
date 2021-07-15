@@ -1,8 +1,11 @@
 """Main file for the Metador server."""
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from typing_extensions import Final
 
 from . import api, orcid, pkg_res, upload
 from .config import conf
@@ -40,23 +43,40 @@ def on_shutdown():
     orcid.get_auth().dump_sessions()
 
 
-app.mount("/static", StaticFiles(directory=pkg_res("static")), name="static")
-
-
-@app.get("/favicon.ico", response_class=FileResponse)
-def read_favicon():
-    """To prevent browser 404 errors."""
-    return FileResponse(pkg_res("static/favicon.ico"))
-
-
 @app.get("/site-base")
 async def site_base():
     """Return the configured site prefix. Useful for correct client-side routing."""
     return conf().metador.site
 
 
-# must come last
-@app.get("/{anything_else:path}")
-async def catch_all():
+FRONTEND_DIR: Final[Path] = pkg_res("frontend/public")
+"""Directory where the built frontend and all its files are located."""
+
+
+@app.get("/")
+async def home():
     """Catch-all redirect (must come last!) of all still unmatched routes to SPA UI."""
-    return FileResponse(pkg_res("static/index.html"))
+    return FileResponse(FRONTEND_DIR / "index.html")
+
+
+# https://stackoverflow.com/a/68363904/432908
+class SPAStaticFiles(StaticFiles):
+    """Return SPA page for files that are not found (instead of 404)."""
+
+    async def get_response(self, path: str, scope):
+        """Serve file or delegate the route lookup to parent on failure."""
+        response = await super().get_response(path, scope)
+        if response.status_code == 404:
+            # response = await super().get_response(".", scope)
+            return FileResponse(FRONTEND_DIR / "index.html")
+        return response
+
+
+app.mount("/", SPAStaticFiles(directory=FRONTEND_DIR), name="static")
+
+
+# must come last
+# @app.get("/{anything_else:path}")
+# async def catch_all():
+#     """Catch-all redirect (must come last!) of all still unmatched routes to SPA UI."""
+#     return FileResponse(FRONTEND_DIR / "index.html")
