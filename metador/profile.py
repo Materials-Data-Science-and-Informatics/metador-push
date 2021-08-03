@@ -294,6 +294,21 @@ class Profile(BaseModel):
         return _profiles[name]
 
 
+class ProfileInfo(BaseModel):
+    """Only the title and description of a profile (e.g. for overview)."""
+
+    title: str
+    """Human-readable title of dataset profile."""
+
+    description: Optional[str] = ""
+    """Human-readable description of dataset profile."""
+
+    @classmethod
+    def of(cls, p: Profile) -> ProfileInfo:
+        """Return ProfileInfo for a given Profile."""
+        return ProfileInfo.parse_obj({"title": p.title, "description": p.description})
+
+
 # TODO: What about non-self-contained JSON schemas? resolve refs and make self-contained!
 # - should resolve local files and eventually grab schemas from outside/metastore
 # - profiles could also be loaded from metastore in addition to local ones

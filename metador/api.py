@@ -11,7 +11,7 @@ from .dataset import Dataset
 from .orcid import get_session
 from .orcid.auth import Session
 from .postprocessing import pass_to_postprocessing
-from .profile import Profile
+from .profile import Profile, ProfileInfo
 
 API_PREF: Final[str] = "/api"
 
@@ -31,13 +31,16 @@ def api_info():
 
 
 @routes.get("/profiles")
-def get_profile_list() -> List[str]:
+def get_profile_list() -> Dict[str, ProfileInfo]:
     """
     Return the available dataset profiles (pr_id + human readable title for UI).
 
     Only used for the client to select which kind of dataset they desire to create.
     """
-    return Profile.get_profiles()
+    return {
+        prid: ProfileInfo.of(Profile.get_profile(prid))
+        for prid in Profile.get_profiles()
+    }
 
 
 @routes.get("/profiles/{pr_name}")
