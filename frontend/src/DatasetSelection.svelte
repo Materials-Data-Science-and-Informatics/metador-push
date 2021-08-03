@@ -1,0 +1,67 @@
+<script lang="ts">
+	import {Link} from "svelte-navigator";
+	import {fetchJSON} from "./util.ts";
+	import {navigate} from "svelte-navigator";
+
+	export let userSession = null;
+
+	async function newDataset(profile: string) {
+		await fetch("/api/datasets?profile=" + profile, {method: 'POST'}).then(r => {
+			if (!r.ok) {
+				console.log("ERROR: " + r.json());
+			}
+			return r.json();
+		}).then(dsId => { 
+			navigate("/dataset/" + dsId); //redirect to new dataset
+		});
+	}
+</script>
+
+<div class="flex three">
+{#if userSession}
+	<div />
+	<h3>Create a new submission...</h3>
+	<div />
+
+	<div />
+	<div>
+		{#await fetchJSON('/api/profiles')}
+			Loading profile info...
+		{:then pinfos}
+			{#each Object.entries(pinfos) as [pId, {title, description}] }
+				<Link class="button stack" to="#" on:click={() => newDataset(pId)}>
+					<b>{title}</b> <br/> <small>{description}</small>
+				</Link>
+			{/each}
+		{/await}
+	</div>
+	<div />
+
+{#await fetchJSON('/api/datasets')}
+<div /><div>Loading user datasets...</div><div />
+{:then dsets}
+	{#if dsets.length > 0}
+		<div />
+		<h3>... or complete the following submissions:</h3>
+		<div />
+
+		<div />
+		<div>
+		{#each dsets as dsId}
+			<Link class="button stack" style="text-align: center;" to={"/dataset/"+dsId}>
+				{dsId}
+			</Link>
+		{/each}
+		</div>
+		<div />
+	{/if}
+{/await}
+
+{:else}
+	<div />
+	<div style="text-align: center;">
+		<h4>Please sign in to create a dataset!</h4>
+	</div>
+	<div />
+{/if}
+</div>
