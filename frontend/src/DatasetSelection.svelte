@@ -12,7 +12,7 @@
 			}
 			return r.json();
 		}).then(dsId => { 
-			navigate("/dataset/" + dsId); //redirect to new dataset
+			navigate("/datasets/" + dsId); //redirect to new dataset
 		});
 	}
 </script>
@@ -48,7 +48,7 @@
 		<div />
 		<div>
 		{#each dsets as dsId}
-			<Link class="button stack" style="text-align: center;" to={"/dataset/"+dsId}>
+			<Link class="button stack" style="text-align: center;" to={"/datasets/"+dsId}>
 				{dsId}
 			</Link>
 		{/each}

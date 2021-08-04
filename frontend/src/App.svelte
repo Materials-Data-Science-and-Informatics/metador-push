@@ -9,25 +9,33 @@
 
 	fetchJSON('/site-base');
 
-	export let url = "";
-
-	let userSession = null; //current session (for conditional rendering)
-
-/*
-	import { Dashboard } from '@uppy/svelte'
-	import Uppy from '@uppy/core'
-	let uppy = new Uppy();
-*/
+	let userSession = null; //current session
 </script>
 
-<style global>
-@import '@uppy/core/dist/style.css';
-@import '@uppy/dashboard/dist/style.css';
+<style>
+	#top-nav {
+	position: fixed;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 60px;
+	width: 100%;
+	}
+	#content-wrapper {
+	margin: 60px 0 0 0;
+	padding: 0 10px;
+	overflow-y: scroll;
+	position: fixed;
+	left: 0;
+	top: 0;
+	height:100vh;
+	width: 100%;
+	}
 </style>
 
-<Router url="{url}">
+<Router url="">
 <header>
-	<nav>
+	<nav id="top-nav">
 		<Link to="/"
 		class="brand"
 		data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research">
@@ -42,18 +50,16 @@
 			<AuthButton bind:userSession />
 		</div>
 	</nav>
-<!-- <div style="height:70px"></div> -->
 </header>
 
-<main style="margin: 4% 2% 1% 2%;"> 
-	<!-- <Dashboard uppy={uppy} plugins={[]} /> -->
+<main id="content-wrapper"> 
 
 	<Route path="/"><DatasetSelection {userSession}/></Route>
 	<Route path="/signout">
 	<Message html="<h4>You have successfully signed out!</h4>" />
 	</Route>
 
-	<Route path="dataset/:id" let:params><Dataset dsId={params.id} /></Route>
+	<Route path="datasets/:id" let:params><Dataset dsId={params.id} /></Route>
 </main>
 
 <footer>
