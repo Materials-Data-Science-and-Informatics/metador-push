@@ -10,6 +10,7 @@ from aiotus.common import ProtocolError
 from metador.dataset import Dataset
 from metador.profile import Profile
 from metador.server import app
+from metador.upload import META_DATASET, META_FILENAME
 
 from .testutil import UvicornTestServer, wait_until
 
@@ -25,14 +26,15 @@ async def mock_server(test_config):
     await server.down()
 
 
-async def aiotus_upload(filename, url, headers):
+async def aiotus_upload(filename, url, filemeta):
     """Upload using aiotus, but this function raises exceptions on failure."""
+    meta = {k: v.encode() for k, v in filemeta.items()}
     with open(filename, "rb") as fd:
         async with aiohttp.ClientSession() as session:
             location = await aiotus.creation.create(
-                session, url, file=fd, metadata={}, headers=headers
+                session, url, file=fd, metadata=meta, headers={}
             )
-            await aiotus.core.upload_buffer(session, location, fd, headers=headers)
+            await aiotus.core.upload_buffer(session, location, fd, headers={})
 
 
 def aiotus_error_http_status_is(e, code: int) -> bool:
@@ -47,10 +49,10 @@ def aiotus_error_http_status_is(e, code: int) -> bool:
     return str(e.value).find(f"Wrong status code {code}") >= 0
 
 
-async def assert_failed_upload(file, url, hdrs, status_code):
+async def assert_failed_upload(file, url, filemeta, status_code):
     """Try to upload. Expect it to fail with specific HTTP status code."""
     with pytest.raises(ProtocolError) as e:
-        await aiotus_upload(file, url, hdrs)
+        await aiotus_upload(file, url, filemeta)
     assert aiotus_error_http_status_is(e, status_code)
 
 
@@ -63,22 +65,28 @@ async def test_upload_tus(
     tusd_url = test_config.metador.tusd_endpoint
 
     # try without required fields
-    hdrs = {"Filename": "some_file"}  # missing dataset
-    await assert_failed_upload(file, tusd_url, hdrs, 400)
+    meta = {META_FILENAME: "some_file"}  # missing dataset
+    await assert_failed_upload(file, tusd_url, meta, 400)
 
-    hdrs = {"Dataset": str(uuid1())}  # missing filename
-    await assert_failed_upload(file, tusd_url, hdrs, 400)
+    meta = {META_DATASET: str(uuid1())}  # missing filename
+    await assert_failed_upload(file, tusd_url, meta, 400)
 
     # try with invalid header
-    hdrs = {"Dataset": "invalid", "Filename": file.name}  # malformed ds id
-    await assert_failed_upload(file, tusd_url, hdrs, 422)
+    meta = {META_DATASET: "invalid", META_FILENAME: file.name}  # malformed ds id
+    await assert_failed_upload(file, tusd_url, meta, 422)
 
-    hdrs = {"Dataset": str(uuid1()), "Filename": "invalid/filename"}  # bad filename
-    await assert_failed_upload(file, tusd_url, hdrs, 422)
+    meta = {
+        META_DATASET: str(uuid1()),
+        META_FILENAME: "invalid/filename",
+    }  # bad filename
+    await assert_failed_upload(file, tusd_url, meta, 422)
 
     # try with invalid dataset id
-    hdrs = {"Dataset": str(uuid1()), "Filename": file.name}  # non-existing dataset
-    await assert_failed_upload(file, tusd_url, hdrs, 404)
+    meta = {
+        META_DATASET: str(uuid1()),
+        META_FILENAME: file.name,
+    }  # non-existing dataset
+    await assert_failed_upload(file, tusd_url, meta, 404)
 
     # create ownerless dataset (the upload does not care about owners)
     ds: Dataset = Dataset.create(Profile.get_profile("anything"))
@@ -89,8 +97,8 @@ async def test_upload_tus(
 
     # upload a file into it
 
-    hdrs = {"Dataset": str(ds.id), "Filename": file.name}
-    await aiotus_upload(file, tusd_url, hdrs)
+    meta = {META_DATASET: str(ds.id), META_FILENAME: file.name}
+    await aiotus_upload(file, tusd_url, meta)
 
     lines = await tus_server.readlines_until(lambda x: x.find("post-finish") >= 0, 1)
     assert lines[-1].find("post-finish") >= 0  # sanity-check: last line has the event
@@ -100,16 +108,14 @@ async def test_upload_tus(
         lambda: file.name in ds.files and ds.files[file.name].checksum is not None
     )
 
-    # try to upload a file with the same name again
+    # try to upload a file with the same name again -> name conflict, rejected
     file.touch()
-    with open(file, "rb") as f:
-        hdrs = {"Dataset": str(ds.id), "Filename": file.name}
-        location = await aiotus.upload(tusd_url, f, headers=hdrs)
-        assert location is None  # name conflict, rejected
+    meta = {META_DATASET: str(ds.id), META_FILENAME: file.name}
+    await assert_failed_upload(file, tusd_url, meta, 422)
 
     # try uploading file that is not allowed (matches "false" schema)
     # in "example" profile only *.[txt|jpg|mp4] is allowed
     badfile = dummy_file("testupload.bmp")
     ds2: Dataset = Dataset.create(Profile.get_profile("example"))
-    hdrs = {"Dataset": str(ds2.id), "Filename": badfile.name}
-    await assert_failed_upload(file, tusd_url, hdrs, 422)
+    meta = {META_DATASET: str(ds2.id), META_FILENAME: badfile.name}
+    await assert_failed_upload(file, tusd_url, meta, 422)

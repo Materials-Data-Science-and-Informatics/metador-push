@@ -70,8 +70,8 @@ routes: APIRouter = APIRouter(tags=["tusd-hook"])
 TUSD_HOOK_ROUTE: Final[str] = "/tusd-events"
 """API route to handle tusd events."""
 
-HDR_DATASET: Final[str] = "Dataset"
-HDR_FILENAME: Final[str] = "Filename"
+META_DATASET: Final[str] = "dataset"
+META_FILENAME: Final[str] = "filename"
 
 """Header to be added to link an upload to a dataset."""
 
@@ -83,18 +83,18 @@ async def tusd_hook(
     hook_name: TusdHookName = Header(...),
 ):
     """React to events signaled by tusd (this is registered in tusd as http hook)."""
-    client_reqhdr = body.HTTPRequest.Header
+    upl_meta = body.Upload.MetaData
 
     log.debug(hook_name)
     log.debug(body)
 
-    if HDR_DATASET not in client_reqhdr or len(client_reqhdr[HDR_DATASET]) > 1:
-        return Response("Exactly one dataset ID must be in header.", status_code=400)
-    ds_id_str: str = client_reqhdr[HDR_DATASET][0]
+    if META_DATASET not in upl_meta:
+        return Response("Exactly one dataset ID must be attached.", status_code=400)
+    ds_id_str: str = upl_meta[META_DATASET]
 
-    if HDR_FILENAME not in client_reqhdr or len(client_reqhdr[HDR_FILENAME]) > 1:
-        return Response("Exactly one filename must be in header.", status_code=400)
-    filename: str = client_reqhdr[HDR_FILENAME][0]
+    if META_FILENAME not in upl_meta:  # or len(upl_meta[META_FILENAME]) > 1:
+        return Response("Exactly one filename must be attached.", status_code=400)
+    filename: str = upl_meta[META_FILENAME]
 
     if filename.find("/") >= 0:
         return Response("Invalid filename: may not contain /", status_code=422)
