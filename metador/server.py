@@ -49,6 +49,12 @@ async def site_base():
     return conf().metador.site
 
 
+@app.get("/tusd-endpoint")
+async def tusd_endpoint():
+    """Return the configured tusd endpoint to be used by client."""
+    return conf().metador.tusd_endpoint
+
+
 FRONTEND_DIR: Final[Path] = pkg_res("frontend/public")
 """Directory where the built frontend and all its files are located."""
 

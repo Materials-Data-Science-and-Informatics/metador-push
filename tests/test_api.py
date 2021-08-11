@@ -37,6 +37,9 @@ async def test_backend_sanity_check(auth_cookie, async_client, test_config):
     res = await async_client.get("/site-base")
     assert res.json() == test_config.metador.site
 
+    res = await async_client.get("/tusd-endpoint")
+    assert res.json() == test_config.metador.tusd_endpoint
+
     # invalid -> should return SPA
     res = await async_client.get("/invalid/route")
     assert res.text.find("bundle.js") >= 0
