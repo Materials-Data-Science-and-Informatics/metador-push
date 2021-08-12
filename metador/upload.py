@@ -130,4 +130,5 @@ async def tusd_hook(
         assert uplloc.is_file()
         uplloc.rename(renamed)
         ds.import_file(renamed)
+        Path(str(body.Upload.Storage.Path) + ".info").unlink()  # remove .info file
         background_tasks.add_task(ds.compute_checksum, filename)
