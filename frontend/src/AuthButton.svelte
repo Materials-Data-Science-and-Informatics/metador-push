@@ -40,6 +40,7 @@
     }
 
     //TODO: if session expires soon, show countdown and warn?
+    // then auto-signout user (setTimeout?)
 </script>
 
 {#if auth_status}
@@ -49,8 +50,7 @@
             <span id="signin-button">
                 <link
                     rel="stylesheet"
-                    href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons/css/academicons.min.css"
-                />
+                    href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons/css/academicons.min.css" />
                 <a class="button" href={auth_link}>
                     <i class="ai ai-orcid" /> Sign in with ORCID
                 </a>

@@ -20,8 +20,7 @@
                 <Link
                     to="/"
                     class="brand"
-                    data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research"
-                >
+                    data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research">
                     Metador
                 </Link>
 

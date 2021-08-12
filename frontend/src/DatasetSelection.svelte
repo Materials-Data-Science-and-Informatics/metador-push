@@ -56,8 +56,7 @@
                         <Link
                             class="button stack"
                             style="text-align: center;"
-                            to={"/datasets/" + dsId}
-                        >
+                            to={"/datasets/" + dsId}>
                             {dsId}
                         </Link>
                     {/each}

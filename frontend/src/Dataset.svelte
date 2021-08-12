@@ -64,16 +64,16 @@
         display: flex;
     }
     #file-list {
-        flex: 2;
+        flex: 1;
         height: 90vh;
         border-right: 1px solid;
-        /* background-color: gray; */
+        padding-right: 10px;
         overflow: auto;
     }
     #file-metadata {
-        flex: 10;
+        flex: 3;
+        padding-left: 10px;
         height: 90vh;
-        background-color: pink;
         overflow: auto;
     }
 </style>
