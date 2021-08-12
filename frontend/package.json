@@ -32,6 +32,7 @@
         "rollup-plugin-livereload": "^2.0.0",
         "rollup-plugin-svelte": "^7.0.0",
         "rollup-plugin-terser": "^7.0.0",
+        "sirv-cli": "^1.0.12",
         "svelte": "^3.0.0",
         "svelte-check": "^2.0.0",
         "svelte-preprocess": "^4.0.0",
@@ -44,7 +45,6 @@
         "@uppy/svelte": "^0.1.13",
         "@uppy/tus": "^1.9.2",
         "picnic": "^6.5.5",
-        "sirv-cli": "^1.0.0",
         "svelte-fa": "^2.2.1",
         "svelte-navigator": "^3.1.5",
         "svelte-notifications": "^0.9.91"

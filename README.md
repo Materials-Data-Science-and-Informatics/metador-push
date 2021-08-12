@@ -60,11 +60,16 @@ If you do not care about collecting metadata, feel free to pick a different solu
 If you do not have a recent version of Python (>=3.7) installed, you can use
 [`pyenv`](https://github.com/pyenv/pyenv) to install e.g. Python 3.9 and enable it.
 
+Similarly, you need node >= 8 and npm to build the frontend
+and you can use e.g. [NVM](https://github.com/nvm-sh/nvm) to install it locally.
+
 Download and install [`tusd`](https://github.com/tus/tusd),
 the server component for the Tus protocol that will handle the low-level details
 of the file uploading process.
 
-Install Metador using `poetry install`, if you use poetry,
+First, go to the `frontend` directory and run `npm run build` to compile the frontend.
+
+Then install Metador using `poetry install`, if you use poetry,
 or use `pip install --user .` if you use pip (as usual, using a `venv` is recommended).
 
 ## Usage
@@ -79,7 +84,6 @@ Run `tusd` like this: `tusd -hooks-http "$(metador-cli tusd-hook-url)"`
 Run Metador like this: `metador-cli run`
 
 Navigate to `http://localhost:8000/` in your browser.
-
 
 ### I want to deploy Metador properly!
 
@@ -234,22 +238,16 @@ Also verify that the pre-commit hooks are run successfully.
 
 See [LICENSE](./LICENSE).
 
-### Used libraries and tools
-
-#### Libraries
+### Legally relevant libraries
 
 **CLI:** typer (MIT), toml (MIT), colorlog (MIT)
 
-**Backend:** FastAPI (MIT), pydantic (MIT), tusd (MIT), httpx (BSD-3), python-multipart (Apache 2), aiotus (Apache 2)
+**Backend:** FastAPI (MIT), pydantic (MIT), httpx (BSD-3), python-multipart (Apache 2),
+tusd (MIT), aiotus (Apache 2)
 
-**Frontend:** uppy (MIT), Picnic CSS (MIT)
+**Backend testing:** pytest (MIT), pytest-cov (MIT), pytest-asyncio (Apache 2)
 
-...and of course, the Python standard library.
-
-#### Tools
-
-**Checked by:** pytest (MIT), pytest-cov (MIT), pytest-asyncio (Apache 2), pre-commit (MIT), black (MIT), flake8 (MIT), mypy (MIT)
-
-**Packaged by:** poetry (MIT)
+**Frontend:** Svelte (MIT), svelte-fa (MIT), svelte-navigator (MIT), svelte-notifications (MIT),
+uppy (MIT), Picnic CSS (MIT), Font-Awesome (MIT/CC-BY-4.0)
 
 More information is in the documentation of the corresponding packages.
