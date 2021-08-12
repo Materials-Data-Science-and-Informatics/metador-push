@@ -1,5 +1,4 @@
-// helper: GET from URL as json response
+/** Helper: GET from URL as json response */
 export function fetchJSON(url) {
-  return fetch(url).then(r => r.json())
+    return fetch(url).then((r) => r.json())
 }
-
