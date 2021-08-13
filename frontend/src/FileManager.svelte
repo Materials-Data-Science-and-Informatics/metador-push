@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
+    import { navigate } from "svelte-navigator"
 
     import { getNotificationsContext } from "svelte-notifications"
 
@@ -13,8 +14,10 @@
         faUpload,
         faPencilAlt,
         faCheckDouble,
+        faDownload,
     } from "@fortawesome/free-solid-svg-icons"
 
+    import { saveAs } from "file-saver"
     export let dataset // current local state of dataset
 
     let uppy = null // uppy object
@@ -26,6 +29,7 @@
 
     // setInterval jobs waiting for checksum of new uploads
     let checksumPollJobs = new Map()
+    const checksumFilename: string = dataset.checksumTool + "s.txt"
 
     onMount(async () => {
         // before we can upload with uppy, we need the tusd URL from the server
@@ -59,7 +63,7 @@
         dataset.files[file] = { checksum: null, meta: null }
 
         // notify
-        let msg = `Upload of ${file} complete!`
+        let msg = `Upload of ${file} complete`
         console.log(msg)
         addNotification({
             text: msg,
@@ -102,6 +106,34 @@
                 })
             } else {
                 let msg = `Cannot delete ${file}!`
+                console.log(msg)
+                addNotification({
+                    text: msg,
+                    removeAfter: 3000,
+                    type: "danger",
+                    position: "bottom-center",
+                })
+            }
+        })
+    }
+
+    async function deleteDataset() {
+        await fetch(`/api/datasets/${dataset.id}`, {
+            method: "DELETE",
+        }).then((r) => {
+            if (r.ok) {
+                navigate("/")
+
+                let msg = `Dataset ${dataset.id} deleted`
+                console.log(msg)
+                addNotification({
+                    text: msg,
+                    removeAfter: 3000,
+                    position: "bottom-center",
+                })
+                dataset = null
+            } else {
+                let msg = `Cannot delete dataset ${dataset.id}!`
                 console.log(msg)
                 addNotification({
                     text: msg,
@@ -162,9 +194,29 @@
     async function openMetadata(filename?: string) {
         alert("TODO: show metadata for " + filename)
     }
+
+    /** Compute a checksum file from the JSON object that can be used for verification */
+    function computeChecksums(files): string {
+        let content: string = ""
+        for (const [filename, info] of Object.entries(files)) {
+            content += info.checksum + "  " + filename + "\n"
+        }
+        return content
+    }
+
+    let checksumFileContent: string = ""
+    $: checksumFileContent = computeChecksums(dataset.files)
+
+    /** Let user download checksums as a text file. */
+    function saveChecksums() {
+        var checksumFile = new Blob([document.getElementById("checksums").value], {
+            type: "text/plain;charset=utf-8",
+        })
+        saveAs(checksumFile, checksumFilename)
+    }
 </script>
 
-<span style="display: flex;">
+<span style="display: flex; margin-bottom: 10px;">
     <h4 style="flex-grow: 1;">Dataset/</h4>
     {#if uppy}
         <DashboardModal {uppy} plugins={[]} open={showUppy} />
@@ -175,11 +227,40 @@
             <Fa icon={faUpload} />
         </button>
     {/if}
-    <button
-        class="tooltip-left"
-        data-tooltip="File checksums"
-        on:click={() => alert("TODO: Show + download/Copy to clipboard")}>
-        <Fa icon={faCheckDouble} /></button>
+    <label data-tooltip="File checksums" for="modal_checksums" class="button tooltip-left"
+        ><Fa icon={faCheckDouble} /></label>
+    <div class="modal">
+        <input id="modal_checksums" type="checkbox" />
+        <label for="modal_checksums" class="overlay" />
+        <article style="width: 50%; height: 50%;">
+            <header>
+                <h3>{checksumFilename}</h3>
+                <label for="modal_checksums" class="close">&times;</label>
+            </header>
+            <section
+                class="content"
+                style="display: flex; flex-direction: column; height: 85%; ">
+                <div style="height: 100%;">
+                    <textarea
+                        id="checksums"
+                        style="font-family: monospace; resize: none; box-sizing: border-box; height: 100%;"
+                        readonly="true"
+                        on:click={(e) => e.target.select()}
+                        >{checksumFileContent}</textarea>
+                </div>
+                <div style="float: right;">
+                    <button
+                        for="modal_checksums"
+                        data-tooltip="download"
+                        class="tooltip-right"
+                        on:click={saveChecksums}>
+                        <Fa icon={faDownload} /></button>
+                </div>
+            </section>
+        </article>
+    </div>
+    <button class="tooltip-left" data-tooltip="Delete dataset" on:click={deleteDataset}
+        ><Fa icon={faTrashAlt} /></button>
     <button
         class="tooltip-left"
         data-tooltip="Show/edit dataset metadata"
@@ -208,8 +289,6 @@
                     on:click={() => openMetadata(file)}>
                     <Fa icon={faPencilAlt} /></button>
             </div>
-            <small style="margin-top: 0; white-space: nowrap;">
-                {dataset.checksumTool.slice(0, -3)}: {fileInfo.checksum}</small>
         </div>
     </div>
 {/each}

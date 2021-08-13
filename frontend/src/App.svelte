@@ -35,12 +35,17 @@
         </header>
 
         <main id="content-wrapper">
-            <Route path="/"><DatasetSelection {userSession} /></Route>
             <Route path="/signout">
                 <Message html="<h4>You have successfully signed out!</h4>" />
             </Route>
-
-            <Route path="datasets/:id" let:params><Dataset dsId={params.id} /></Route>
+            {#if userSession}
+                <Route path="/"><DatasetSelection /></Route>
+                <Route path="datasets/:id" let:params><Dataset dsId={params.id} /></Route>
+            {:else}
+                <div style="text-align: center;">
+                    <h4>Please sign in to create, edit and submit datasets!</h4>
+                </div>
+            {/if}
         </main>
 
         <footer>

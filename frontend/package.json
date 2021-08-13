@@ -14,6 +14,7 @@
         "@rollup/plugin-node-resolve": "^11.0.0",
         "@rollup/plugin-typescript": "^8.0.0",
         "@tsconfig/svelte": "^2.0.0",
+        "@types/file-saver": "^2.0.3",
         "@typescript-eslint/eslint-plugin": "^4.29.0",
         "@typescript-eslint/parser": "^4.29.0",
         "eslint": "7.32.0",
@@ -41,11 +42,12 @@
     },
     "dependencies": {
         "@fortawesome/free-solid-svg-icons": "^5.15.4",
-        "@uppy/golden-retriever": "^1.4.2",
         "@uppy/svelte": "^0.1.13",
         "@uppy/tus": "^1.9.2",
+        "file-saver": "^2.0.5",
         "picnic": "^6.5.5",
         "svelte-fa": "^2.2.1",
+        "svelte-jsoneditor": "^0.2.7",
         "svelte-navigator": "^3.1.5",
         "svelte-notifications": "^0.9.91"
     }

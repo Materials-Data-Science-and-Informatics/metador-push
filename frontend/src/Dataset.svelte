@@ -25,8 +25,6 @@
                     dataset = data
                 }
             })
-
-        console.log(dataset)
     })
 </script>
 
