@@ -1,6 +1,7 @@
 import svelte from "rollup-plugin-svelte"
 import commonjs from "@rollup/plugin-commonjs"
 import resolve from "@rollup/plugin-node-resolve"
+import json from "@rollup/plugin-json"
 import livereload from "rollup-plugin-livereload"
 import { terser } from "rollup-plugin-terser"
 import sveltePreprocess from "svelte-preprocess"
@@ -57,6 +58,9 @@ export default {
         // a separate file - better for performance
         css({ output: "bundle.css" }),
 
+        // need that for JSONEditor
+        json(),
+
         // If you have external dependencies installed from
         // npm, you'll most likely need these plugins. In
         // some cases you'll need additional configuration -
@@ -87,4 +91,5 @@ export default {
     watch: {
         clearScreen: false,
     },
+    inlineDynamicImports: true, // required for jsoneditor bundling to work
 }

@@ -248,6 +248,6 @@ tusd (MIT), aiotus (Apache 2)
 **Backend testing:** pytest (MIT), pytest-cov (MIT), pytest-asyncio (Apache 2)
 
 **Frontend:** Svelte (MIT), svelte-fa (MIT), svelte-navigator (MIT), svelte-notifications (MIT),
-uppy (MIT), Picnic CSS (MIT), Font-Awesome (MIT/CC-BY-4.0), FileSaver.js (MIT)
+svelte-jsoneditor (ISC), uppy (MIT), Picnic CSS (MIT), Font-Awesome (MIT/CC-BY-4.0), FileSaver.js (MIT)
 
 More information is in the documentation of the corresponding packages.

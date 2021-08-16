@@ -18,7 +18,11 @@
     } from "@fortawesome/free-solid-svg-icons"
 
     import { saveAs } from "file-saver"
+
+    // props:
     export let dataset // current local state of dataset
+    export let selectedFile: null | string = null // currently selected file
+    export let unsavedChanges: boolean
 
     let uppy = null // uppy object
     let showUppy: boolean = false // visibility toggle
@@ -88,16 +92,32 @@
             })
     }
 
-    /** Delete file on the server and remove in the view. */
-    async function deleteFile(file: string) {
-        await fetch(`/api/datasets/${dataset.id}/files/${file}`, {
-            method: "DELETE",
-        }).then((r) => {
-            if (r.ok) {
-                delete dataset.files[file]
-                dataset.files = dataset.files
+    /** Delete file or dataset on the server and reflect change in UI. */
+    async function deleteFile(file: string | null) {
+        let msg = "Are you sure that you want to delete "
+        msg += file ? file : "this dataset"
+        msg += "? This cannot be undone!"
+        if (!confirm(msg)) return
 
-                let msg = `File ${file} deleted`
+        let url = `/api/datasets/${dataset.id}`
+        if (file) {
+            url += `/files/${file}`
+        }
+
+        await fetch(url, { method: "DELETE" }).then((r) => {
+            if (r.ok) {
+                if (file) {
+                    // just remove a file
+                    delete dataset.files[file]
+                    if (selectedFile == file) selectedFile = null
+                    dataset.files = dataset.files
+                } else {
+                    // dataset deleted -> back to homepage
+                    navigate("/")
+                    dataset = null
+                }
+
+                const msg = `${file ? file : "Dataset"} deleted`
                 console.log(msg)
                 addNotification({
                     text: msg,
@@ -105,35 +125,7 @@
                     position: "bottom-center",
                 })
             } else {
-                let msg = `Cannot delete ${file}!`
-                console.log(msg)
-                addNotification({
-                    text: msg,
-                    removeAfter: 3000,
-                    type: "danger",
-                    position: "bottom-center",
-                })
-            }
-        })
-    }
-
-    async function deleteDataset() {
-        await fetch(`/api/datasets/${dataset.id}`, {
-            method: "DELETE",
-        }).then((r) => {
-            if (r.ok) {
-                navigate("/")
-
-                let msg = `Dataset ${dataset.id} deleted`
-                console.log(msg)
-                addNotification({
-                    text: msg,
-                    removeAfter: 3000,
-                    position: "bottom-center",
-                })
-                dataset = null
-            } else {
-                let msg = `Cannot delete dataset ${dataset.id}!`
+                let msg = `Cannot delete ${file ? file : dataset.id}!`
                 console.log(msg)
                 addNotification({
                     text: msg,
@@ -170,8 +162,9 @@
         }).then((r) => {
             if (r.ok) {
                 // perform local rename
-                dataset.files[e.target.value] = dataset.files[file]
+                dataset.files[newName] = dataset.files[file]
                 delete dataset.files[file]
+                if (selectedFile == file) selectedFile = newName
 
                 addNotification({
                     text: sucMsg,
@@ -191,11 +184,15 @@
     }
 
     /** Open metadata edit view for file or dataset. */
-    async function openMetadata(filename?: string) {
-        alert("TODO: show metadata for " + filename)
+    async function openMetadata(filename?: null | string) {
+        if (filename == selectedFile) return //nothing to do
+        let proceed: boolean = true
+        if (unsavedChanges)
+            proceed = confirm("All unsaved changes will be lost! Are you sure?")
+        if (proceed) selectedFile = filename
     }
 
-    /** Compute a checksum file from the JSON object that can be used for verification */
+    /** Compute a checksum file from the JSON object that can be used for verification. */
     function computeChecksums(files): string {
         let content: string = ""
         for (const [filename, info] of Object.entries(files)) {
@@ -213,6 +210,20 @@
             type: "text/plain;charset=utf-8",
         })
         saveAs(checksumFile, checksumFilename)
+    }
+
+    /** Helper function to mark currently selected file edit button green/red. */
+    function editButtonClass(btnFile: string | null, sel: string | null, uns: boolean) {
+        let str = "tooltip-left"
+        if (sel === btnFile) {
+            if (uns) {
+                str += " error"
+            } else {
+                str += " success"
+            }
+        }
+        console.log(str)
+        return str
     }
 </script>
 
@@ -259,11 +270,12 @@
             </section>
         </article>
     </div>
-    <button class="tooltip-left" data-tooltip="Delete dataset" on:click={deleteDataset}
-        ><Fa icon={faTrashAlt} /></button>
     <button
         class="tooltip-left"
-        data-tooltip="Show/edit dataset metadata"
+        data-tooltip="Delete dataset"
+        on:click={() => deleteFile(null)}><Fa icon={faTrashAlt} /></button>
+    <button
+        class={editButtonClass(null, selectedFile, unsavedChanges)}
         on:click={() => openMetadata(null)}>
         <Fa icon={faPencilAlt} /></button>
 </span>
@@ -284,8 +296,7 @@
                     on:click={() => deleteFile(file)}><Fa icon={faTrashAlt} /></button>
                 <button
                     style="margin-top: 0px;"
-                    class="tooltip-left"
-                    data-tooltip="Show/edit file metadata"
+                    class={editButtonClass(file, selectedFile, unsavedChanges)}
                     on:click={() => openMetadata(file)}>
                     <Fa icon={faPencilAlt} /></button>
             </div>

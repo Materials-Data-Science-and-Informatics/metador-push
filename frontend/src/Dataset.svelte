@@ -1,13 +1,19 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import FileManager from "./FileManager.svelte"
+    import MetadataEditor from "./MetadataEditor.svelte"
 
-    export let dsId: string // passed as prop
-    let notFound = false //set to true on failure to load given dsId
+    export let dsId: string // passed from parent, we will try to load it
+
+    let notFound = false // set to true on failure to load given dsId
 
     // all information about the dataset
+    // initialized on mount, assertion: always in sync with server
     //TODO: add expires field in backend
-    let dataset // initialized on mount
+    let dataset
+
+    let selectedFile // from FileManager component
+    let unsavedChanges // from MetadataEditor component
 
     onMount(async () => {
         let ok: boolean
@@ -44,12 +50,10 @@
     </div>
     <div id="dataset-app">
         <div id="file-list">
-            <FileManager {dataset} />
+            <FileManager bind:dataset bind:selectedFile {unsavedChanges} />
         </div>
         <div id="file-metadata">
-            <p>test</p>
-            <p>test</p>
-            <p>test</p>
+            <MetadataEditor bind:dataset bind:unsavedChanges {selectedFile} />
         </div>
     </div>
 {/if}
