@@ -1,7 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte"
+    import { getNotificationsContext } from "svelte-notifications"
     import FileManager from "./FileManager.svelte"
     import MetadataEditor from "./MetadataEditor.svelte"
+
+    const { addNotification } = getNotificationsContext() // for showing notifications
 
     export let dsId: string // passed from parent, we will try to load it
 
@@ -13,7 +16,67 @@
     let dataset
 
     let selectedFile // from FileManager component
-    let unsavedChanges // from MetadataEditor component
+    let editorMetadata
+    let reloadEditor = {}
+
+    /** When a user selects a new file/the root, get the metadata stored in the dataset */
+    function getMetadata() {
+        if (dataset) {
+            if (selectedFile) {
+                editorMetadata = dataset.files[selectedFile].metadata
+            } else {
+                editorMetadata = dataset.rootMeta
+            }
+            modified = false
+            reloadEditor = {}
+        }
+    }
+
+    let modified = false // from MetadataEditor component
+
+    /** Store the updated metadata in the dataset */
+    async function saveMetadata(e) {
+        const meta = e.detail
+
+        let url = `/api/datasets/${dataset.id}`
+        if (selectedFile) {
+            url += `/files/${selectedFile}`
+        }
+        url += "/meta"
+
+        const entityStr = selectedFile ? selectedFile : "dataset"
+        await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(meta),
+        }).then((r) => {
+            if (r.ok) {
+                if (selectedFile) {
+                    dataset.files[selectedFile].metadata = e.detail
+                } else {
+                    dataset.rootMeta = e.detail
+                }
+                modified = false
+
+                const msg = `Metadata for ${entityStr} saved`
+                console.log(msg)
+                addNotification({
+                    text: msg,
+                    removeAfter: 3000,
+                    position: "bottom-center",
+                })
+            } else {
+                let msg = `Cannot save metadata for ${entityStr}!`
+                console.log(msg)
+                addNotification({
+                    text: msg,
+                    removeAfter: 3000,
+                    type: "danger",
+                    position: "bottom-center",
+                })
+            }
+        })
+    }
 
     onMount(async () => {
         let ok: boolean
@@ -29,9 +92,21 @@
                     notFound = true
                 } else {
                     dataset = data
+                    getMetadata()
+                    reloadEditor = {}
                 }
             })
     })
+
+    function setModified(e) {
+        /* console.log(e.type, e.detail) */
+
+        // check that the message comes from the currently selected file
+        // otherwise we sometimes get an old event from previous selected file
+        if (e.detail == selectedFile) {
+            modified = true
+        }
+    }
 </script>
 
 {#if notFound}
@@ -50,10 +125,21 @@
     </div>
     <div id="dataset-app">
         <div id="file-list">
-            <FileManager bind:dataset bind:selectedFile {unsavedChanges} />
+            <FileManager
+                bind:dataset
+                bind:selectedFile
+                on:select={getMetadata}
+                unsavedChanges={modified} />
         </div>
         <div id="file-metadata">
-            <MetadataEditor bind:dataset bind:unsavedChanges {selectedFile} />
+            {#key reloadEditor}
+                <MetadataEditor
+                    {selectedFile}
+                    {editorMetadata}
+                    {modified}
+                    on:save={saveMetadata}
+                    on:modified={setModified} />
+            {/key}
         </div>
     </div>
 {/if}

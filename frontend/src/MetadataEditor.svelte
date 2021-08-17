@@ -1,42 +1,32 @@
 <script lang="ts">
-    import { JSONEditor, createAjvValidator } from "svelte-jsoneditor"
+    import { createEventDispatcher } from "svelte"
+    import { onMount } from "svelte"
+
     import Fa from "svelte-fa/src/fa.svelte"
     import { faSave } from "@fortawesome/free-solid-svg-icons"
 
-    export let dataset // from parent Dataset component
-    export let selectedFile // from sibling FileManager component
+    import { JSONEditor, createAjvValidator } from "svelte-jsoneditor"
 
     const validator = createAjvValidator(true) //TODO: add refs list
 
-    // current metadata stored in dataset (must be synchronized to server)
-    let savedMetadata
-    $: savedMetadata = selectedFile
-        ? dataset.files[selectedFile].metadata
-        : dataset.metadata
+    const dispatch = createEventDispatcher() // for sending events
 
-    // the current metadata value, not necessarily synchronized to the server yet
-    // this is our current "local state"
-    let jsonMetadata
+    // ----
+    // props in:
+    export let selectedFile: null | string
+    export let modified: boolean
+    // props out:
+    export let editorMetadata
+    // ----
 
-    // json stored in JSONEditor component
-    let editorJson
-
-    // is there a difference of stored and edited metadata? (modulo null/undefined)
-    // export to outside to e.g. prevent leaving page?
-    export let unsavedChanges: boolean = false
-    $: unsavedChanges = savedMetadata != jsonMetadata
-
-    // toggle between form and editor view
-    let formView: boolean = false
-
-    function saveMetadata() {
-        if (selectedFile) dataset.files[selectedFile] = jsonMetadata
-        else dataset.metadata = jsonMetadata
-    }
+    let jsonEditor // reference to component
+    let formView: boolean = false // toggle between form and editor view
 
     /** Get updates of JSON metadata. */
     function editorMetadataChanged(content) {
-        console.log(content)
+        //console.log(content)
+
+        // depending on tree or code view we get text or json object...
         let newJson = content.json
         if (!newJson) {
             try {
@@ -46,37 +36,45 @@
                 newJson = null
             }
         }
-        jsonMetadata = newJson
-        console.log(savedMetadata, jsonMetadata, unsavedChanges)
+        const old = Object.assign({}, editorMetadata) // shallow copy
+        editorMetadata = newJson
+        // console.log(old, editorMetadata)
+        if (old != editorMetadata) {
+            dispatch("modified", selectedFile)
+        }
     }
 
-    /** switch between the views, (re-)initialize objects. */
-    function setFormView(form: boolean) {
-        if (!form) {
-            editorJson = jsonMetadata
-        } else {
-            //TODO reinit form
-        }
-        formView = form
+    /** Tell parent the user requests to save metadata. */
+    function pushMeta() {
+        dispatch("save", editorMetadata)
     }
+
+    onMount(() => {
+        if (!editorMetadata) {
+            jsonEditor.setText("") // don't show "null" metadata
+        }
+    })
 </script>
 
 <span style="display: flex; margin-bottom: 10px;">
     <h4>{selectedFile ? `Metadata of ${selectedFile}` : "Dataset Metadata"}</h4>
-    <button disabled={!unsavedChanges} style="margin-left: 10px;" on:click={saveMetadata}
+    <button disabled={!modified} style="margin-left: 10px;" on:click={pushMeta}
         ><Fa icon={faSave} /></button>
     <span style="margin-left: 10px;" />
-    <button on:click={() => setFormView(true)} disabled={formView}>Form</button>
-    <button on:click={() => setFormView(false)} disabled={!formView}>Editor</button>
+    <button on:click={() => (formView = true)} disabled={formView}>Form</button>
+    <button on:click={() => (formView = false)} disabled={!formView}>Editor</button>
 </span>
 
-<div>
-    {#if formView}
-        TODO
-    {:else}
-        <JSONEditor bind:json={editorJson} onChange={editorMetadataChanged} {validator} />
-    {/if}
+<div class:hidden={formView}>
+    <JSONEditor
+        bind:json={editorMetadata}
+        bind:this={jsonEditor}
+        onChange={editorMetadataChanged}
+        {validator} />
 </div>
 
 <style>
+    .hidden {
+        display: none !important;
+    }
 </style>

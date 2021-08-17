@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte"
+    import { onMount, createEventDispatcher } from "svelte"
     import { navigate } from "svelte-navigator"
 
     import { getNotificationsContext } from "svelte-notifications"
@@ -24,16 +24,17 @@
     export let selectedFile: null | string = null // currently selected file
     export let unsavedChanges: boolean
 
+    // local vars:
     let uppy = null // uppy object
     let showUppy: boolean = false // visibility toggle
     let tusd_endpoint: string = "" // URL for tus file upload (given out from server)
 
-    // for showing notifications
-    const { addNotification } = getNotificationsContext()
-
     // setInterval jobs waiting for checksum of new uploads
     let checksumPollJobs = new Map()
     const checksumFilename: string = dataset.checksumTool + "s.txt"
+
+    const dispatch = createEventDispatcher() // for sending events
+    const { addNotification } = getNotificationsContext() // for showing notifications
 
     onMount(async () => {
         // before we can upload with uppy, we need the tusd URL from the server
@@ -109,8 +110,15 @@
                 if (file) {
                     // just remove a file
                     delete dataset.files[file]
-                    if (selectedFile == file) selectedFile = null
                     dataset.files = dataset.files
+
+                    // if we deleted the current one, focus dataset root
+                    if (selectedFile == file) {
+                        selectedFile = null
+                        dispatch("select", { file: null })
+                    }
+
+                    dispatch("delete", { file: file })
                 } else {
                     // dataset deleted -> back to homepage
                     navigate("/")
@@ -164,7 +172,16 @@
                 // perform local rename
                 dataset.files[newName] = dataset.files[file]
                 delete dataset.files[file]
-                if (selectedFile == file) selectedFile = newName
+
+                let selectedRenamed = false
+                if (selectedFile == file) {
+                    selectedFile = newName
+                    selectedRenamed = true
+                }
+                dispatch("rename", { file: file, to: newName })
+                if (selectedRenamed) {
+                    dispatch("select", { file: newName })
+                }
 
                 addNotification({
                     text: sucMsg,
@@ -185,11 +202,18 @@
 
     /** Open metadata edit view for file or dataset. */
     async function openMetadata(filename?: null | string) {
-        if (filename == selectedFile) return //nothing to do
+        if (filename == selectedFile) {
+            return //nothing to do
+        }
+
         let proceed: boolean = true
-        if (unsavedChanges)
+        if (unsavedChanges) {
             proceed = confirm("All unsaved changes will be lost! Are you sure?")
-        if (proceed) selectedFile = filename
+        }
+        if (proceed) {
+            selectedFile = filename
+            dispatch("select", { file: selectedFile })
+        }
     }
 
     /** Compute a checksum file from the JSON object that can be used for verification. */
@@ -222,7 +246,6 @@
                 str += " success"
             }
         }
-        console.log(str)
         return str
     }
 </script>
