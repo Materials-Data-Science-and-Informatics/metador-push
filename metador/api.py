@@ -154,7 +154,7 @@ def get_dataset_metadata(ds_uuid: UUID):
 
 
 @ds_routes.put("/{ds_uuid}/meta")
-def put_dataset_metadata(ds_uuid: UUID, metadata: dict = Body(...)):
+def put_dataset_metadata(ds_uuid: UUID, metadata=Body(...)):
     """Store a JSON file as dataset metadata (without validation)."""
     return Dataset.get_dataset(ds_uuid).set_metadata(None, metadata)
 
@@ -225,7 +225,7 @@ def get_file_metadata(ds_uuid: UUID, filename: str):
 
 
 @file_routes.put("/{filename}/meta")
-def put_file_metadata(ds_uuid: UUID, filename: str, metadata: dict = Body(...)):
+def put_file_metadata(ds_uuid: UUID, filename: str, metadata=Body(...)):
     """Set currently stored JSON metadata of selected file, if it exists."""
     return Dataset.get_dataset(ds_uuid).set_metadata(filename, metadata)
 
