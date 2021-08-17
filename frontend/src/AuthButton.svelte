@@ -6,9 +6,11 @@
 
     // The button should react to changes of the URL...
     const loc = useLocation()
-    let curpath = $loc.pathname
+
     // authentication redirects back to same location as before, except after signout
-    let auth_link = "/oauth/orcid?state=" + (curpath != "/signout" ? curpath : "/")
+    let auth_link: string = ""
+    $: auth_link =
+        "/oauth/orcid?state=" + ($loc.pathname != "/signout" ? $loc.pathname : "/")
 
     // Grab authentication state when loading component
     let auth_status = null
