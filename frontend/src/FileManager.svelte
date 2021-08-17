@@ -151,9 +151,12 @@
         console.log("trying rename: " + file + " -> " + newName)
 
         const sucMsg: string = `Renamed "${file}" to "${newName}"`
-        const errMsg: string = `Cannot rename "${file}" to "${newName}"!`
+        let errMsg: string = `Cannot rename "${file}" to "${newName}"!`
+        if (unsavedChanges) {
+            errMsg = "There are unsaved metadata changes, cannot rename file!"
+        }
 
-        if (e.target.value == "" || !checkNewFilename(newName)) {
+        if (e.target.value == "" || !checkNewFilename(newName) || unsavedChanges) {
             addNotification({
                 text: errMsg,
                 removeAfter: 3000,
