@@ -2,7 +2,7 @@
     import { onMount, createEventDispatcher } from "svelte"
     import { navigate } from "svelte-navigator"
 
-    import { getNotificationsContext } from "svelte-notifications"
+    import { getNotifier, getSchemaFor, getFirstMatchingPattern } from "./util"
 
     import { DashboardModal } from "@uppy/svelte"
     import Uppy from "@uppy/core"
@@ -34,7 +34,7 @@
     const checksumFilename: string = dataset.checksumTool + "s.txt"
 
     const dispatch = createEventDispatcher() // for sending events
-    const { addNotification } = getNotificationsContext() // for showing notifications
+    const notify = getNotifier() // for showing notifications
 
     onMount(async () => {
         // before we can upload with uppy, we need the tusd URL from the server
@@ -58,8 +58,19 @@
             uppy.info(msg, "error", 3000)
             return false
         }
+
+        const fileSchema = getSchemaFor(dataset.profile, filename)
+        if (fileSchema == false) {
+            let pat = getFirstMatchingPattern(dataset.profile.patterns, filename)
+            let msg = `Filename does not match any allowed name pattern!`
+            if (pat) {
+                msg = `Filename ${pat.pattern} matches a forbidden pattern!`
+            }
+            console.log("ERROR: " + msg)
+            uppy.info(msg, "error", 3000)
+            return false
+        }
         return filename
-        //TODO: check forbidden file patterns (i.e. with schema "false")
     }
 
     /** Handle successful uppy upload of given filename. */
@@ -70,11 +81,7 @@
         // notify
         let msg = `Upload of ${file} complete`
         console.log(msg)
-        addNotification({
-            text: msg,
-            removeAfter: 3000,
-            position: "bottom-center",
-        })
+        notify(msg)
 
         // start polling for the checksum
         checksumPollJobs.set(file, setInterval(getChecksum, 2000, file))
@@ -127,20 +134,11 @@
 
                 const msg = `${file ? file : "Dataset"} deleted`
                 console.log(msg)
-                addNotification({
-                    text: msg,
-                    removeAfter: 3000,
-                    position: "bottom-center",
-                })
+                notify(msg)
             } else {
                 let msg = `Cannot delete ${file ? file : dataset.id}!`
                 console.log(msg)
-                addNotification({
-                    text: msg,
-                    removeAfter: 3000,
-                    type: "danger",
-                    position: "bottom-center",
-                })
+                notify(msg, "danger")
             }
         })
     }
@@ -151,18 +149,9 @@
         console.log("trying rename: " + file + " -> " + newName)
 
         const sucMsg: string = `Renamed "${file}" to "${newName}"`
-        let errMsg: string = `Cannot rename "${file}" to "${newName}"!`
-        if (unsavedChanges) {
-            errMsg = "There are unsaved metadata changes, cannot rename file!"
-        }
-
-        if (e.target.value == "" || !checkNewFilename(newName) || unsavedChanges) {
-            addNotification({
-                text: errMsg,
-                removeAfter: 3000,
-                type: "danger",
-                position: "bottom-center",
-            })
+        const errMsg: string = `Cannot rename "${file}" to "${newName}"!`
+        if (e.target.value == "" || !checkNewFilename(newName)) {
+            notify(errMsg, "danger")
             e.target.value = file // reset change
             return
         }
@@ -186,18 +175,9 @@
                     dispatch("select", { file: newName })
                 }
 
-                addNotification({
-                    text: sucMsg,
-                    removeAfter: 3000,
-                    position: "bottom-center",
-                })
+                notify(sucMsg)
             } else {
-                addNotification({
-                    text: errMsg,
-                    removeAfter: 3000,
-                    type: "danger",
-                    position: "bottom-center",
-                })
+                notify(errMsg, "danger")
                 e.target.value = file // reset change
             }
         })
@@ -205,7 +185,7 @@
 
     /** Open metadata edit view for file or dataset. */
     async function openMetadata(filename?: null | string) {
-        if (filename == selectedFile) {
+        if (filename == selectedFile && !unsavedChanges) {
             return //nothing to do
         }
 
@@ -281,7 +261,7 @@
                     <textarea
                         id="checksums"
                         style="font-family: monospace; resize: none; box-sizing: border-box; height: 100%;"
-                        readonly="true"
+                        readonly={true}
                         on:click={(e) => e.target.select()}
                         >{checksumFileContent}</textarea>
                 </div>
@@ -314,6 +294,7 @@
                     type="text"
                     style="flex-grow: 1;"
                     value={file}
+                    disabled={selectedFile == file && unsavedChanges}
                     on:change={(e) => renameFile(e, file)} />
                 <button
                     style="margin-top: 0px;"

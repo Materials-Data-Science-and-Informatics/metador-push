@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { Link } from "svelte-navigator"
-    import { fetchJSON } from "./util.ts"
-    import { navigate } from "svelte-navigator"
+    import { Link, navigate } from "svelte-navigator"
+    import { fetchJSON } from "./util"
 
     /** Create a new dataset based on given profile and go to its view. */
     async function newDataset(profile: string) {

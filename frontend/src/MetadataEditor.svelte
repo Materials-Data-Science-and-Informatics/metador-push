@@ -7,7 +7,7 @@
 
     import { JSONEditor, createAjvValidator } from "svelte-jsoneditor"
 
-    const validator = createAjvValidator(true) //TODO: add refs list
+    import { getSchemaFor } from "./util"
 
     const dispatch = createEventDispatcher() // for sending events
 
@@ -15,9 +15,15 @@
     // props in:
     export let selectedFile: null | string
     export let modified: boolean
+    export let profile
     // props out:
     export let editorMetadata
     // ----
+
+    const schema = getSchemaFor(profile, selectedFile)
+    console.log(schema)
+
+    const validator = createAjvValidator(schema, profile.schemas)
 
     let jsonEditor // reference to component
     let formView: boolean = false // toggle between form and editor view
@@ -44,11 +50,6 @@
         }
     }
 
-    /** Tell parent the user requests to save metadata. */
-    function pushMeta() {
-        dispatch("save", editorMetadata)
-    }
-
     onMount(() => {
         if (!editorMetadata) {
             jsonEditor.setText("") // don't show "null" metadata
@@ -58,14 +59,16 @@
 
 <span style="display: flex; margin-bottom: 10px;">
     <h4>{selectedFile ? `Metadata of ${selectedFile}` : "Dataset Metadata"}</h4>
-    <button disabled={!modified} style="margin-left: 10px;" on:click={pushMeta}
-        ><Fa icon={faSave} /></button>
+    <button
+        disabled={!modified}
+        style="margin-left: 10px;"
+        on:click={() => dispatch("save", editorMetadata)}><Fa icon={faSave} /></button>
     <span style="margin-left: 10px;" />
     <button on:click={() => (formView = true)} disabled={formView}>Form</button>
     <button on:click={() => (formView = false)} disabled={!formView}>Editor</button>
 </span>
 
-<div class:hidden={formView}>
+<div style="height: 90%;" class:hidden={formView}>
     <JSONEditor
         bind:json={editorMetadata}
         bind:this={jsonEditor}

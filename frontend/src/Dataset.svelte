@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import { getNotificationsContext } from "svelte-notifications"
     import FileManager from "./FileManager.svelte"
     import MetadataEditor from "./MetadataEditor.svelte"
+    import { getNotifier } from "./util"
 
-    const { addNotification } = getNotificationsContext() // for showing notifications
+    const notify = getNotifier() // for showing notifications
 
     export let dsId: string // passed from parent, we will try to load it
 
@@ -34,7 +34,16 @@
 
     let modified = false // from MetadataEditor component
 
-    /** Store the updated metadata in the dataset */
+    /** Handle event that the metadata JSON has been modified. */
+    function setModified(e) {
+        // check that the message comes from the currently selected file
+        // otherwise we sometimes get an old event from previous selected file
+        if (e.detail == selectedFile) {
+            modified = true
+        }
+    }
+
+    /** Handle event that user pressed save. Store the updated metadata in the dataset. */
     async function saveMetadata(e) {
         const meta = e.detail
 
@@ -60,20 +69,11 @@
 
                 const msg = `Metadata for ${entityStr} saved`
                 console.log(msg)
-                addNotification({
-                    text: msg,
-                    removeAfter: 3000,
-                    position: "bottom-center",
-                })
+                notify(msg)
             } else {
                 let msg = `Cannot save metadata for ${entityStr}!`
                 console.log(msg)
-                addNotification({
-                    text: msg,
-                    removeAfter: 3000,
-                    type: "danger",
-                    position: "bottom-center",
-                })
+                notify(msg, "danger")
             }
         })
     }
@@ -97,16 +97,6 @@
                 }
             })
     })
-
-    function setModified(e) {
-        /* console.log(e.type, e.detail) */
-
-        // check that the message comes from the currently selected file
-        // otherwise we sometimes get an old event from previous selected file
-        if (e.detail == selectedFile) {
-            modified = true
-        }
-    }
 </script>
 
 {#if notFound}
@@ -137,6 +127,7 @@
                     {selectedFile}
                     {editorMetadata}
                     {modified}
+                    profile={dataset.profile}
                     on:save={saveMetadata}
                     on:modified={setModified} />
             {/key}

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import { fetchJSON } from "./util.ts"
+    import { fetchJSON } from "./util"
     import { navigate, useLocation } from "svelte-navigator"
     import "../node_modules/picnic/picnic.min.css"
 
