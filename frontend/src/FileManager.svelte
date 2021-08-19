@@ -53,9 +53,7 @@
     /** Reject uploads with existing and forbidden file names. */
     function checkNewFilename(filename: string) {
         if (filename in dataset.files) {
-            let msg = `File named ${filename} already in dataset!`
-            console.log("ERROR: " + msg)
-            uppy.info(msg, "error", 3000)
+            notify(`File named ${filename} already in dataset!`, "danger")
             return false
         }
 
@@ -66,8 +64,7 @@
             if (pat) {
                 msg = `Filename ${pat.pattern} matches a forbidden pattern!`
             }
-            console.log("ERROR: " + msg)
-            uppy.info(msg, "error", 3000)
+            notify(msg, "danger")
             return false
         }
         return filename
@@ -77,11 +74,7 @@
     function uploadSuccess(file: string) {
         // reflect addition of the new file in dataset
         dataset.files[file] = { checksum: null, meta: null }
-
-        // notify
-        let msg = `Upload of ${file} complete`
-        console.log(msg)
-        notify(msg)
+        notify(`Upload of ${file} complete`)
 
         // start polling for the checksum
         checksumPollJobs.set(file, setInterval(getChecksum, 2000, file))
@@ -132,13 +125,9 @@
                     dataset = null
                 }
 
-                const msg = `${file ? file : "Dataset"} deleted`
-                console.log(msg)
-                notify(msg)
+                notify(`${file ? file : "Dataset"} deleted`)
             } else {
-                let msg = `Cannot delete ${file ? file : dataset.id}!`
-                console.log(msg)
-                notify(msg, "danger")
+                notify(`Cannot delete ${file ? file : dataset.id}!`, "danger")
             }
         })
     }
@@ -146,7 +135,7 @@
     /** Try to rename a file (if it does not violate anything). */
     async function renameFile(e, file: string) {
         const newName: string = e.target.value
-        console.log("trying rename: " + file + " -> " + newName)
+        //console.log("trying rename: " + file + " -> " + newName)
 
         const sucMsg: string = `Renamed "${file}" to "${newName}"`
         const errMsg: string = `Cannot rename "${file}" to "${newName}"!`

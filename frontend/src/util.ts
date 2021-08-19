@@ -10,12 +10,22 @@ export async function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// the notification styles of svelte-notifications:
 type notificationType = "default" | "success" | "warning" | "danger"
+
+// typical log-level names for showing the notification text in log:
+const typeToLoglevel = {
+    default: "INFO",
+    success: "INFO",
+    warning: "WARNING",
+    danger: "ERROR",
+}
 
 /** Return preconfigured addNotification wrapper. */
 export function getNotifier() {
     const { addNotification }: any = getNotificationsContext()
     function notify(text: string, type: notificationType = "default"): void {
+        console.log(typeToLoglevel[type] + ": " + text)
         addNotification({
             text: text,
             removeAfter: 3000,

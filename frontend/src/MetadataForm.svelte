@@ -4,7 +4,8 @@
     import React from "react"
     import ReactDOM from "react-dom"
 
-    import Form from "@rjsf/core"
+    // this design is the only one that works without any issues...
+    import Form from "@rjsf/material-ui"
 
     const e = React.createElement
 

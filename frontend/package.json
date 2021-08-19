@@ -45,6 +45,7 @@
     "dependencies": {
         "@fortawesome/free-solid-svg-icons": "^5.15.4",
         "@rjsf/core": "^3.1.0",
+        "@rjsf/material-ui": "^3.1.0",
         "@uppy/svelte": "^0.1.13",
         "@uppy/tus": "^1.9.2",
         "file-saver": "^2.0.5",

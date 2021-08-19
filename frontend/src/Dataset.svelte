@@ -68,13 +68,9 @@
                 }
                 modified = false
 
-                const msg = `Metadata for ${entityStr} saved`
-                console.log(msg)
-                notify(msg)
+                notify(`Metadata for ${entityStr} saved`)
             } else {
-                let msg = `Cannot save metadata for ${entityStr}!`
-                console.log(msg)
-                notify(msg, "danger")
+                notify(`Cannot save metadata for ${entityStr}!`, "danger")
             }
         })
     }
