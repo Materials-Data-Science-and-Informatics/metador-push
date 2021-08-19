@@ -13,6 +13,7 @@
           "exclusiveMaximum": 100
         }
       },
+      "additionalProperties": false,
       "required": ["validNumber"]
     }
   },

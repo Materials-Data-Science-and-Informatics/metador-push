@@ -55,10 +55,11 @@
         url += "/meta"
 
         const entityStr = selectedFile ? selectedFile : "dataset"
+        const metaStr = JSON.stringify(meta)
         await fetch(url, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(meta),
+            body: metaStr,
         }).then((r) => {
             if (r.ok) {
                 if (selectedFile) {

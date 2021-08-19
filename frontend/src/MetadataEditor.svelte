@@ -43,8 +43,8 @@
             try {
                 newJson = JSON.parse(content.text)
             } catch (err) {
-                // invalid JSON or empty string -> we interpret this as null
-                newJson = null
+                // invalid JSON or empty string -> we use empty object
+                newJson = {}
             }
         }
         const old = Object.assign({}, editorMetadata) // shallow copy
@@ -58,7 +58,7 @@
 
     onMount(() => {
         if (!editorMetadata) {
-            jsonEditor.setText("") // don't show "null" metadata
+            jsonEditor.set({}) // don't accept "null" metadata
         }
     })
 
