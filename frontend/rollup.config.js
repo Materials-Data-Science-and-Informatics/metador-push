@@ -1,12 +1,13 @@
 import svelte from "rollup-plugin-svelte"
 import commonjs from "@rollup/plugin-commonjs"
 import resolve from "@rollup/plugin-node-resolve"
-import json from "@rollup/plugin-json"
 import livereload from "rollup-plugin-livereload"
 import { terser } from "rollup-plugin-terser"
 import sveltePreprocess from "svelte-preprocess"
 import typescript from "@rollup/plugin-typescript"
 import css from "rollup-plugin-css-only"
+import json from "@rollup/plugin-json"
+import replace from "@rollup/plugin-replace"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -58,9 +59,6 @@ export default {
         // a separate file - better for performance
         css({ output: "bundle.css" }),
 
-        // need that for JSONEditor
-        json(),
-
         // If you have external dependencies installed from
         // npm, you'll most likely need these plugins. In
         // some cases you'll need additional configuration -
@@ -87,6 +85,15 @@ export default {
         // If we're building for production (npm run build
         // instead of npm run dev), minify
         production && terser(),
+
+        // need that for JSONEditor
+        json(),
+
+        // need that for react and the jsonschema-form
+        replace({
+            "process.env.NODE_ENV": JSON.stringify("development"),
+            preventAssignment: true,
+        }),
     ],
     watch: {
         clearScreen: false,

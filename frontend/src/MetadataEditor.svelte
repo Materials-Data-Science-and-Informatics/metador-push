@@ -9,6 +9,8 @@
 
     import { getSchemaFor } from "./util"
 
+    import MetadataForm from "./MetadataForm.svelte"
+
     const dispatch = createEventDispatcher() // for sending events
 
     // ----
@@ -25,8 +27,11 @@
 
     const validator = createAjvValidator(schema, profile.schemas)
 
-    let jsonEditor // reference to component
-    let formView: boolean = false // toggle between form and editor view
+    // references to components
+    let jsonEditor
+    let refreshForm = {} // set again to {} to regenerate Form component
+
+    export let formView // toggle between form and editor view
 
     /** Get updates of JSON metadata. */
     function editorMetadataChanged(content) {
@@ -44,6 +49,7 @@
         }
         const old = Object.assign({}, editorMetadata) // shallow copy
         editorMetadata = newJson
+
         // console.log(old, editorMetadata)
         if (old != editorMetadata) {
             dispatch("modified", selectedFile)
@@ -55,6 +61,13 @@
             jsonEditor.setText("") // don't show "null" metadata
         }
     })
+
+    function setFormView(b) {
+        formView = b
+        if (b) {
+            refreshForm = {}
+        }
+    }
 </script>
 
 <span style="display: flex; margin-bottom: 10px;">
@@ -64,8 +77,8 @@
         style="margin-left: 10px;"
         on:click={() => dispatch("save", editorMetadata)}><Fa icon={faSave} /></button>
     <span style="margin-left: 10px;" />
-    <button on:click={() => (formView = true)} disabled={formView}>Form</button>
-    <button on:click={() => (formView = false)} disabled={!formView}>Editor</button>
+    <button on:click={() => setFormView(true)} disabled={formView}>Form</button>
+    <button on:click={() => setFormView(false)} disabled={!formView}>Editor</button>
 </span>
 
 <div style="height: 90%;" class:hidden={formView}>
@@ -74,6 +87,14 @@
         bind:this={jsonEditor}
         onChange={editorMetadataChanged}
         {validator} />
+</div>
+<div style="height: 90%;" class:hidden={!formView}>
+    {#key refreshForm}
+        <MetadataForm
+            {schema}
+            prefill={editorMetadata}
+            onChange={editorMetadataChanged} />
+    {/key}
 </div>
 
 <style>

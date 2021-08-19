@@ -17,7 +17,8 @@
 
     let selectedFile // from FileManager component
     let editorMetadata
-    let reloadEditor = {}
+    let reloadEditor = {} // set this to {} again to force reload of component
+    let formView: boolean = true // toggle between form and editor view
 
     /** When a user selects a new file/the root, get the metadata stored in the dataset */
     function getMetadata() {
@@ -127,6 +128,7 @@
                     {selectedFile}
                     {editorMetadata}
                     {modified}
+                    bind:formView
                     profile={dataset.profile}
                     on:save={saveMetadata}
                     on:modified={setModified} />
