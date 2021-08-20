@@ -6,7 +6,7 @@
 
 * **Summary:** File upload service with resumable uploads and rich metadata requirements
 * **Purpose:** Comfortably get data from outside while enforcing collection of certain metadata
-* Easy to set up, no mandatory non-Python dependencies
+* Easy to set up, no complicated dependencies
 * Metadata validation based on file name pattern matching and JSON Schema
 * Authentication via ORCID, with optional allowlist to restrict access
 * Successfully uploaded and annotated datasets are passed to postprocessing:
@@ -41,7 +41,9 @@ makes Metador **easy to integrate into your existing workflows**.
 
 To achieve these goals, Metador combines state-of-the-art resumable file-upload technology
 using [Uppy](https://uppy.io) and the [tus](https://tus.io/) protocol 
-with a [JSON Schema](https://json-schema.org/) driven metadata editor.
+with a [JSON Schema](https://json-schema.org/) driven multi-view metadata editor based on
+[react-jsonschema-form](https://github.com/rjsf-team/react-jsonschema-form)
+and [JSONEditor](https://github.com/josdejong/jsoneditor).
 
 ## Why not a different self-hosted file uploader?
 
@@ -49,7 +51,7 @@ Before starting work on Metador, I was not able to find an existing solution che
 of the following boxes:
 
 * lightweight (easy to deploy and use on a typical institutional Linux server)
-* supports upload of large files conveniently (with progress, resumable)
+* supports convenient upload of large files (with progress indication, pauseable/resumable)
 * supports rich and expressive metadata annotation that is **generic** (schema-driven)
 
 If you care about this combination of features, then Metador is for you.
@@ -113,7 +115,6 @@ For serious deployment into an existing infrastructure, some more steps are requ
 
 * *Optional:* For ORCID integration, you need access to the ORCID public API.
 
-
 * Run `tusd` as required with your setup, passing 
   `-hooks-http "$(metador-cli tusd-hook-url)"` as argument.
 
@@ -145,7 +146,8 @@ The following never actually asked questions might be of interest to you.
 
 This service is intended for use by human beings, to send you data that originally has
 ad-hoc or lacking metadata. If the dataset is already fully annotated, it probably should
-be transferred in a different and simpler way. 
+be transferred in a different and simpler way offered by your database or repository
+solution.
 
 If you insist on using this service mechanically, in fact it is designed to be as RESTful
 as possible so you might try to script an auto-uploader. The API is accessible under the
@@ -190,7 +192,8 @@ After completing authentication, a classical session cookie is stored, proving t
 user is signed in. This cookie is not accessible from JavaScript and is using
 all the best practices to counteract typical attacks.
 
-Only with that cookie the user can access the datasets, and only his own datasets.
+Only with that cookie the user can access the datasets, and only his own datasets that are
+not completed and have not expired yet.
 This is ensured by the fact that the session cookie witnesses an authenticated ORCID
 and each dataset is marked with the ORCID of its creator, so it is only accessible by this
 user. File uploads are also all marked with the Dataset UUID, which only the user knows.
@@ -215,7 +218,8 @@ The classical session-cookie approach is easier to implement, handling JWT corre
 more involved and 
 [there are](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/)
 [arguments](https://developer.okta.com/blog/2017/08/17/why-jwts-suck-as-session-tokens)
-that JWT should not be used for sessions or at least have no advantages for this usage.
+that JWT should not be used for sessions or at least have no advantages for this usage,
+especially if the possibility to sign-out a user and invalidate a session is desired.
 
 Concerning Redis - it might be used to persist in-memory data between reloads, but only for
 this, pulling in this dependency seems to be "overkill". As this service is not intended to
@@ -226,26 +230,31 @@ mandatory.
 
 ## Development
 
+For backend development, you can enable auto-reload of uvicorn in the `metador.toml`.
+For frontend development, run `npm run dev` in the frontend directory in addition to the
+Metador server to get auto-reload.
+
 Before commiting, run `pytest` and make sure you did not break anything.
 
 To generate documentation, run `pdoc -o docs metador`.
 
 To check coverage, use `pytest --cov`
 
-Also verify that the pre-commit hooks are run successfully.
+Also verify that the pre-commit hooks all run successfully.
 
 ## Copyright and Licence
 
 See [LICENSE](./LICENSE).
 
-### Legally relevant libraries
+### Main used libraries and dependencies
+
+The following libraries are used directly (i.e. not only transitively) in this project:
 
 **CLI:** typer (MIT), toml (MIT), colorlog (MIT)
 
-**Backend:** FastAPI (MIT), pydantic (MIT), httpx (BSD-3), python-multipart (Apache 2),
-tusd (MIT), aiotus (Apache 2)
+**Backend:** FastAPI (MIT), pydantic (MIT), httpx (BSD-3), tusd (MIT), jsonschema (MIT)
 
-**Backend testing:** pytest (MIT), pytest-cov (MIT), pytest-asyncio (Apache 2)
+**Backend testing:** pytest (MIT), pytest-cov (MIT), pytest-asyncio (Apache 2), aiotus (Apache 2)
 
 **Frontend:** Svelte (MIT), svelte-fa (MIT), svelte-navigator (MIT), svelte-notifications (MIT),
 svelte-jsoneditor (ISC), uppy (MIT), Picnic CSS (MIT), Font-Awesome (MIT/CC-BY-4.0), FileSaver.js (MIT), react-jsonschema-form (Apache 2)
