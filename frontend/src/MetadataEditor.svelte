@@ -1,4 +1,10 @@
 <script lang="ts">
+    /**
+       This component combines and synchronizes
+       * JSONEditor (text + structural tree editor)
+       * react-jsonschema-form (input form based on the schema)
+     */
+
     import { createEventDispatcher } from "svelte"
     import { onMount } from "svelte"
 
@@ -7,36 +13,43 @@
 
     import { JSONEditor, createAjvValidator } from "svelte-jsoneditor"
 
-    import { getSchemaFor } from "./util"
-
     import MetadataForm from "./MetadataForm.svelte"
 
     const dispatch = createEventDispatcher() // for sending events
 
     // ----
     // props in:
+
+    // toggle between form and editor view (can be used with bind)
+    //(comes from parent, e.g. to preserve between file selection change)
+    export let formView: boolean
+
+    // self-contained schema and the name of the current file (or null for root metadata)
+    // need that to assemble the schema into a suitable form.
     export let selectedFile: null | string
+    export let schema: any
+
+    // this component sends "modified" events up whenever the metadata changes.
+    // the parent component decides whether the state is currently modified
+    // based on that we enable/disable the save button (e.g. if saving succeeded)
     export let modified: boolean
-    export let profile
-    // props out:
-    export let editorMetadata
+
+    // initial value of metadata. Future changes are sent up on "save" event
+    export let editorMetadata: any
     // ----
 
-    const schema = getSchemaFor(profile, selectedFile)
-    console.log(schema)
+    // validator to pass into JSONEditor
+    const validator = createAjvValidator(schema)
 
-    const validator = createAjvValidator(schema, profile.schemas)
-
-    // references to components
-    let jsonEditor
+    let jsonEditor: any // reference to JSONEditor to call methods etc.
     let refreshForm = {} // set again to {} to regenerate Form component
 
-    export let formView // toggle between form and editor view
-
-    /** Get updates of JSON metadata. */
-    function editorMetadataChanged(content) {
-        //console.log(content)
-
+    /** 
+        Get updates of JSON metadata. 
+        JSONEditor passes an object with either a text or json key.
+        For react-jsonschema-form updates, we repack the new value into this shape.
+     */
+    function editorMetadataChanged(content: { json?: any; text?: string }): void {
         // depending on tree or code view we get text or json object...
         let newJson = content.json
         if (!newJson) {
@@ -50,7 +63,6 @@
         const old = Object.assign({}, editorMetadata) // shallow copy
         editorMetadata = newJson
 
-        // console.log(old, editorMetadata)
         if (old != editorMetadata) {
             dispatch("modified", selectedFile)
         }
@@ -62,16 +74,17 @@
         }
     })
 
-    function setFormView(b) {
+    function setFormView(b: boolean): void {
         formView = b
         if (b) {
+            // force form regeneration when switching to form view
             refreshForm = {}
         }
     }
 </script>
 
 <span style="display: flex; margin-bottom: 10px;">
-    <h4>{selectedFile ? `Metadata of ${selectedFile}` : "Dataset Metadata"}</h4>
+    <h4>{"Metadata of " + (selectedFile ? selectedFile : "Dataset")}</h4>
     <button
         disabled={!modified}
         style="margin-left: 10px;"
@@ -93,7 +106,7 @@
         <MetadataForm
             {schema}
             prefill={editorMetadata}
-            onChange={editorMetadataChanged} />
+            onChange={(e) => editorMetadataChanged({ json: e.formData })} />
     {/key}
 </div>
 

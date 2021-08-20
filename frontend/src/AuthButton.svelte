@@ -33,6 +33,7 @@
     /** Sign out user on server and remove local auth information. */
     function signOut() {
         fetch("/oauth/signout").then((r) => {
+            //note: can't use fetchJSON, is a redirect
             if (r.status != 200) {
                 console.log("WARNING: signout at server failed. We can still proceed.")
             }

@@ -2,10 +2,17 @@
     import { onMount, createEventDispatcher } from "svelte"
     import { navigate } from "svelte-navigator"
 
-    import { getNotifier, getSchemaFor, getFirstMatchingPattern } from "./util"
+    import {
+        fetchJSON,
+        getNotifier,
+        getSchemaNameFor,
+        getFirstMatchingPattern,
+    } from "./util"
+    import type { Dataset, FileInfos } from "./util"
 
     import { DashboardModal } from "@uppy/svelte"
     import Uppy from "@uppy/core"
+    import type { UppyFile, UppyOptions } from "@uppy/core"
     import Tus from "@uppy/tus"
 
     import Fa from "svelte-fa/src/fa.svelte"
@@ -20,8 +27,8 @@
     import { saveAs } from "file-saver"
 
     // props:
-    export let dataset // current local state of dataset
-    export let selectedFile: null | string = null // currently selected file
+    export let dataset: Dataset // current local state of dataset
+    export let selectedFile: string | null = null // currently selected file
     export let unsavedChanges: boolean
 
     // local vars:
@@ -38,26 +45,36 @@
 
     onMount(async () => {
         // before we can upload with uppy, we need the tusd URL from the server
-        await fetch("/tusd-endpoint")
-            .then((r) => r.json())
-            .then((str) => (tusd_endpoint = str))
+        await fetchJSON("/tusd-endpoint").then((str: string) => (tusd_endpoint = str))
 
-        uppy = new Uppy({
+        const uppyConf: UppyOptions = {
             meta: { dataset: dataset.id },
-            onBeforeFileAdded: (file) => checkNewFilename(file.name),
-        })
+            onBeforeFileAdded: beforeFileAdded,
+        }
+        uppy = new Uppy(uppyConf)
             .use(Tus, { endpoint: tusd_endpoint })
-            .on("upload-success", (file) => uploadSuccess(file.name))
+            .on("upload-success", (file: UppyFile) => uploadSuccess(file.name))
     })
 
-    /** Reject uploads with existing and forbidden file names. */
+    /** Handle uppy event (user selected a file). */
+    function beforeFileAdded(file: UppyFile): UppyFile | boolean {
+        const ret = checkNewFilename(file.name)
+        if (ret) {
+            file.name = ret
+            return file
+        }
+        return false
+    }
+
+    /** Reject uploads with and renames to existing and forbidden file names. */
     function checkNewFilename(filename: string) {
         if (filename in dataset.files) {
             notify(`File named ${filename} already in dataset!`, "danger")
             return false
         }
 
-        const fileSchema = getSchemaFor(dataset.profile, filename)
+        const pr = dataset.profile
+        const fileSchema = pr.schemas[getSchemaNameFor(pr, filename)]
         if (fileSchema == false) {
             let pat = getFirstMatchingPattern(dataset.profile.patterns, filename)
             let msg = `Filename does not match any allowed name pattern!`
@@ -73,7 +90,7 @@
     /** Handle successful uppy upload of given filename. */
     function uploadSuccess(file: string) {
         // reflect addition of the new file in dataset
-        dataset.files[file] = { checksum: null, meta: null }
+        dataset.files[file] = { checksum: null, metadata: null }
         notify(`Upload of ${file} complete`)
 
         // start polling for the checksum
@@ -82,15 +99,15 @@
 
     /** update the checksum for given file, if available. */
     async function getChecksum(filename: string) {
-        await fetch(`/api/datasets/${dataset.id}/files/${filename}/checksum`)
-            .then((r) => r.json())
-            .then((chksum) => {
+        fetchJSON(`/api/datasets/${dataset.id}/files/${filename}/checksum`).then(
+            (chksum) => {
                 if (chksum) {
                     dataset.files[filename].checksum = chksum
                     clearInterval(checksumPollJobs.get(filename))
                     checksumPollJobs.delete(filename)
                 }
-            })
+            }
+        )
     }
 
     /** Delete file or dataset on the server and reflect change in UI. */
@@ -105,8 +122,8 @@
             url += `/files/${file}`
         }
 
-        await fetch(url, { method: "DELETE" }).then((r) => {
-            if (r.ok) {
+        await fetchJSON(url, { method: "DELETE" })
+            .then(() => {
                 if (file) {
                     // just remove a file
                     delete dataset.files[file]
@@ -126,30 +143,30 @@
                 }
 
                 notify(`${file ? file : "Dataset"} deleted`)
-            } else {
+            })
+            .catch(() => {
                 notify(`Cannot delete ${file ? file : dataset.id}!`, "danger")
-            }
-        })
+            })
     }
 
     /** Try to rename a file (if it does not violate anything). */
-    async function renameFile(e, file: string) {
-        const newName: string = e.target.value
+    async function renameFile(e: Event, file: string) {
+        const target = e.target as HTMLInputElement
+        const newName: string = target.value
         //console.log("trying rename: " + file + " -> " + newName)
 
         const sucMsg: string = `Renamed "${file}" to "${newName}"`
         const errMsg: string = `Cannot rename "${file}" to "${newName}"!`
-        if (e.target.value == "" || !checkNewFilename(newName)) {
+        if (newName == "" || !checkNewFilename(newName)) {
             notify(errMsg, "danger")
-            e.target.value = file // reset change
+            target.value = file // reset change
             return
         }
 
         // try to rename on server
-        await fetch(`/api/datasets/${dataset.id}/files/${file}/rename-to/${newName}`, {
-            method: "PATCH",
-        }).then((r) => {
-            if (r.ok) {
+        const renameUrl = `/api/datasets/${dataset.id}/files/${file}/rename-to/${newName}`
+        await fetchJSON(renameUrl, { method: "PATCH" })
+            .then(() => {
                 // perform local rename
                 dataset.files[newName] = dataset.files[file]
                 delete dataset.files[file]
@@ -165,15 +182,15 @@
                 }
 
                 notify(sucMsg)
-            } else {
+            })
+            .catch(() => {
                 notify(errMsg, "danger")
-                e.target.value = file // reset change
-            }
-        })
+                target.value = file // reset change
+            })
     }
 
     /** Open metadata edit view for file or dataset. */
-    async function openMetadata(filename?: null | string) {
+    async function openMetadata(filename?: string | null) {
         if (filename == selectedFile && !unsavedChanges) {
             return //nothing to do
         }
@@ -189,7 +206,7 @@
     }
 
     /** Compute a checksum file from the JSON object that can be used for verification. */
-    function computeChecksums(files): string {
+    function computeChecksums(files: FileInfos): string {
         let content: string = ""
         for (const [filename, info] of Object.entries(files)) {
             content += info.checksum + "  " + filename + "\n"
@@ -202,10 +219,16 @@
 
     /** Let user download checksums as a text file. */
     function saveChecksums() {
-        var checksumFile = new Blob([document.getElementById("checksums").value], {
+        const chksumArea = document.getElementById("checksums") as HTMLTextAreaElement
+        var checksumFile = new Blob([chksumArea.value], {
             type: "text/plain;charset=utf-8",
         })
         saveAs(checksumFile, checksumFilename)
+    }
+
+    /** Helper to prevent TypeScript errors. */
+    function selectAllText(el: EventTarget) {
+        ;(el as HTMLTextAreaElement).select()
     }
 
     /** Helper function to mark currently selected file edit button green/red. */
@@ -251,7 +274,7 @@
                         id="checksums"
                         style="font-family: monospace; resize: none; box-sizing: border-box; height: 100%;"
                         readonly={true}
-                        on:click={(e) => e.target.select()}
+                        on:click={(e) => selectAllText(e.target)}
                         >{checksumFileContent}</textarea>
                 </div>
                 <div style="float: right;">
@@ -275,7 +298,7 @@
         <Fa icon={faPencilAlt} /></button>
 </span>
 
-{#each Object.entries(dataset.files) as [file, fileInfo] (file)}
+{#each Object.keys(dataset.files) as file (file)}
     <div style="margin-left: 20px;">
         <div style="margin-bottom: 10px;">
             <div style="display: flex;">

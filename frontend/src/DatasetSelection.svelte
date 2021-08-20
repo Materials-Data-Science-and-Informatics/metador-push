@@ -4,17 +4,19 @@
 
     /** Create a new dataset based on given profile and go to its view. */
     async function newDataset(profile: string) {
-        await fetch("/api/datasets?profile=" + profile, { method: "POST" })
-            .then((r) => {
-                if (!r.ok) {
-                    console.log("ERROR: " + r.json())
-                }
-                return r.json()
-            })
+        fetchJSON("/api/datasets?profile=" + profile, { method: "POST" })
             .then((dsId) => {
                 navigate("/datasets/" + dsId) //redirect to new dataset
             })
+            .catch((err) => {
+                console.log("ERROR: ", err)
+            })
     }
+
+    // type coercions to use in templating to prevent TypeScript errors
+    const retStringArray = (val: any) => val as Promise<string[]>
+    const retStringMap = (val: any) =>
+        val as Promise<{ [profile: string]: { title: string; description: string } }>
 </script>
 
 <div class="flex three">
@@ -24,19 +26,21 @@
 
     <div />
     <div>
-        {#await fetchJSON("/api/profiles")}
+        {#await retStringMap(fetchJSON("/api/profiles"))}
             Loading profile info...
         {:then pinfos}
             {#each Object.entries(pinfos) as [pId, { title, description }]}
-                <Link class="button stack" to="#" on:click={() => newDataset(pId)}>
-                    <b>{title}</b> <br /> <small>{description}</small>
+                <Link to="#">
+                    <span class="button stack" on:click={() => newDataset(pId)}>
+                        <b>{title}</b> <br /> <small>{description}</small>
+                    </span>
                 </Link>
             {/each}
         {/await}
     </div>
     <div />
 
-    {#await fetchJSON("/api/datasets")}
+    {#await retStringArray(fetchJSON("/api/datasets"))}
         <div />
         <div>Loading user datasets...</div>
         <div />

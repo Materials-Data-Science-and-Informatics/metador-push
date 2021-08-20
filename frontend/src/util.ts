@@ -1,8 +1,22 @@
 import { getNotificationsContext } from "svelte-notifications"
 
 /** Helper: GET from URL as json response. */
-export async function fetchJSON(url: string) {
-    return fetch(url).then((r) => r.json())
+export function fetchJSON(url: string, args?: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+        fetch(url, args)
+            .then((response) => {
+                response.json().then((val) => {
+                    if (response.ok) {
+                        resolve(val)
+                    } else {
+                        reject(val)
+                    }
+                })
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
 }
 
 /** Helper: Sleep for given number of ms. */
@@ -36,7 +50,37 @@ export function getNotifier() {
     return notify
 }
 
-export function getFirstMatchingPattern(patterns, filename: string) {
+export type Pattern = {
+    pattern: string
+    useSchema: string
+}
+
+export type Profile = {
+    title: string
+    description: string
+    schemas: { [name: string]: any }
+    patterns: Pattern[]
+    rootSchema: string
+    fallbackSchema: string
+}
+
+export type FileInfos = { [name: string]: { checksum: string | null; metadata: any } }
+
+export type Dataset = {
+    id: string
+    creator: string
+    created: string
+    expires: string
+    checksumTool: string
+    profile: Profile
+    rootMeta: any
+    files: FileInfos
+}
+
+export function getFirstMatchingPattern(
+    patterns: Pattern[],
+    filename: string
+): Pattern | null {
     for (let pat of patterns) {
         const reg = new RegExp(`^${pat.pattern}$`)
         if (reg.test(filename)) {
@@ -46,16 +90,22 @@ export function getFirstMatchingPattern(patterns, filename: string) {
     return null
 }
 
-export function getSchemaFor(profile, filename: null | string) {
+export function getSchemaNameFor(profile: Profile, filename: string | null): string {
     if (!filename) {
         // dataset root metadata
-        return profile.schemas[profile.rootSchema]
+        return profile.rootSchema
     }
     // check files
     const pat = getFirstMatchingPattern(profile.patterns, filename)
     if (pat !== null) {
-        return profile.schemas[pat.useSchema]
+        return pat.useSchema
     }
     // no match
-    return profile.schemas[profile.fallbackSchema]
+    return profile.fallbackSchema
+}
+
+export function selfContainedSchema(profile: Profile, schemaName: string) {
+    return profile.schemas[schemaName]
+    // TODO: copy profile.schemas into schema.definitions
+    // rewire all $refs correctly
 }
