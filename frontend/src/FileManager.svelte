@@ -228,7 +228,8 @@
 
     /** Helper to prevent TypeScript errors. */
     function selectAllText(el: EventTarget) {
-        ;(el as HTMLTextAreaElement).select()
+        const elem = el as HTMLTextAreaElement
+        elem.select()
     }
 
     /** Helper function to mark currently selected file edit button green/red. */

@@ -1,0 +1,110 @@
+<script lang="ts">
+    /** This component visualizes a dataset profile (patterns and schemas). */
+    import { JSONEditor } from "svelte-jsoneditor"
+
+    import type { Profile, Pattern } from "./util"
+    import { selfContainedSchema, getFirstMatchingPattern } from "./util"
+
+    export let profile: Profile
+
+    //name of selected schema (key in profile)
+    let selected: string = profile.rootSchema
+
+    //title shown for that schema above jsoneditor
+    let selTitle: string = "dataset root"
+
+    //the actual schema to show
+    let json: any
+    $: json = selfContainedSchema(profile, selected)
+
+    //the actual matching pattern for highlighting
+    //undefined = no match performed, null = no match (-> fallback), otherwise pattern
+    let matchPat: undefined | null | Pattern
+
+    function updateMatchingPattern(e: InputEvent) {
+        const str = e.target.value
+        if (str == "") {
+            matchPat = undefined
+            return
+        }
+        matchPat = getFirstMatchingPattern(profile.patterns, e.target.value)
+    }
+
+    /** 
+      Helper for setting profile schema name and title in header.
+      Name maps null to rootSchema and empty string to fallbackSchema.
+     */
+    function select(name: null | string, title: string) {
+        if (name === null) {
+            selected = profile.rootSchema
+        } else if (name == "") {
+            selected = profile.fallbackSchema
+        } else {
+            selected = name
+        }
+        selTitle = title
+    }
+</script>
+
+<label for="modal_profile" style="cursor: help;">{profile.title}</label>
+<div class="modal">
+    <input id="modal_profile" type="checkbox" />
+    <label for="modal_profile" class="overlay" />
+    <article style="width: 75%; height: 75%;">
+        <header>
+            <h3>Profile: {profile.title}</h3>
+            <label for="modal_profile" class="close">&times;</label>
+        </header>
+        <section
+            class="content"
+            style="display: flex; flex-direction: column; height: 90%; ">
+            <div style="height: 100%;" class="flex three">
+                <div style="display: flex; flex-direction: column; height: 80%; ">
+                    <span
+                        class="pseudo button"
+                        on:click={() => select(null, "dataset root")}>
+                        <b> dataset root</b>
+                    </span>
+                    <span style="border-top: 1px solid black;">
+                        <b>File patterns:</b>
+                    </span>
+                    {#each profile.patterns as pat, i}
+                        <span
+                            class="pseudo button"
+                            class:match={matchPat == pat}
+                            style="font-family: monospace"
+                            on:click={() => select(pat.useSchema, pat.pattern)}
+                            >{pat.pattern}</span>
+                    {/each}
+                    <span
+                        class="pseudo button"
+                        class:match={matchPat === null}
+                        on:click={() => select("", "file (default)")}>
+                        default
+                    </span>
+
+                    <div style="text-align: center; margin-top: 50px;">
+                        For files, the first matching pattern determines the schema.
+                        <br />
+                        If no pattern matches, the default schema is used.
+                    </div>
+                    <div style="margin-top: 20px;">
+                        Enter a filename to highlight the applying schema: <input
+                            on:input={updateMatchingPattern} />
+                    </div>
+                </div>
+
+                <div class="two-third" style="height: 95%;">
+                    <h4>JSON Schema for: {selTitle}</h4>
+                    <JSONEditor readOnly={true} {json} />
+                </div>
+            </div>
+        </section>
+    </article>
+</div>
+
+<style>
+    .match {
+        border: 1px dashed black;
+    }
+</style>

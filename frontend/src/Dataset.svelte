@@ -3,6 +3,7 @@
     import { navigate } from "svelte-navigator"
     import FileManager from "./FileManager.svelte"
     import MetadataEditor from "./MetadataEditor.svelte"
+    import ProfileViewer from "./ProfileViewer.svelte"
     import { getNotifier, fetchJSON } from "./util"
     import { selfContainedSchema, getSchemaNameFor } from "./util"
     import type { Dataset } from "./util"
@@ -17,7 +18,6 @@
 
     // all information about the dataset
     // initialized on mount, assertion: always in sync with server
-    //TODO: add expires field in backend
     let dataset: Dataset
 
     let selectedFile: null | string // from FileManager component
@@ -153,7 +153,8 @@
 {:else}
     <div class="flex">
         <h3>Dataset {dsId}</h3>
-        <span style="margin-top: 20px"><b>Profile:</b> {dataset.profile.title}</span>
+        <span style="margin-top: 20px"
+            ><b>Profile:</b> <ProfileViewer profile={dataset.profile} /></span>
         <span style="margin-top: 20px">
             <b>To complete until:</b>
             <span class:urgent={completionUrgent()}>{expiryDateStr()}</span>
