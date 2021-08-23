@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
+    import { navigate } from "svelte-navigator"
     import FileManager from "./FileManager.svelte"
     import MetadataEditor from "./MetadataEditor.svelte"
     import { getNotifier, fetchJSON } from "./util"
@@ -53,6 +54,25 @@
         return selfContainedSchema(pr, getSchemaNameFor(pr, selectedFile))
     }
 
+    async function submitDataset() {
+        let msg = "Are you sure you want to submit the dataset? "
+        msg += "After submission you cannot access or edit it anymore!"
+        if (!confirm(msg)) return
+
+        await fetchJSON(`/api/datasets/${dataset.id}`, { method: "PUT" })
+            .then(() => {
+                notify("Dataset submission complete!")
+                navigate(`/complete/${dataset.id}`)
+            })
+            .catch((err) => {
+                console.log(err)
+                notify(
+                    "Cannot submit dataset, check that the metadata is valid!",
+                    "danger"
+                )
+            })
+    }
+
     /** Handle event that user pressed save. Store the updated metadata in the dataset. */
     async function saveMetadata(e: CustomEvent<any>) {
         const meta = e.detail
@@ -98,6 +118,28 @@
                 notFound = true
             })
     })
+
+    /** Format date to local format (without sec/ms). */
+    function expiryDateStr(): string {
+        const date = new Date(dataset.expires)
+        let ret = date.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+        })
+        ret += " "
+        ret += date.toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+        })
+        return ret
+    }
+
+    /** Completion of dataset is urgent if it has less than 1h. */
+    function completionUrgent(): boolean {
+        const date = new Date(dataset.expires)
+        return parseInt((date - Date.now()) / 1000) < 3600
+    }
 </script>
 
 {#if notFound}
@@ -111,8 +153,13 @@
 {:else}
     <div class="flex">
         <h3>Dataset {dsId}</h3>
-        <span>Profile: {dataset.profile.title}</span>
-        <span>To complete until: {dataset.expires}</span>
+        <span style="margin-top: 20px"><b>Profile:</b> {dataset.profile.title}</span>
+        <span style="margin-top: 20px">
+            <b>To complete until:</b>
+            <span class:urgent={completionUrgent()}>{expiryDateStr()}</span>
+        </span>
+        <span style="width:30%;" />
+        <button disabled={modified} on:click={submitDataset}><h3>Submit</h3></button>
     </div>
     <div id="dataset-app">
         <div id="file-list">
@@ -156,5 +203,9 @@
         padding-left: 10px;
         height: 90vh;
         overflow: auto;
+    }
+    .urgent {
+        font-weight: bold;
+        color: red;
     }
 </style>

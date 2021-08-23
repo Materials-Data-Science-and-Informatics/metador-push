@@ -334,7 +334,7 @@ def test_example_dataset(test_profiles, dummy_file):
         {"authorName": "John Doe", "authorEmail": "a@b.de", "authorOrcid": "orcid"},
     )
     assert txtfile.name in ds.validate_dataset()
-    assert ds.complete() is None  # cannot complete with validation errors
+    assert ds.complete()[0] is None  # cannot complete with validation errors
 
     valid_txt_meta = {
         "authorName": "John Doe",
@@ -345,13 +345,13 @@ def test_example_dataset(test_profiles, dummy_file):
     assert txtfile.name not in ds.validate_dataset()
 
     # missing checksums
-    assert ds.complete() is None
+    assert ds.complete()[0] is None
     for fname in ds.files.keys():
         ds.compute_checksum(fname)
 
     # now completion should work
     assert len(ds.validate_dataset()) == 0
-    path = ds.complete()
+    path, _ = ds.complete()
     assert path is not None
     assert not ds._persist_filename(ds.id).is_file()
     assert not ds._upload_dir().is_dir()
@@ -404,7 +404,7 @@ async def test_completion_hooks(test_profiles, mock_http_postproc):
 
     pr = Profile.get_profile("anything")
     ds = Dataset.create(pr, SOME_ORCID)
-    path = ds.complete()
+    path, _ = ds.complete()
     assert path is not None
 
     # notif = DatasetNotification(location=str(path))

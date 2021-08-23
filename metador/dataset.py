@@ -11,7 +11,7 @@ import re
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from uuid import UUID, uuid1
 
 from pydantic import BaseModel
@@ -135,14 +135,14 @@ class Dataset(BaseModel):
         metadata = self.files[file].metadata if file else self.rootMeta
         return util.validate_json(metadata, self.profile.get_schema_for(file))
 
-    def validate_dataset(self) -> Dict[str, Optional[str]]:
+    def validate_dataset(self) -> Dict[str, str]:
         """
         Validate the dataset, collect error messages.
 
         On success, the returned dict is empty, otherwise it contains
         the error message per file (empty filename = root metadata validation result).
         """
-        errors: Dict[str, Optional[str]] = {}
+        errors: Dict[str, str] = {}
         err = self.validate_metadata(None)
         if err is not None:
             errors[""] = err  # dataset "root" metadata errors
@@ -282,7 +282,7 @@ class Dataset(BaseModel):
 
     ####
 
-    def complete(self) -> Optional[Path]:
+    def complete(self) -> Tuple[Optional[Path], Dict[str, str]]:
         """
         Validate metadata and check that all checksums are present.
 
@@ -294,12 +294,14 @@ class Dataset(BaseModel):
         val_errors = self.validate_dataset()
         if len(val_errors) != 0:
             log.error(f"Cannot complete dataset, validation failed: {val_errors}")
-            return None
+            return (None, val_errors)
 
+        missing_checksums = {}
         for file, dat in self.files.items():
             if dat.checksum is None:
-                log.error(f"Cannot complete dataset, missing checksum for {file}")
-                return None
+                missing_checksums[file] = f"File checksum is missing: {file}"
+        if len(missing_checksums) != 0:
+            return (None, missing_checksums)
 
         upload_dir: Final[Path] = self._upload_dir()
         target_dir: Final[Path] = self._target_dir()
@@ -310,13 +312,13 @@ class Dataset(BaseModel):
         # produce the metadata files
         if self.rootMeta is not None:
             with open(target_dir / METADATA_SUF, "w") as outfile:
-                json.dump(self.rootMeta, outfile)
+                json.dump(self.rootMeta, outfile, indent=2)
                 outfile.flush()
 
         for filename, dat in self.files.items():
             if dat.metadata is not None:
                 with open(target_dir / (filename + METADATA_SUF), "w") as outfile:
-                    json.dump(dat.metadata, outfile)
+                    json.dump(dat.metadata, outfile, indent=2)
                     outfile.flush()
 
         # create a checksum file (e.g. sha256sums.txt)
@@ -330,7 +332,7 @@ class Dataset(BaseModel):
             dsinfo = DatasetInfo(
                 creator=self.creator, created=self.created, profile=self.profile
             )
-            outfile.write(dsinfo.json())
+            json.dump(json.loads(dsinfo.json()), outfile, indent=2)
             outfile.flush()
 
         # TODO: this is the point where we could store the profile as  e.g. dirschema
@@ -341,7 +343,7 @@ class Dataset(BaseModel):
         self._persist_filename(self.id).unlink()
 
         log.info(f"Dataset {self.id} completed.")
-        return target_dir
+        return (target_dir, {})
 
     def delete(self) -> None:
         """Delete information about this dataset and all its files IRREVERSIBLY."""

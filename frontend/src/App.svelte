@@ -11,6 +11,14 @@
     fetchJSON("/site-base")
 
     let userSession = null //current session
+
+    const submissionComplete = (dsId) => `
+    <h3>Dataset submission completed</h3>
+    <div>
+    You just successfully submitted dataset <b>${dsId}</b>. <br />
+    Please keep this ID as a reference and add it to inquiries about the dataset.
+    </div>
+    `
 </script>
 
 <Router url="">
@@ -37,6 +45,9 @@
         <main id="content-wrapper">
             <Route path="/signout">
                 <Message html="<h4>You have successfully signed out!</h4>" />
+            </Route>
+            <Route path="/complete/:id" let:params>
+                <Message html={submissionComplete(params.id)} />
             </Route>
             {#if userSession}
                 <Route path="/"><DatasetSelection /></Route>

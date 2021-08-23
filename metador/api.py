@@ -1,5 +1,6 @@
 """Core backend API exposing functionality to the frontend."""
 
+import json
 from typing import Dict, List, Optional
 from uuid import UUID
 
@@ -125,10 +126,10 @@ async def put_dataset(ds_uuid: UUID):
 
     If validation fails, returns 422 status code.
     """
-    path = Dataset.get_dataset(ds_uuid).complete()
+    path, errors = Dataset.get_dataset(ds_uuid).complete()
     if path is None:
         return Response(
-            "Cannot complete dataset, invalid metadata or missing checksums!",
+            json.dumps(errors),
             status_code=422,
         )
 
@@ -138,7 +139,7 @@ async def put_dataset(ds_uuid: UUID):
 
     # from the user's point of view, we are done
     # the user does not care about possible problems in postprocessing
-    return Response("OK", status_code=200)
+    return Response(json.dumps({}), status_code=200)
 
 
 @ds_routes.delete("/{ds_uuid}")
