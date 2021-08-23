@@ -97,8 +97,7 @@ def test_create_load_get(test_config, dummy_file):
     del ds  # this one is old, now ds2 is the real object
 
     # check that auto-removing works (make expired)
-    surely_old = int(test_config.metador.incomplete_expire_after / 24) + 2
-    ds2.created = datetime.now() - timedelta(days=surely_old)
+    ds2.expires = datetime.now() - timedelta(days=1)
     assert ds2.is_expired()
     with pytest.raises(KeyError):
         Dataset.get_dataset(ds2.id)

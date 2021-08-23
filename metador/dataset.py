@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 from uuid import UUID, uuid1
@@ -76,6 +76,9 @@ class Dataset(BaseModel):
     created: datetime
     """Creation date and time."""
 
+    expires: datetime
+    """Expiry date and time (if not completed by then)."""
+
     checksumTool: ChecksumTool
     """Fix checksum tool in a dataset (should stay consistent throughout config change)."""
 
@@ -121,8 +124,7 @@ class Dataset(BaseModel):
 
     def is_expired(self) -> bool:
         """Return true if dataset is expired according to current config."""
-        age_hours = (datetime.now() - self.created).total_seconds() / 3600
-        return age_hours > conf().metador.incomplete_expire_after
+        return datetime.now() > self.expires
 
     def save(self) -> None:
         """Serialize the current state into a file."""
@@ -385,10 +387,13 @@ class Dataset(BaseModel):
     @classmethod
     def create(cls, profile: Profile, creator: Optional[OrcidStr] = None) -> Dataset:
         """Create a new dataset and its directory + persistence file, return it."""
+        now = datetime.now()
+        tdiff = timedelta(hours=conf().metador.incomplete_expire_after)
         ds = cls(
             id=uuid1(),
             creator=creator,
-            created=datetime.now(),
+            created=now,
+            expires=now + tdiff,
             profile=profile,
             checksumTool=conf().metador.checksum_tool,
         )
