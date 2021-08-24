@@ -15,8 +15,7 @@
     const defFile: string = "file (default)"
 
     //the actual schema to show
-    let json: any
-    $: json = selfContainedSchema(profile, selected)
+    export let json: any = undefined
 
     //the actual matching pattern for highlighting
     //undefined = no match performed, null = no match (-> fallback), otherwise pattern
@@ -49,6 +48,7 @@
         } else {
             selected = name
         }
+        json = selfContainedSchema(profile, selected)
         selTitle = title
         matchPat = undefined //user clicked pattern -> un-highlight text match
     }

@@ -22,8 +22,9 @@
     // all information about the dataset
     // initialized on mount, assertion: always in sync with server
     let dataset: Dataset
+    let datasetReady: boolean = false
 
-    let selectedFile: null | string // from FileManager component
+    let selectedFile: null | string = null // from FileManager component
     let editorMetadata: any
     let reloadEditor = {} // set this to {} again to force reload of component
     let formView = true // toggle between form and editor view
@@ -114,7 +115,7 @@
             .then((data) => {
                 dataset = data
                 getMetadata()
-                reloadEditor = {}
+                datasetReady = true
             })
             .catch((err) => {
                 console.log("ERROR:", err)
@@ -175,16 +176,18 @@
                 unsavedChanges={modified} />
         </div>
         <div id="file-metadata">
-            {#key reloadEditor}
-                <MetadataEditor
-                    {selectedFile}
-                    {editorMetadata}
-                    {modified}
-                    bind:formView
-                    schema={assembleSchema(selectedFile)}
-                    on:save={saveMetadata}
-                    on:modified={setModified} />
-            {/key}
+            {#if datasetReady}
+                {#key reloadEditor}
+                    <MetadataEditor
+                        {selectedFile}
+                        {editorMetadata}
+                        {modified}
+                        bind:formView
+                        schema={assembleSchema(selectedFile)}
+                        on:save={saveMetadata}
+                        on:modified={setModified} />
+                {/key}
+            {/if}
         </div>
     </div>
 {/if}

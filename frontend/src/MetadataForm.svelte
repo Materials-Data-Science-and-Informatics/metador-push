@@ -76,8 +76,9 @@
         ReactDOM.unmountComponentAtNode(container)
     })
 
-    //TODO: I did not find a way to update formData later on programmatically,
-    //so this component is regenerated when the user changes from the Editor
+    //TODO: I did not find a way to trigger validation programmatically
+    //(which can be done using component.setState({formData: ...})).
+    //So this component is regenerated when the user changes from the Editor
     //view to this Form view. This is not elegant, but works good enough.
 </script>
 
