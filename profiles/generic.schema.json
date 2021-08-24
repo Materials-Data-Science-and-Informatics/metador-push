@@ -10,6 +10,11 @@
       "minLength": 1
 
     },
+    "authorOrcid": { "$ref": "#/$defs/authorOrcid" },
+    "authorEmail": { "$ref": "#/$defs/authorEmail" }
+  },
+  "required": ["authorName", "authorEmail"],
+  "$defs": {
     "authorOrcid": {
       "title": "Author ORCID",
       "description": "ORCID of the author",
@@ -22,6 +27,5 @@
       "type": "string",
       "pattern": "^[^@]+@[^@]+$"
     }
-  },
-  "required": ["authorName", "authorEmail"]
+  }
 }

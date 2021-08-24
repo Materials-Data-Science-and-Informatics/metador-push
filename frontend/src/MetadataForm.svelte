@@ -61,7 +61,7 @@
                 {
                     liveValidate: true,
                     noHtml5Validate: true,
-                    schema: schema === true ? anythingSchema : schema,
+                    schema: schema === true ? (anythingSchema as any) : schema,
                     formData: prefill ? prefill : {}, // just initial pre-fill data
                     onChange: onChange,
                     //ref: (c) => (component = c), // reference to React comp. instance

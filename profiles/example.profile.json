@@ -7,14 +7,21 @@
       "type": "object",
       "description": "A dummy object to test embedded schemas",
       "properties": {
-        "validNumber": {
+        "validNumber": { "$ref": "#/$defs/between0and99" },
+        "anotherValidNumber": { "$ref": "#/properties/validNumber" },
+        "authorName": {
+          "$ref": "generic.schema.json#/properties/authorName"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["validNumber"],
+      "$defs": {
+        "between0and99": {
           "type": "integer",
           "minimum": 0,
           "exclusiveMaximum": 100
         }
-      },
-      "additionalProperties": false,
-      "required": ["validNumber"]
+      }
     }
   },
   "rootSchema": "embeddedSchema",
