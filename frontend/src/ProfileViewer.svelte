@@ -79,7 +79,7 @@
                     <span style="border-top: 1px solid black;">
                         <b>File patterns:</b>
                     </span>
-                    {#each profile.patterns as pat, i}
+                    {#each profile.patterns as pat}
                         <span
                             class="pseudo button"
                             class:match={matchPat == pat}

@@ -12,7 +12,7 @@
 
     let userSession = null //current session
 
-    const submissionComplete = (dsId) => `
+    const submissionComplete = (dsId: string) => `
     <h3>Dataset submission completed</h3>
     <div>
     You just successfully submitted dataset <b>${dsId}</b>. <br />
