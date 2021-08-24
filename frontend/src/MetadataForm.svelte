@@ -58,6 +58,7 @@
                 Form,
                 {
                     liveValidate: true,
+                    noHtml5Validate: true,
                     schema: schema === true ? anythingSchema : schema,
                     formData: prefill ? prefill : {}, // just initial pre-fill data
                     onChange: onChange,

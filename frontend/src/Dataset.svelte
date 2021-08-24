@@ -8,6 +8,9 @@
     import { selfContainedSchema, getSchemaNameFor } from "./util"
     import type { Dataset } from "./util"
 
+    import Fa from "svelte-fa/src/fa.svelte"
+    import { faFileExport } from "@fortawesome/free-solid-svg-icons"
+
     const notify = getNotifier() // for showing notifications
 
     // props in:
@@ -153,14 +156,15 @@
 {:else}
     <div class="flex">
         <h3>Dataset {dsId}</h3>
-        <span style="margin-top: 20px"
+        <span style="margin-top: 15px"
             ><b>Profile:</b> <ProfileViewer profile={dataset.profile} /></span>
-        <span style="margin-top: 20px">
+        <span style="margin-top: 15px">
             <b>To complete until:</b>
             <span class:urgent={completionUrgent()}>{expiryDateStr()}</span>
         </span>
         <span style="width:30%;" />
-        <button disabled={modified} on:click={submitDataset}><h3>Submit</h3></button>
+        <button style="mainButton" disabled={modified} on:click={submitDataset}>
+            <Fa icon={faFileExport} /> Submit</button>
     </div>
     <div id="dataset-app">
         <div id="file-list">

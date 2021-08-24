@@ -12,6 +12,7 @@
 
     //title shown for that schema above jsoneditor
     let selTitle: string = "dataset root"
+    const defFile: string = "file (default)"
 
     //the actual schema to show
     let json: any
@@ -21,13 +22,19 @@
     //undefined = no match performed, null = no match (-> fallback), otherwise pattern
     let matchPat: undefined | null | Pattern
 
-    function updateMatchingPattern(e: InputEvent) {
-        const str = e.target.value
+    function updateMatchingPattern(e: Event) {
+        const str = (e.target as HTMLInputElement).value
         if (str == "") {
             matchPat = undefined
             return
         }
-        matchPat = getFirstMatchingPattern(profile.patterns, e.target.value)
+        const pat = getFirstMatchingPattern(profile.patterns, str)
+        //show corresponding JSON Schema in editor
+        const patName = pat ? pat.useSchema : ""
+        const patTitle = pat ? pat.pattern : defFile
+        select(patName, patTitle)
+        //sets the highlighted pattern (select unsets it before!)
+        matchPat = pat
     }
 
     /** 
@@ -43,10 +50,14 @@
             selected = name
         }
         selTitle = title
+        matchPat = undefined //user clicked pattern -> un-highlight text match
     }
 </script>
 
-<label for="modal_profile" style="cursor: help;">{profile.title}</label>
+<label
+    class="pseudo button"
+    for="modal_profile"
+    style="cursor: help; margin-top: -15px; margin-bottom: -15px;">{profile.title}</label>
 <div class="modal">
     <input id="modal_profile" type="checkbox" />
     <label for="modal_profile" class="overlay" />
@@ -79,7 +90,7 @@
                     <span
                         class="pseudo button"
                         class:match={matchPat === null}
-                        on:click={() => select("", "file (default)")}>
+                        on:click={() => select("", defFile)}>
                         default
                     </span>
 
