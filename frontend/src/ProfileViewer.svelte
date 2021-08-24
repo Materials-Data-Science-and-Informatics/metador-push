@@ -2,7 +2,7 @@
     /** This component visualizes a dataset profile (patterns and schemas). */
     import { JSONEditor } from "svelte-jsoneditor"
 
-    import type { Profile, Pattern } from "./util"
+    import type { JSONVal, Profile, Pattern } from "./util"
     import { selfContainedSchema, getFirstMatchingPattern } from "./util"
 
     export let profile: Profile
@@ -15,7 +15,7 @@
     const defFile: string = "file (default)"
 
     //the actual schema to show
-    export let json: any = undefined
+    export let json: JSONVal = undefined
 
     //the actual matching pattern for highlighting
     //undefined = no match performed, null = no match (-> fallback), otherwise pattern

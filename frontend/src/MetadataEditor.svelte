@@ -15,6 +15,8 @@
 
     import MetadataForm from "./MetadataForm.svelte"
 
+    import type { JSONVal } from "./util"
+
     const dispatch = createEventDispatcher() // for sending events
 
     // ----
@@ -27,7 +29,7 @@
     // self-contained schema and the name of the current file (or null for root metadata)
     // need that to assemble the schema into a suitable form.
     export let selectedFile: null | string
-    export let schema: any
+    export let schema: JSONVal
 
     // this component sends "modified" events up whenever the metadata changes.
     // the parent component decides whether the state is currently modified
@@ -35,11 +37,11 @@
     export let modified: boolean
 
     // initial value of metadata. Future changes are sent up on "save" event
-    export let editorMetadata: any
+    export let editorMetadata: JSONVal
     // ----
 
     // validator to pass into JSONEditor
-    const validator = createAjvValidator(schema)
+    const validator = createAjvValidator(schema as any)
 
     let jsonEditor: any // reference to JSONEditor to call methods etc.
     let refreshForm = {} // set again to {} to regenerate Form component
@@ -49,7 +51,7 @@
         JSONEditor passes an object with either a text or json key.
         For react-jsonschema-form updates, we repack the new value into this shape.
      */
-    function editorMetadataChanged(content: { json?: any; text?: string }): void {
+    function editorMetadataChanged(content: { json?: JSONVal; text?: string }): void {
         // depending on tree or code view we get text or json object...
         let newJson = content.json
         if (!newJson) {

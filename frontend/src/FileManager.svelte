@@ -102,7 +102,7 @@
         fetchJSON(`/api/datasets/${dataset.id}/files/${filename}/checksum`).then(
             (chksum) => {
                 if (chksum) {
-                    dataset.files[filename].checksum = chksum
+                    dataset.files[filename].checksum = chksum as string
                     clearInterval(checksumPollJobs.get(filename))
                     checksumPollJobs.delete(filename)
                 }

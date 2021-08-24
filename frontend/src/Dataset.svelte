@@ -6,7 +6,7 @@
     import ProfileViewer from "./ProfileViewer.svelte"
     import { getNotifier, fetchJSON } from "./util"
     import { selfContainedSchema, getSchemaNameFor } from "./util"
-    import type { Dataset } from "./util"
+    import type { JSONVal, Dataset } from "./util"
 
     import Fa from "svelte-fa/src/fa.svelte"
     import { faFileExport } from "@fortawesome/free-solid-svg-icons"
@@ -25,7 +25,7 @@
     let datasetReady: boolean = false
 
     let selectedFile: null | string = null // from FileManager component
-    let editorMetadata: any
+    let editorMetadata: JSONVal
     let reloadEditor = {} // set this to {} again to force reload of component
     let formView = true // toggle between form and editor view
 
@@ -78,7 +78,7 @@
     }
 
     /** Handle event that user pressed save. Store the updated metadata in the dataset. */
-    async function saveMetadata(e: CustomEvent<any>) {
+    async function saveMetadata(e: CustomEvent<JSONVal>) {
         const meta = e.detail
 
         let url = `/api/datasets/${dataset.id}`
@@ -113,7 +113,7 @@
     onMount(async () => {
         fetchJSON("/api/datasets/" + dsId)
             .then((data) => {
-                dataset = data
+                dataset = data as Dataset
                 getMetadata()
                 datasetReady = true
             })
@@ -142,7 +142,7 @@
     /** Completion of dataset is urgent if it has less than 1h. */
     function completionUrgent(): boolean {
         const date = new Date(dataset.expires)
-        return parseInt((date - Date.now()) / 1000) < 3600
+        return (date.getTime() - Date.now()) / 1000 < 3600
     }
 </script>
 

@@ -20,7 +20,7 @@
         "@types/react-dom": "^17.0.9",
         "@typescript-eslint/eslint-plugin": "^4.29.0",
         "@typescript-eslint/parser": "^4.29.0",
-        "eslint": "7.32.0",
+        "eslint": "^7.32.0",
         "eslint-plugin-import": "^2.23.4",
         "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^5.1.0",
@@ -56,6 +56,6 @@
         "svelte-fa": "^2.2.1",
         "svelte-jsoneditor": "^0.2.7",
         "svelte-navigator": "^3.1.5",
-        "svelte-notifications": "^0.9.91"
+        "svelte-notifications": "github:keenethics/svelte-notifications"
     }
 }

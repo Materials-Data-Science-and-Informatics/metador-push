@@ -1,5 +1,13 @@
 import { getNotificationsContext } from "svelte-notifications"
 
+export type JSONVal =
+    | string
+    | number
+    | boolean
+    | null
+    | JSONVal[]
+    | { [key: string]: JSONVal }
+
 /** Helper: GET from URL as json response. */
 export function fetchJSON(url: string, args?: any): Promise<any> {
     return new Promise((resolve, reject) => {

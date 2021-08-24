@@ -40,9 +40,11 @@
     // "additionalProperties" producing a generic "Add item" button.
     import Form from "@rjsf/material-ui"
 
+    import type { JSONVal } from "./util"
+
     // props in:
-    export let schema: any //schema to validate against (must be self-contained)
-    export let prefill: any //current metadata JSON to prefill the form on generation
+    export let schema: JSONVal //schema to validate against (must be self-contained)
+    export let prefill: JSONVal //current metadata JSON to prefill the form on generation
     export let onChange: (e: any) => void //handler for form/JSON data updates
 
     let container: HTMLElement // ref to DOM element to mount component into
