@@ -158,7 +158,7 @@ class Profile(BaseModel):
 
         filepath = _PROFILE_DIR / filename
         if not filepath.is_file():
-            critical_exit(f"So such profile: {filepath}")
+            critical_exit(f"No such profile: {filepath}")
 
         content: Any = load_json(filepath)
 
@@ -170,7 +170,7 @@ class Profile(BaseModel):
         # Extract, load and check schemas referenced in profiles
         for entry in content["patterns"]:
             schemaref = entry["useSchema"]
-            if type(schemaref) == str:
+            if type(schemaref) == str and schemaref not in content["schemas"]:
                 cls.get_schema_json(schemaref)
 
         _profiles_json[filename] = content
