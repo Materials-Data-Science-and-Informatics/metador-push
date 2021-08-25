@@ -16,9 +16,32 @@
     let auth_status = null
     export let userSession = null
 
+    let currTime = Date.now()
+    let remainingTime: number
+    $: remainingTime = userSession
+        ? new Date(userSession.expires).getTime() - currTime
+        : remainingTime
+
+    function formatTime(date: Date): string {
+        return date.toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        })
+    }
+
+    /** Update time, sign user out if expired. */
+    function checkTime() {
+        currTime = Date.now()
+        if (remainingTime <= 0 && userSession) {
+            signOut()
+        }
+    }
+
     onMount(async () => {
         auth_status = await fetchJSON("/oauth/status")
         userSession = auth_status.session
+        setInterval(checkTime, 500)
     })
 
     /** Greet the identified user. */
@@ -41,9 +64,6 @@
             navigate("/signout", { replace: true }) //redirect to signout page
         })
     }
-
-    //TODO: if session expires soon, show countdown and warn?
-    // then auto-signout user (setTimeout?)
 </script>
 
 {#if auth_status}
@@ -59,9 +79,18 @@
                 </a>
             </span>
         {:else}
+            Your session ends in: <span class:urgent={remainingTime < 600}>
+                {formatTime(new Date(remainingTime))}</span>
             <span id="signout-button">
                 <a class="button" href={"#"} on:click={signOut}>Sign out</a>
             </span>
         {/if}
     </span>
 {/if}
+
+<style>
+    .urgent {
+        font-weight: bold;
+        color: red;
+    }
+</style>
