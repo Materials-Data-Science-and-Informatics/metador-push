@@ -64,6 +64,8 @@
                     schema: schema === true ? (anythingSchema as any) : schema,
                     formData: prefill ? prefill : {}, // just initial pre-fill data
                     onChange: onChange,
+                    ErrorList: () => e("span"), // remove global error list on top
+                    //TODO: move this to the bottom, somehow?
                     //ref: (c) => (component = c), // reference to React comp. instance
                 },
                 // pass empty child to prevent creation of submit button,
