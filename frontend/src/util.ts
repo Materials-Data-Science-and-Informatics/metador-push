@@ -45,7 +45,7 @@ const typeToLoglevel = {
 
 /** Return preconfigured addNotification wrapper. */
 export function getNotifier(): (msg: string, nType?: notificationType) => void {
-    const { addNotification } = getNotificationsContext()
+    const { addNotification }: any = getNotificationsContext()
     function notify(msg: string, type: notificationType = "default"): void {
         console.log(typeToLoglevel[type] + ": " + msg)
         addNotification({

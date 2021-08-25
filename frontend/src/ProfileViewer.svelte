@@ -19,7 +19,9 @@
 
     //the actual matching pattern for highlighting
     //undefined = no match performed, null = no match (-> fallback), otherwise pattern
-    let matchPat: undefined | null | Pattern
+    let matchPat: undefined | null | number
+    //the clicked/selected pattern directly
+    let selPat: undefined | null | number
 
     function updateMatchingPattern(e: Event) {
         const str = (e.target as HTMLInputElement).value
@@ -27,20 +29,27 @@
             matchPat = undefined
             return
         }
+
         const pat = getFirstMatchingPattern(profile.patterns, str)
-        //show corresponding JSON Schema in editor
+
         const patName = pat ? pat.useSchema : ""
         const patTitle = pat ? pat.pattern : defFile
-        select(patName, patTitle)
-        //sets the highlighted pattern (select unsets it before!)
-        matchPat = pat
+        let patIdx = profile.patterns.findIndex((el) => el == pat)
+        if (patIdx < 0) {
+            patIdx = null
+        }
+
+        //show corresponding JSON Schema in editor
+        select(patName, patTitle, patIdx)
+        //set the highlighted pattern (select unsets it before!)
+        matchPat = patIdx
     }
 
     /** 
       Helper for setting profile schema name and title in header.
       Name maps null to rootSchema and empty string to fallbackSchema.
      */
-    function select(name: null | string, title: string) {
+    function select(name: null | string, title: string, sel: undefined | null | number) {
         if (name === null) {
             selected = profile.rootSchema
         } else if (name == "") {
@@ -51,6 +60,7 @@
         json = selfContainedSchema(profile, selected)
         selTitle = title
         matchPat = undefined //user clicked pattern -> un-highlight text match
+        selPat = sel
     }
 </script>
 
@@ -73,24 +83,27 @@
                 <div style="display: flex; flex-direction: column; height: 80%; ">
                     <span
                         class="pseudo button"
-                        on:click={() => select(null, "dataset root")}>
-                        <b> dataset root</b>
+                        class:select={selPat === undefined}
+                        on:click={() => select(null, "dataset root", undefined)}>
+                        dataset root metadata
                     </span>
                     <span style="border-top: 1px solid black;">
                         <b>File patterns:</b>
                     </span>
-                    {#each profile.patterns as pat}
+                    {#each profile.patterns as pat, i}
                         <span
                             class="pseudo button"
-                            class:match={matchPat == pat}
+                            class:match={matchPat == i}
+                            class:select={selPat == i}
                             style="font-family: monospace"
-                            on:click={() => select(pat.useSchema, pat.pattern)}
+                            on:click={() => select(pat.useSchema, pat.pattern, i)}
                             >{pat.pattern}</span>
                     {/each}
                     <span
                         class="pseudo button"
                         class:match={matchPat === null}
-                        on:click={() => select("", defFile)}>
+                        class:select={selPat === null}
+                        on:click={() => select("", defFile, null)}>
                         default
                     </span>
 
@@ -106,8 +119,13 @@
                 </div>
 
                 <div class="two-third" style="height: 95%;">
-                    <h4>JSON Schema for: {selTitle}</h4>
-                    <JSONEditor readOnly={true} {json} />
+                    {#if json !== false}
+                        <h4>JSON Schema for: {selTitle}</h4>
+                        <JSONEditor readOnly={true} {json} />
+                    {:else}
+                        <h4>Forbidden Pattern</h4>
+                        <div>You can not upload a file with this name.</div>
+                    {/if}
                 </div>
             </div>
         </section>
@@ -117,5 +135,8 @@
 <style>
     .match {
         border: 1px dashed black;
+    }
+    .select {
+        background-color: lightgray;
     }
 </style>
