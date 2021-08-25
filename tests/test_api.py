@@ -64,8 +64,9 @@ async def test_profile_routes(auth_cookie, async_client, test_profiles):
     async_client.cookies = auth_cookie
 
     # list of profiles
-    res = (await async_client.get("/profiles")).json()
-    assert list(res.keys()) == ["anything", "empty", "example", "unsat"]
+    res = (await async_client.get("/profiles")).json().keys()
+    for p in ["anything", "empty", "example", "unsat"]:
+        assert p in res
 
     # get invalid profile
     res = await async_client.get("/profiles/invalid")

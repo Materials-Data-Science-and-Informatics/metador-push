@@ -23,7 +23,10 @@ def test_load_get_profiles(test_config, tmp_path):
     Profile.load_profiles(test_config.metador.profile_dir)
 
     # test that profile directory loads properly
-    assert Profile.get_profiles() == ["anything", "empty", "example", "unsat"]
+    prs = Profile.get_profiles()
+    for p in ["anything", "empty", "example", "unsat"]:
+        assert p in prs
+
     assert Profile.get_profile("empty") is not None
     with pytest.raises(KeyError):
         Profile.get_profile("non-existing profile")
