@@ -17,9 +17,7 @@ routes: APIRouter = APIRouter(prefix=AUTH_PREF, tags=["orcid-auth-client"])
 
 def set_paranoid_cookie(res: Response, key: str, value: str, **kwargs) -> None:
     """Set a very restrictive cookie, preventing many kinds of attacks."""
-    res.set_cookie(
-        key=key, value=value, httponly=True, secure=True, samesite="strict", **kwargs
-    )
+    res.set_cookie(key=key, value=value, httponly=True, samesite="strict", **kwargs)
 
 
 def kill_cookie(res: Response, key: str) -> None:
@@ -112,7 +110,13 @@ async def orcid_auth(code: Optional[str] = None, state: str = "/"):
 
     res = RedirectResponse(url=state)
     maxage = auth.orcid_conf.auth_expire_after * 60
-    set_paranoid_cookie(res, "session_id", str(session_id), max_age=maxage)
+    set_paranoid_cookie(
+        res,
+        "session_id",
+        str(session_id),
+        max_age=maxage,
+        secure=auth.site_prefix[:6] == "https",  # set "secure" if we're on https
+    )
     return res
 
 
