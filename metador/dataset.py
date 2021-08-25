@@ -133,7 +133,9 @@ class Dataset(BaseModel):
     def validate_metadata(self, file: Optional[str]) -> Optional[str]:
         """Validate a file of given name, or the root metadata otherwise."""
         metadata = self.files[file].metadata if file else self.rootMeta
-        return util.validate_json(metadata, self.profile.get_schema_for(file))
+        return util.validate_json(
+            metadata, self.profile.get_schema_for(file), self.profile.schemas
+        )
 
     def validate_dataset(self) -> Dict[str, str]:
         """

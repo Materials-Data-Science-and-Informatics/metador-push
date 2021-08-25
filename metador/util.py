@@ -3,9 +3,9 @@
 import json
 import sys
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
-import jsonschema
+from jsonschema import Draft7Validator, RefResolver
 from jsonschema.exceptions import ValidationError
 from pydantic import BaseModel
 
@@ -34,10 +34,18 @@ def load_json(filename: Path) -> UnsafeJSON:
         return json.load(file)
 
 
-def validate_json(instance: UnsafeJSON, schema: UnsafeJSON) -> Optional[str]:
+def validate_json(
+    instance: UnsafeJSON,
+    schema: UnsafeJSON,
+    refSchemas: Optional[Dict[str, UnsafeJSON]] = None,
+) -> Optional[str]:
     """Validate JSON against JSON Schema, on success return None, otherwise the error."""
+    if refSchemas is None:
+        refSchemas = {}
     try:
-        jsonschema.validate(instance, schema)
+        resolver = RefResolver.from_schema(schema, store=refSchemas)
+        validator = Draft7Validator(schema, resolver=resolver)
+        validator.validate(instance)
         return None
     except ValidationError as e:
         return str(e)
