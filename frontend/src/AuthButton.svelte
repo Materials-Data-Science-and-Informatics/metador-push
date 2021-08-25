@@ -17,17 +17,14 @@
     export let userSession = null
 
     let currTime = Date.now()
-    let remainingTime: number
+    let remainingTime: number // in seconds
     $: remainingTime = userSession
-        ? new Date(userSession.expires).getTime() - currTime
+        ? Math.floor((new Date(userSession.expires).getTime() - currTime) / 1000)
         : remainingTime
 
-    function formatTime(date: Date): string {
-        return date.toLocaleTimeString(undefined, {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-        })
+    function secToHHMMSS(sec: number): string {
+        const dstr = new Date(sec * 1000).toISOString()
+        return sec < 3600 ? dstr.substr(14, 5) : dstr.substr(11, 8)
     }
 
     /** Update time, sign user out if expired. */
@@ -80,7 +77,7 @@
             </span>
         {:else}
             Your session ends in: <span class:urgent={remainingTime < 600}>
-                {formatTime(new Date(remainingTime))}</span>
+                {secToHHMMSS(remainingTime)}</span>
             <span id="signout-button">
                 <a class="button" href={"#"} on:click={signOut}>Sign out</a>
             </span>
