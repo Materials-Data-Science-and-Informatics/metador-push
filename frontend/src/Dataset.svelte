@@ -68,10 +68,16 @@
                 notify("Dataset submission complete!")
                 navigate(`/complete/${dataset.id}`)
             })
-            .catch((err) => {
-                console.log(err)
+            .catch((err: { [file: string]: string }) => {
+                let files: string[] = Object.keys(err)
+                const rootIdx = files.findIndex((el) => el == "")
+                if (rootIdx >= 0) {
+                    files[rootIdx] = "dataset root"
+                }
                 notify(
-                    "Cannot submit dataset, check that the metadata is valid!",
+                    "Cannot submit dataset. " +
+                        "Please check the metadata in: " +
+                        files.toString(),
                     "danger"
                 )
             })
