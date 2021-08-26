@@ -2,7 +2,7 @@
     /** This component visualizes a dataset profile (patterns and schemas). */
     import { JSONEditor } from "svelte-jsoneditor"
 
-    import type { JSONVal, Profile, Pattern } from "./util"
+    import type { JSONVal, Profile } from "./util"
     import { selfContainedSchema, getFirstMatchingPattern } from "./util"
 
     export let profile: Profile

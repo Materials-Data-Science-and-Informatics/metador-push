@@ -53,6 +53,21 @@
     // (by default, we would get no form at all, which is not what we want)
     const anythingSchema = { additionalProperties: { type: "string" } }
 
+    let mounted = false // is the component mounted?
+    /**
+      Wrap the provided onChange function to fix the following problem:
+      When mounting the component, the form automatically modifies
+      the prefilled JSON by adding missing sub-objects. 
+      We don't want these "changes" done on load to be notified upward.
+     */
+    function wrappedOnChange(func: any): any {
+        return function (e: any) {
+            if (mounted) {
+                func(e)
+            }
+        }
+    }
+
     const e = React.createElement
     onMount(() => {
         ReactDOM.render(
@@ -63,10 +78,10 @@
                     noHtml5Validate: true,
                     schema: schema === true ? (anythingSchema as any) : schema,
                     formData: prefill ? prefill : {}, // just initial pre-fill data
-                    onChange: onChange,
+                    onChange: wrappedOnChange(onChange),
+                    /* ref: (c) => (component = c), // reference to React comp. instance */
                     ErrorList: () => e("span"), // remove global error list on top
-                    //TODO: move this to the bottom, somehow?
-                    //ref: (c) => (component = c), // reference to React comp. instance
+                    //TODO: move it to the bottom, somehow?
                 },
                 // pass empty child to prevent creation of submit button,
                 // see e.g. rjsf Github issue #1602
@@ -74,6 +89,7 @@
             ),
             container
         )
+        mounted = true
     })
 
     onDestroy(() => {
