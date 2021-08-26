@@ -12,17 +12,25 @@ at the start of the application.
 """
 from __future__ import annotations
 
+import collections
 import re
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Deque, Dict, List, Mapping, Optional, Set, Union
 
 from pydantic import BaseModel
 from typing_extensions import Final
 
 from . import pkg_res
 from .log import log
-from .util import UnsafeJSON, critical_exit, load_json, save_json, validate_json
+from .util import (
+    UnsafeJSON,
+    critical_exit,
+    load_json,
+    referenced_schemas,
+    save_json,
+    validate_json,
+)
 
 SCHEMA_SUF: Final[str] = ".schema.json"
 """File suffix for json schemas."""
@@ -53,6 +61,59 @@ _profiles_json: Dict[str, Mapping[str, UnsafeJSON]] = {}
 
 _profiles: Dict[str, "Profile"] = {}
 """In-memory cache: profiles assembled from files, ready to be copied into datasets."""
+
+
+def expand_schema_path(filename: str) -> str:
+    """If passed string is not an URL, prepend profile directory to relative path/filename."""
+    if filename.find("http://") == 0 or filename.find("https://") == 0:
+        return filename
+    return str(_PROFILE_DIR / filename)
+
+
+def schema_bfs(
+    name: str,
+    func: Callable[[str, UnsafeJSON], Any],
+    get_succ: Callable[[str], UnsafeJSON],
+) -> None:
+    """
+    Perform BFS on the graph schemas and their successors (referenced schemas).
+
+    Takes a schema name, a function to call for each schema, and a successor function
+    that returns a schema given its name (without fragment part).
+    """
+    vis = set(name)
+    q: Deque[str] = collections.deque()
+    q.append(name)
+    while not len(q) == 0:
+        curr_name = q.popleft()
+        curr_schema = get_succ(curr_name)
+        if curr_name in vis:
+            continue
+        vis.add(curr_name)
+        func(curr_name, curr_schema)
+        for name in referenced_schemas(curr_schema):
+            q.append(name)
+
+
+def load_schema_refs(
+    name: str, schema: UnsafeJSON, extra_schemas: Dict[str, UnsafeJSON]
+) -> Set[str]:
+    """
+    Given a JSON schema dict, recursively load referenced schemas.
+
+    This means, make sure that all referenced schemas are in the cache.
+    Returns all direct and transitive $refs.
+    """
+    ret = set()
+
+    def collect_ref(name: str, _: UnsafeJSON) -> None:
+        ret.add(name)
+
+    def get_next_schema(name: str) -> UnsafeJSON:
+        return Profile.schema_content(name, extra_schemas)
+
+    schema_bfs(name, collect_ref, get_next_schema)
+    return ret
 
 
 class PatternSchema(BaseModel):
@@ -122,17 +183,15 @@ class Profile(BaseModel):
         if not force_reload and filename in _schemas_json:
             return _schemas_json[filename]
 
-        if not (_PROFILE_DIR / filename).is_file():
-            critical_exit(f"Could not open schema file '{filename}'!")
-
+        # not cached -> load from file/URL
         schema = None
         try:
-            schema = load_json(_PROFILE_DIR / filename)
+            schema = load_json(expand_schema_path(filename))
         except JSONDecodeError:
             critical_exit("Cannot parse schema file '{filename}'!")
 
         if validate_json(schema, _JSONSCHEMA_SCHEMA) is not None:
-            critical_exit(f"{filename} is not a valid JSON Schema!")
+            critical_exit(f"{filename} is not a valid Draft 7 JSON Schema!")
 
         _schemas_json[filename] = schema  # cache for next access
         return schema
@@ -148,32 +207,22 @@ class Profile(BaseModel):
         """
         Given the filename of a profile, load, validate cache and return it if not loaded yet.
 
-        Also loads, validaties and caches referenced JSON Schemas.
         If loaded (and not forcing reload), returns cached version.
+        This is only for loading the "raw" profile. Use 'load' to get the assembled one.
         """
         global _profiles_json
 
         if not force_reload and filename in _profiles_json:
             return _profiles_json[filename]
 
-        filepath = _PROFILE_DIR / filename
-        if not filepath.is_file():
-            critical_exit(f"No such profile: {filepath}")
-
-        content: Any = load_json(filepath)
+        content: Any = load_json(expand_schema_path(filename))
 
         # check profile itself
         errmsg = validate_json(content, _PROFILE_SCHEMA)
         if errmsg is not None:
             critical_exit(f"Invalid profile {filename}: {errmsg}")
 
-        # Extract, load and check schemas referenced in profiles
-        for entry in content["patterns"]:
-            schemaref = entry["useSchema"]
-            if type(schemaref) == str and schemaref not in content["schemas"]:
-                cls.get_schema_json(schemaref)
-
-        _profiles_json[filename] = content
+        _profiles_json[filename] = content  # cache it
         return content
 
     @classmethod
@@ -221,23 +270,47 @@ class Profile(BaseModel):
         fallbackSchema: str = cls.schema_filename(profile["fallbackSchema"])
 
         schemas: Dict[str, UnsafeJSON] = {TRIV_TRUE: True, TRIV_FALSE: False}
+
+        toEmbed: Set[str] = set()  # additional referenced schemas that must be embedded
+
         # first copy the directly embedded ones
         if "schemas" in profile:  # optional embedded schemas
             for embName, embSchema in profile["schemas"].items():
                 schemas[embName] = embSchema
 
-        # need to embed root and fallback schemas
+        # collect refs from inside the embedded schemas
+        for embName, embSchema in schemas.items():
+            toEmbed = toEmbed.union(load_schema_refs(embName, embSchema, schemas))
+
+        # need to also add root and fallback schemas
         schemas[rootSchema] = cls.schema_content(rootSchema, schemas)
         schemas[fallbackSchema] = cls.schema_content(fallbackSchema, schemas)
+        # collect their refs, too
+        toEmbed = toEmbed.union(
+            load_schema_refs(rootSchema, schemas[rootSchema], schemas)
+        )
+        toEmbed = toEmbed.union(
+            load_schema_refs(fallbackSchema, schemas[fallbackSchema], schemas)
+        )
 
         patterns = []
         for pat in profile["patterns"]:
-            # add referenced schema if not yet added
+            # add referenced schema from pattern if not yet added
             schemaref: str = cls.schema_filename(pat["useSchema"])
             schemaval: UnsafeJSON = cls.schema_content(schemaref, schemas)
             schemas[schemaref] = schemaval
             # add regex entry
             patterns.append(PatternSchema(pattern=pat["pattern"], useSchema=schemaref))
+            # collect $refs
+            toEmbed = toEmbed.union(
+                load_schema_refs(schemaref, schemas[schemaref], schemas)
+            )
+
+        # do not overwrite already embedded ones
+        toEmbed = toEmbed.difference(schemas.keys())
+        # embed missing referenced schemas
+        for schema_name in toEmbed:
+            schemas[schema_name] = cls.schema_content(schema_name, schemas)
 
         return cls(
             title=title,

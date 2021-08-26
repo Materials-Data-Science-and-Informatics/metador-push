@@ -1,0 +1,10 @@
+{
+  "description": "This schema is referenced more than one resolution step from the profile..",
+  "type": "object",
+  "properties": {
+    "something": { 
+      "type": "string",
+      "description": "If you see this, transitive reference resolution with fragment addressing works :)"
+    }
+  }
+}

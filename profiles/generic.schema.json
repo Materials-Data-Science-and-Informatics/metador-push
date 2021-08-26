@@ -11,7 +11,8 @@
 
     },
     "authorOrcid": { "$ref": "#/$defs/authorOrcid" },
-    "authorEmail": { "$ref": "#/$defs/authorEmail" }
+    "authorEmail": { "$ref": "#/$defs/authorEmail" },
+    "extra": { "$ref": "transitive.schema.json#/properties/something" }
   },
   "required": ["authorName", "authorEmail"],
   "$defs": {

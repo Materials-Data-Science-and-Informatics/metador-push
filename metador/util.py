@@ -3,7 +3,10 @@
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Set, Union
+from urllib.error import HTTPError
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from jsonschema import Draft7Validator, RefResolver
 from jsonschema.exceptions import ValidationError
@@ -28,10 +31,29 @@ def save_json(obj: BaseModel, filepath: Path):
         file.flush()
 
 
-def load_json(filename: Path) -> UnsafeJSON:
-    """Load JSON from a file."""
-    with open(filename, "r") as file:
-        return json.load(file)
+def load_json(filename: Union[Path, str]) -> UnsafeJSON:
+    """Load JSON from a file or URL. On failure, terminate program (fatal error)."""
+    if isinstance(filename, Path):
+        filename = str(filename)
+    parsed = urlparse(filename)
+
+    if parsed.scheme == "":  # looks like a file
+        try:
+            with open(filename, "r") as file:
+                return json.load(file)
+        except FileNotFoundError as e:
+            critical_exit(f"Cannot load {filename}: {str(e)}")
+
+    if parsed.scheme.find("http") == 0:  # looks like a HTTP(S) URL
+        try:
+            with urlopen(filename) as file:
+                return json.load(file)
+        except HTTPError as e:
+            critical_exit(f"Cannot load {filename}: {str(e)}")
+
+    # don't know what to do with this
+    critical_exit(f"Cannot load {filename}: Unknown protocol '{parsed.scheme}'")
+    return None  # make mypy happy
 
 
 def validate_json(
@@ -49,6 +71,22 @@ def validate_json(
         return None
     except ValidationError as e:
         return str(e)
+
+
+def referenced_schemas(schema: UnsafeJSON) -> Set[str]:
+    """Return set of referenced schemas within given schema."""
+    if isinstance(schema, list):
+        ret = {ref for s in schema for ref in referenced_schemas(s)}
+        return ret
+    elif isinstance(schema, dict):
+        ret = {ref for v in schema.values() for ref in referenced_schemas(v)}
+        if "$ref" in schema and isinstance(schema["$ref"], str):
+            path = schema["$ref"].split("#")[0]  # without the fragment
+            if len(path) > 0:  # not a local ref like #/...
+                ret.add(path)
+        return ret
+    else:  # primitive type -> no ref
+        return set()
 
 
 def critical_exit(msg: str) -> None:

@@ -69,10 +69,11 @@
           "type": "boolean"
         },
         {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[^#]+$"
         }
       ],
-      "$comment": "Either trivial schema, or a filename/URI (whatever is allowed in $ref)"
+      "$comment": "Either trivial schema, or a filename/URI (without fragment part #/...)"
     }
   }
 }

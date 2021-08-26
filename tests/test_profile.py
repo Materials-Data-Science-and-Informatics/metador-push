@@ -108,6 +108,7 @@ def test_profile_load(test_config):
         "generic.schema.json",
         "true.schema.json",
         "false.schema.json",
+        "transitive.schema.json",
     }
 
     # check that the embedded schema wins over loaded from file
@@ -118,5 +119,5 @@ def test_schema_save_load(test_config, tmp_path):
     """Test serializing and loading back (might be of interest for post-proc)."""
     pr = Profile.get_profile("example")
     pr.save(tmp_path / "example_dump.profile.json")
-    pr2 = Profile.load(tmp_path / "example_dump.profile.json")
+    pr2 = Profile.load(str(tmp_path / "example_dump.profile.json"))
     assert pr == pr2
