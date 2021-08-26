@@ -16,8 +16,11 @@
     import MetadataForm from "./MetadataForm.svelte"
 
     import type { JSONVal } from "./util"
+    import { getNotifier } from "./util"
 
     const dispatch = createEventDispatcher() // for sending events
+
+    const notify = getNotifier()
 
     // ----
     // props in:
@@ -41,7 +44,17 @@
     // ----
 
     // validator to pass into JSONEditor
-    const validator = createAjvValidator(schema as any)
+    let validator = createAjvValidator(true)
+    try {
+        validator = createAjvValidator(schema as any)
+    } catch (e) {
+        let msg = `
+        There were errors while loading the schema.
+        This is a bug or misconfiguration.
+        Please notify the site administrator.
+        `
+        notify(msg, "danger")
+    }
 
     let jsonEditor: any // reference to JSONEditor to call methods etc.
     let refreshForm = {} // set again to {} to regenerate Form component
