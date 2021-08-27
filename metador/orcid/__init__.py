@@ -36,10 +36,12 @@ def get_session(session_id: Optional[SessionID] = Cookie(None)) -> Optional[Sess
     Returns 403 automatically if no valid session + authentication is enabled.
     """
     auth = get_auth()
-    session = auth.lookup_session(session_id)
-    if auth.orcid_conf.enabled and session is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Please sign in to access this page.",
-        )
-    return session
+    if auth.orcid_conf.enabled:
+        session = auth.lookup_session(session_id)
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Please sign in to access this page.",
+            )
+        return session
+    return None

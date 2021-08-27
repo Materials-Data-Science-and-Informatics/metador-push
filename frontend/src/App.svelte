@@ -10,7 +10,7 @@
 
     fetchJSON("/site-base")
 
-    let userSession = null //current session
+    let auth_status = null //current session
 
     const submissionComplete = (dsId: string) => `
     <h3>Dataset submission completed</h3>
@@ -37,7 +37,7 @@
                 </span>
 
                 <div class="menu">
-                    <AuthButton bind:userSession />
+                    <AuthButton bind:auth_status />
                 </div>
             </nav>
         </header>
@@ -49,7 +49,7 @@
             <Route path="/complete/:id" let:params>
                 <Message html={submissionComplete(params.id)} />
             </Route>
-            {#if userSession}
+            {#if auth_status && (auth_status.session || !auth_status.orcid_enabled)}
                 <Route path="/"><DatasetSelection /></Route>
                 <Route path="datasets/:id" let:params><Dataset dsId={params.id} /></Route>
             {:else}

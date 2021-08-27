@@ -169,8 +169,7 @@
             <b>To complete until:</b>
             <span class:urgent={completionUrgent()}>{expiryDateStr()}</span>
         </span>
-        <span style="width:30%;" />
-        <button style="mainButton" disabled={modified} on:click={submitDataset}>
+        <button class="mainButton" disabled={modified} on:click={submitDataset}>
             <Fa icon={faFileExport} /> Submit</button>
     </div>
     <div id="dataset-app">

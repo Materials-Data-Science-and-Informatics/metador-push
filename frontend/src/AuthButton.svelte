@@ -13,8 +13,8 @@
         "/oauth/orcid?state=" + ($loc.pathname != "/signout" ? $loc.pathname : "/")
 
     // Grab authentication state when loading component
-    let auth_status = null
-    export let userSession = null
+    export let auth_status = null
+    let userSession = null
 
     let currTime = Date.now()
     let remainingTime: number // in seconds
@@ -63,7 +63,7 @@
     }
 </script>
 
-{#if auth_status}
+{#if auth_status && auth_status.orcid_enabled}
     <span id="auth-button" v-if="global.auth.orcid_enabled">
         {greeting(auth_status)}
         {#if auth_status.session == null}

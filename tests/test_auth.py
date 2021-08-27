@@ -195,7 +195,7 @@ async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
         # try getting the current session info, first with auth disabled
         get_auth().orcid_conf.enabled = False
 
-        assert get_session(cookies["session_id"]).orcid == MOCK_TOKEN.orcid
+        assert get_session(cookies["session_id"]) is None
         assert get_session(SessionID("invalid")) is None
         assert get_session(None) is None
         assert get_session() is None

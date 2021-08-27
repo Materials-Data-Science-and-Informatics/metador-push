@@ -40,9 +40,11 @@ class AuthStatus(BaseModel):
 async def get_auth_info(session_id: Optional[SessionID] = Cookie(None)):
     """Return current authentication info to the client."""
     auth = get_auth()
+    auth_enabled = auth.orcid_conf.enabled
+    session = auth.lookup_session(session_id) if auth_enabled else None
     return {
-        "orcid_enabled": auth.orcid_conf.enabled,
-        "session": auth.lookup_session(session_id),
+        "orcid_enabled": auth_enabled,
+        "session": session,
     }
 
 
