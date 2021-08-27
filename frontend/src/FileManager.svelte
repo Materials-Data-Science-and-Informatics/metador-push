@@ -307,7 +307,8 @@
                     type="text"
                     style="flex-grow: 1;"
                     value={file}
-                    disabled={selectedFile == file && unsavedChanges}
+                    disabled={!dataset.files[file].checksum ||
+                        (selectedFile == file && unsavedChanges)}
                     on:change={(e) => renameFile(e, file)} />
                 <button
                     style="margin-top: 0px;"

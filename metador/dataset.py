@@ -231,8 +231,8 @@ class Dataset(BaseModel):
                 check=True,
                 capture_output=True,
                 encoding="utf-8",
-            ).stdout.split()
-            assert Path(ret[1]) == filepath  # sanity-check
+            ).stdout.split(maxsplit=1)
+            assert Path(ret[1].rstrip()) == filepath  # sanity-check
             file_checksum = ret[0]
             self.files[filename].checksum = file_checksum
         except FileNotFoundError:
