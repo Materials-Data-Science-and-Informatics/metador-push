@@ -120,6 +120,16 @@ For serious deployment into an existing infrastructure, some more steps are requ
 
 * Run Metador with your configuration: `metador-cli run --conf YOUR_CONFIG_FILE`
 
+## Using HTTPS with Uvicorn server
+
+If you deploy the instance directly, you can provide your SSL certificate and key
+in the configuration by setting `uvicorn.ssl_certfile` and `uvicorn.ssl_keyfile`.
+
+For testing purposes, you can generate a self-signed certificate:
+```
+openssl req -nodes -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+```
+
 ## Setting up ORCID Authentication
 
 Follow instructions given e.g. 

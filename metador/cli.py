@@ -55,13 +55,17 @@ def run(config: Optional[Path] = None) -> None:  # pragma: no cover
     # run server. if reload is active, it watches for changes in the Python code.
     # The templates and static files can be changed on runtime anyway.
     # If you want to change a conf and reload, just "touch" a Python file forcing reload
-    uvicorn.run(
-        "metador.server:app",
-        host=c.conf().uvicorn.host,
-        port=c.conf().uvicorn.port,
-        reload=c.conf().uvicorn.reload,
-        reload_dirs=[__pkg_path__],
-    )
+    uvicorn_args = {
+        "host": c.conf().uvicorn.host,
+        "port": c.conf().uvicorn.port,
+        "reload": c.conf().uvicorn.reload,
+        "reload_dirs": [__pkg_path__],
+    }
+    if c.conf().uvicorn.https:
+        uvicorn_args["ssl_certfile"] = c.conf().uvicorn.ssl_certfile
+        uvicorn_args["ssl_keyfile"] = c.conf().uvicorn.ssl_keyfile
+
+    uvicorn.run("metador.server:app", **uvicorn_args)
 
 
 if __name__ == "__main__":  # pragma: no cover
