@@ -183,13 +183,16 @@ def init_conf(conffile: Optional[Path] = None) -> None:
     # If we get a filename passed, it always overrides the env var
     if conffile:
         os.environ[CONFFILE_ENVVAR] = str(conffile)
+    # If we get no filename, try to use config in CWD
+    elif Path("metador.toml").is_file():
+        os.environ[CONFFILE_ENVVAR] = "metador.toml"
 
     # load the config from filename stored in env var
     if CONFFILE_ENVVAR in os.environ:
         log.info(f"(Re-)Loading configuration from {os.environ[CONFFILE_ENVVAR]}")
         _conf = read_user_config(Path(os.environ[CONFFILE_ENVVAR]))
     else:
-        log.warning("No configuration file passed, using defaults.")
+        log.warning("No config passed or found in current directory, using defaults.")
         _conf = Conf()
 
 
