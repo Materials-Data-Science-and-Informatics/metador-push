@@ -1,15 +1,18 @@
 """Handle the upload per HTTP / tus."""
+import re
 from enum import Enum
+from json import JSONDecodeError
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Header, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from typing_extensions import Final, Literal
 
 from .dataset import Dataset
 from .log import log
+from .util import load_json
 
 
 class TusdHTTPRequest(BaseModel):
@@ -132,3 +135,48 @@ async def tusd_hook(
         ds.import_file(renamed)
         Path(str(body.Upload.Storage.Path) + ".info").unlink()  # remove .info file
         background_tasks.add_task(ds.compute_checksum, filename)
+
+
+# Tusd cleanup helpers:
+
+
+def is_tusd_file(p: Path) -> bool:
+    """
+    Check whether filename looks like something tusd could have created.
+
+    Used to filter files for cleanup to avoid deleting something wrong.
+    """
+    return re.match("^[0-9a-f]{32}(\\.info)?$", p.name) is not None
+
+
+def get_tusd_garbage(paths: Iterable[Path], dsets: Set[str]) -> Set[Path]:
+    """
+    Return list of garbage files given a list of filepaths and a list of known datasets.
+
+    The filepaths should be existing data and .info files (i.e., contents of the tusd
+    data directory), the datasets should be the currently existing non-completed datasets.
+    This function will ignore filenames that look not like what tusd creates and also
+    ignore .info files that cannot be parsed successfully.
+
+    Side effects: Tries to load the .info files from file system
+    """
+    candidates = set(map(str, filter(is_tusd_file, paths)))  # keep plausible filenames
+    # separate .info and the (partial) data files
+    ifiles = set(filter(lambda p: p.find("info") >= 0, candidates))
+    dfiles = candidates - ifiles
+    # collect "unpaired" files
+    garbage = {dfile for dfile in dfiles if dfile + ".info" not in ifiles}
+    garbage = garbage.union({ifile for ifile in ifiles if ifile[:-5] not in dfiles})
+    # add "stale" uploads
+    for ifile in ifiles - garbage:
+        upl_meta = None
+        try:
+            upl_meta = TusdUpload.parse_obj(load_json(ifile))
+        except (JSONDecodeError, ValidationError):
+            continue  # does not look like tusd upload info metadata
+        if upl_meta is not None and "dataset" in upl_meta.MetaData:
+            if upl_meta.MetaData["dataset"] in dsets:
+                continue  # existing dataset -> still relevant
+        garbage.add(ifile)
+        garbage.add(ifile[:-5])
+    return set(map(Path, garbage))

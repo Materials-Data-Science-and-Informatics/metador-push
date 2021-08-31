@@ -8,9 +8,11 @@ import uvicorn  # type: ignore
 
 from . import __pkg_path__, __version__
 from . import config as c
+from .dataset import Dataset
 from .log import patch_uvicorn_log_format
 from .orcid.auth import orcid_redir
-from .upload import TUSD_HOOK_ROUTE
+from .upload import TUSD_HOOK_ROUTE, get_tusd_garbage
+from .util import critical_exit
 
 app = typer.Typer()
 
@@ -43,6 +45,30 @@ def orcid_redir_url(config: Optional[Path] = None) -> None:
     """URL that should be registered as the ORCID API redirect."""
     c.init_conf(config)  # correct result depends on configured metador.site
     print(orcid_redir(c.conf().metador.site))
+
+
+@app.command()
+def tusd_cleanup(tusd_data_dir: Path, config: Optional[Path] = None) -> None:
+    """
+    Clean up abandoned downloads stored in given directory used for tusd uploads.
+
+    More precisely, remove data files that lack an .info file and vice versa, and
+    also remove files where the .info does not contain a currently staging dataset id.
+    """
+    if not tusd_data_dir.is_dir():
+        critical_exit("Passed path is not a directory!")
+
+    c.init_conf(config)
+    Dataset.load_datasets()
+
+    dsets = set(map(str, Dataset.get_datasets()))
+    garbage = get_tusd_garbage(list(tusd_data_dir.glob("*")), dsets)
+
+    if len(garbage) > 0:
+        print("Deleting detected tusd garbage files:")
+    for useless in garbage:
+        print("  " + str(useless))
+        useless.unlink()
 
 
 @app.command()

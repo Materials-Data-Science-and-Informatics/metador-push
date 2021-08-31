@@ -148,6 +148,21 @@ dataset profiles and (local) JSON Schemas that are referenced in the profiles.
 
 TODO explain profiles, example
 
+## Cleaning up abandoned uploads and datasets
+
+The upload server tusd will create intermediate files in its own data directory, in
+normal operation they will be removed/relocated when a file upload is completed.
+In the case that an upload is abandoned, these intermediate files will stay there forever,
+unless cleaned up.
+
+To clean up, you can run `metador-cli tusd-cleanup YOUR_TUSD_DATA_DIR`. The command should
+be launched in the same directory where the server is run and with the same configuration,
+so the tusd directory shall be either relative to that location, or an absolute path.
+
+To automate this, you can e.g. set up a cronjob to run this script regularily.
+
+TODO: expired datasets / sessions cleanup
+
 ## FAQ
 
 The following never actually asked questions might be of interest to you.
