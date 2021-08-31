@@ -71,6 +71,12 @@ class Session(BaseModel):
     orcid: OrcidStr
     user_name: str
 
+    def is_expired(self, currtime: Optional[datetime] = None) -> bool:
+        """Return whether the session is expired (wrt. given time or current time)."""
+        if currtime is None:
+            currtime = datetime.today()
+        return currtime > self.expires
+
 
 class Sessions(BaseModel):
     """Wrapper class purely existing for serialization."""
@@ -281,6 +287,7 @@ class Auth:
 
         log.info(f"Restoring serialized sessions from {fname}")
         self.sessions = Sessions.parse_file(fname).__root__
+        self.cleanup_sessions()
 
     def dump_sessions(self) -> None:
         """
@@ -312,8 +319,7 @@ class Auth:
 
         session = self.sessions[sess_id]
 
-        session_expired = (session.expires - datetime.today()).total_seconds() <= 0
-        if session_expired:
+        if session.is_expired():
             log.debug(f"Removing expired session {sess_id}.")
             del self.sessions[sess_id]
             return None
@@ -325,3 +331,8 @@ class Auth:
             return None
 
         return session
+
+    def cleanup_sessions(self) -> None:
+        """Remove expired sessions."""
+        t = datetime.today()
+        self.sessions = {k: v for k, v in self.sessions.items() if not v.is_expired(t)}

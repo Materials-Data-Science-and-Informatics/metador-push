@@ -96,11 +96,14 @@ def test_create_load_get(test_config, dummy_file):
     assert ds2 == ds
     del ds  # this one is old, now ds2 is the real object
 
-    # check that auto-removing works (make expired)
+    # check that expired are not returned
     ds2.expires = datetime.now() - timedelta(days=1)
     assert ds2.is_expired()
     with pytest.raises(KeyError):
         Dataset.get_dataset(ds2.id)
+
+    # check that cleanup works
+    Dataset.cleanup_datasets()
     assert ds2.id not in dataset._datasets.keys()
     assert ds2.id not in Dataset.get_datasets()
 

@@ -1,5 +1,7 @@
 """Main file for the Metador server."""
 
+import asyncio
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -26,6 +28,21 @@ app.include_router(api.routes)  # backend
 app.include_router(upload.routes)  # tusd hook
 
 
+async def run_cleanup_task() -> None:
+    """Periodic cleanup job for expired sessions and datasets."""
+    next_cleanup = datetime.today()
+    while True:
+        orcid.get_auth().cleanup_sessions()
+        Dataset.cleanup_datasets()
+        # wait until next time...
+        next_cleanup = next_cleanup + timedelta(days=1)
+        while datetime.today() < next_cleanup:
+            await asyncio.sleep(3600)  # check every hour
+
+
+cleanup_task: asyncio.Task  # reference to started cleanup task
+
+
 @app.on_event("startup")
 def on_startup():
     """Initialize singletons based on config."""
@@ -36,11 +53,18 @@ def on_startup():
     Profile.load_profiles(conf().metador.profile_dir)
     Dataset.load_datasets()
 
+    global cleanup_task
+    cleanup_task = asyncio.create_task(run_cleanup_task())
+
 
 @app.on_event("shutdown")
-def on_shutdown():
+async def on_shutdown():
     """Store transient state to files."""
     orcid.get_auth().dump_sessions()
+
+    global cleanup_task
+    cleanup_task.cancel()
+    await asyncio.wait(cleanup_task)
 
 
 @app.get("/site-base")

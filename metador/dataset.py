@@ -122,9 +122,11 @@ class Dataset(BaseModel):
 
     ####
 
-    def is_expired(self) -> bool:
-        """Return true if dataset is expired according to current config."""
-        return datetime.now() > self.expires
+    def is_expired(self, currtime: Optional[datetime] = None) -> bool:
+        """Return whether the dataset is expired (wrt. given time or current time)."""
+        if currtime is None:
+            currtime = datetime.today()
+        return currtime > self.expires
 
     def save(self) -> None:
         """Serialize the current state into a file."""
@@ -420,29 +422,34 @@ class Dataset(BaseModel):
                 _datasets[ds_id] = ds
 
     @classmethod
+    def cleanup_datasets(cls) -> None:
+        """Remove expired datasets from cache and delete the files."""
+        t = datetime.today()
+        log.info("Cleaning up expired datasets...")
+        expired = [v for v in _datasets.values() if v.is_expired(t)]
+        for ds in expired:
+            ds.delete()
+
+    @classmethod
     def get_datasets(cls, creator: Optional[OrcidStr] = None) -> List[UUID]:
         """Return a list of dataset ids (possibly filtered by creator)."""
-        if creator is None:  # list all datasets
-            return list(_datasets.keys())
-        else:  # return datasets created by certain user
-            return list(
-                map(
-                    lambda x: x.id,
-                    filter(lambda x: x.creator == creator, _datasets.values()),
-                )
-            )
+        t = datetime.today()
+        return [
+            k
+            for k, v in _datasets.items()
+            if not v.is_expired(t) and (creator is None or (v.creator == creator))
+        ]
 
     @classmethod
     def get_dataset(cls, ds_id: UUID) -> Dataset:
         """
         Return a dataset if it exists and is not expired (throws if it does not exist).
 
-        If it is expired, it is cleaned up and treated like it does not exist.
-        This is better than giving it out, as a cleaning job could delete it any moment.
+        If it is expired, it is treated like it does not exist,
+        as a cleaning job could delete it any moment.
         """
         ds = _datasets[ds_id]
         if ds.is_expired():
-            ds.delete()
             raise KeyError
         return ds
 
