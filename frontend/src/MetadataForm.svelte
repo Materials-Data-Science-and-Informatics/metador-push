@@ -70,13 +70,21 @@
 
     const e = React.createElement
     onMount(() => {
+        // the form cannot handle true/false schemas
+        let preprocessedSchema: any = schema
+        if (preprocessedSchema === true) {
+            preprocessedSchema = anythingSchema
+        } else if (preprocessedSchema === false) {
+            preprocessedSchema = {}
+        }
+
         ReactDOM.render(
             e(
                 Form,
                 {
                     liveValidate: true,
                     noHtml5Validate: true,
-                    schema: schema === true ? (anythingSchema as any) : schema,
+                    schema: preprocessedSchema,
                     formData: prefill ? prefill : {}, // just initial pre-fill data
                     onChange: wrappedOnChange(onChange),
                     /* ref: (c) => (component = c), // reference to React comp. instance */

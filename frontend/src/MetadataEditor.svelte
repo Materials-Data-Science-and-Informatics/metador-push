@@ -44,7 +44,7 @@
     // ----
 
     // validator to pass into JSONEditor
-    let validator = createAjvValidator(true)
+    let validator = createAjvValidator(true as any)
     try {
         validator = createAjvValidator(schema as any)
     } catch (e) {
