@@ -8,7 +8,7 @@
     import { selfContainedSchema, getSchemaNameFor } from "./util"
     import type { JSONVal, Dataset } from "./util"
 
-    import Fa from "svelte-fa/src/fa.svelte"
+    import Fa from "svelte-fa"
     import { faFileExport } from "@fortawesome/free-solid-svg-icons"
 
     const notify = getNotifier() // for showing notifications

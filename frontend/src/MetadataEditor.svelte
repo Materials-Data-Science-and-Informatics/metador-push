@@ -8,7 +8,7 @@
     import { createEventDispatcher } from "svelte"
     import { onMount } from "svelte"
 
-    import Fa from "svelte-fa/src/fa.svelte"
+    import Fa from "svelte-fa"
     import { faSave } from "@fortawesome/free-solid-svg-icons"
 
     import { JSONEditor, createAjvValidator } from "svelte-jsoneditor"
