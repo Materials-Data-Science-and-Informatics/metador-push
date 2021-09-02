@@ -7,14 +7,25 @@
 #
 # NOTE: relative file/directory paths will be interpreted relative to CWD,
 # NOT relative to location of this config.
+#
+# A minimal deployment configuration with ORCID and behind a reverse proxy will need:
+# metador.site, metador.tusd_endpoint, orcid.enabled, orcid.client_id, orcid.client_secret
+# For a possible setup, check out the example nginx configuration file.
 ##########################################################################################
 
 [metador]
 # Site where metador is served (without trailing slash).
+# It depends on the way you proxy/route/serve requests to it.
+#
+# With reverse proxy for https, this can be e.g. https://localhost
 site = 'http://localhost:8000'
-# The endpoint URL for file uploads from client. Must be accessible from client.
+
+# The endpoint URL for file uploads that is accessible from client (with trailing slash).
 # It depends on the -base-path of tusd and the way you proxy/route/serve requests to it.
+#
+# With reverse proxy for https, this can be e.g. https://localhost/tusd/files/
 tusd_endpoint = 'http://localhost:1080/files/'
+
 # After that many hours the non-completed datasets have expired and can be cleaned up.
 incomplete_expire_after = 48
 
@@ -82,6 +93,9 @@ use_fake = false
 # These are only respected if you launch your application using `metador-cli run`.
 host = '0.0.0.0'
 port = 8000
+# If a filename for a UNIX socket is provided, uvicorn will bind to it instead of host:port
+# This should be used for proper deployment behind a reverse proxy.
+socket = ""
 
 # Mostly for developers: reload application on code changes.
 reload = false

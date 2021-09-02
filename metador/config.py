@@ -96,9 +96,7 @@ class UvicornConf(BaseModel):
 
     host: str = "0.0.0.0"
     port: int = 8000
-    https: bool = False
-    ssl_certfile: str = ""
-    ssl_keyfile: str = ""
+    socket: str = ""
 
     # auto-reload on file changes. good for development
     reload: bool = False
@@ -129,16 +127,8 @@ somewhere else, the call-site won't see a redefinition (that we need to do at ru
 
 def check_config(conf: Conf) -> None:
     """Check configuration for obvious errors and terminate app if they are present."""
-    if conf.uvicorn.https:
-        if conf.metador.site.find("https:") < 0:
-            log.critical("uvicorn.https enabled, but metador.site is not https://...!")
-            sys.exit(1)
-        if not Path(conf.uvicorn.ssl_certfile).is_file():
-            log.critical(f"Cannot access SSL certificate: {conf.uvicorn.ssl_certfile}")
-            sys.exit(1)
-        if not Path(conf.uvicorn.ssl_keyfile).is_file():
-            log.critical(f"Cannot access SSL key file: {conf.uvicorn.ssl_keyfile}")
-            sys.exit(1)
+    # might use that later
+    pass
 
 
 def read_user_config(conffile: Path) -> Conf:

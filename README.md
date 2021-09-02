@@ -122,10 +122,10 @@ For serious deployment into an existing infrastructure, some more steps are requ
 
 ## Using HTTPS with Uvicorn server
 
-If you deploy the instance directly, you can provide your SSL certificate and key
-in the configuration by setting `uvicorn.ssl_certfile` and `uvicorn.ssl_keyfile`.
+To enable https, use a reverse proxy that handles https for you.
+You can use the provided example nginx configuration as a starting point.
 
-For testing purposes, you can generate a self-signed certificate:
+For testing purposes, you can easily generate a self-signed certificate:
 ```
 openssl req -nodes -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
 ```

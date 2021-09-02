@@ -82,14 +82,19 @@ def run(config: Optional[Path] = None) -> None:  # pragma: no cover
     # The templates and static files can be changed on runtime anyway.
     # If you want to change a conf and reload, just "touch" a Python file forcing reload
     uvicorn_args = {
-        "host": c.conf().uvicorn.host,
-        "port": c.conf().uvicorn.port,
+        # for development
         "reload": c.conf().uvicorn.reload,
         "reload_dirs": [__pkg_path__],
+        # for proper deployment via reverse proxy
+        "proxy_headers": True,
+        "forwarded_allow_ips": "*",
     }
-    if c.conf().uvicorn.https:
-        uvicorn_args["ssl_certfile"] = c.conf().uvicorn.ssl_certfile
-        uvicorn_args["ssl_keyfile"] = c.conf().uvicorn.ssl_keyfile
+
+    if c.conf().uvicorn.socket == "":
+        uvicorn_args["host"] = c.conf().uvicorn.host
+        uvicorn_args["port"] = c.conf().uvicorn.port
+    else:  # for use behind reverse proxy
+        uvicorn_args["uds"] = c.conf().uvicorn.socket
 
     uvicorn.run("metador.server:app", **uvicorn_args)
 

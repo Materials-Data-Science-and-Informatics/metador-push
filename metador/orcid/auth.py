@@ -20,14 +20,7 @@ from pathlib import Path
 from typing import Dict, List, NewType, Optional
 
 import httpx
-from pydantic import (
-    BaseModel,
-    DirectoryPath,
-    Extra,
-    Field,
-    FilePath,
-    validate_arguments,
-)
+from pydantic import BaseModel, Extra, Field, FilePath, validate_arguments
 from typing_extensions import Annotated, Final, Literal
 
 from ..log import log
@@ -143,9 +136,7 @@ class Auth:
     PERSIST_FILE: Final[str] = "active_sessions.json"
 
     @validate_arguments
-    def __init__(
-        self, site: str, conf: OrcidConf, persist_dir: Optional[DirectoryPath] = None
-    ):
+    def __init__(self, site: str, conf: OrcidConf, persist_dir: Optional[Path] = None):
         """
         Initialize authorization management.
 
@@ -223,7 +214,10 @@ class Auth:
             "redirect_uri": orcid_redir(self.site_prefix),
         }
 
-        async with httpx.AsyncClient() as client:
+        httpx_client_args = {}
+        if self.orcid_conf.use_fake:
+            httpx_client_args["verify"] = False
+        async with httpx.AsyncClient(**httpx_client_args) as client:
             r = await client.post(
                 self.orcid_server_pref() + "/token",
                 headers=hdrs,
@@ -239,7 +233,10 @@ class Auth:
             "client_secret": self.orcid_conf.client_secret,
             "token": tok.access_token,
         }
-        async with httpx.AsyncClient() as client:
+        httpx_client_args = {}
+        if self.orcid_conf.use_fake:
+            httpx_client_args["verify"] = False
+        async with httpx.AsyncClient(**httpx_client_args) as client:
             r = await client.post(
                 self.orcid_server_pref() + "/revoke",
                 headers=hdrs,
