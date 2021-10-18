@@ -124,6 +124,8 @@ For serious deployment into an existing infrastructure, some more steps are requ
 
 To enable https, use a reverse proxy that handles https for you.
 You can use the provided example nginx configuration as a starting point.
+Remember to set `-behind-proxy` flag when starting `tusd` in order to
+handle proxy headers correctly.
 
 For testing purposes, you can easily generate a self-signed certificate:
 ```
@@ -146,7 +148,61 @@ If you register on the ORCID sandox server, do not forget to set `sandbox=true`!
 In your configuration you must provide an existing directory that contains your
 dataset profiles and (local) JSON Schemas that are referenced in the profiles.
 
-TODO explain profiles, example
+A dataset profile must have the following shape:
+```
+{
+  "title": "Dataset Profile Title",
+  "description": "Short summary of what this dataset profile is intended for",
+  "schemas": {
+    "SCHEMA_NAME_1": <JSONSCHEMA>,
+    ...,
+    "SCHEMA_NAME_N": <JSONSCHEMA>,
+  },
+  "rootSchema": "SCHEMA_NAME" | bool,
+  "patterns": [
+    {"pattern": ".*\\.txt", "useSchema": "SCHEMA_NAME" | bool},
+    {"pattern": ".*\\.jpg", "useSchema": "SCHEMA_NAME" | bool},
+    {"pattern": ".*\\.mp4", "useSchema": "SCHEMA_NAME" | bool}
+  ],
+  "fallbackSchema": "SCHEMA_NAME" | bool
+}
+```
+
+The `title` and `description` keys are self-explanatory.
+The `schemas` section can be used to embed arbitrary JSON Schemas that are e.g. not
+relevant for other profiles or for some other reason are not stored in a separate file.
+
+The keys `rootSchema`, `fallbackSchema` and `patterns` are defining the behavior of the
+dataset profile.
+
+The key `rootSchema` defines the JSON Schema that is defining the metadata required for
+the dataset itself, i.e. file-independent, general metadata or metadata that applies to
+e.g. all the files (e.g. for reducing the effort for the user).
+
+For each uploaded file, the filename is matched against the listed `patterns` in the
+provided order. In case of a full match (i.e. the pattern must match the complete
+filename) the corresponding schema is used. If no pattern matches, then the
+`fallbackSchema` is applied.
+
+Remember that in the pattern a regex is expected, so characters like `.`, `*` etc. are
+interpreted as special symbols unless escaped by a backslash. But because backslashes also
+must be escaped in a string, e.g. in order to match an actual `*` symbol, the pattern must
+be `"\\*"`.
+
+As a schema to be applied, you can use
+
+* a boolean
+* the name of an embedded schema in the `schemas` section
+* a filename of a JSON schema (relative to the profile directory)
+
+Setting the schema to `true` means that arbitrary metadata can be provided. In the UI this
+special case is treated by providing the possibility to add arbitrary key-value pairs as
+metadata.
+
+Setting the schema to `false` would literally mean that no metadata could be valid. This
+is not useful, so instead a `false` schema is interpreted as forbidding to use a file with
+a name that matched the pattern (in case of `useSchema`) or to upload files that do not
+match any pattern (in case of `fallbackSchema`).
 
 ## Cleaning up abandoned uploads and datasets
 
@@ -160,8 +216,6 @@ be launched in the same directory where the server is run and with the same conf
 so the tusd directory shall be either relative to that location, or an absolute path.
 
 To automate this, you can e.g. set up a cronjob to run this script regularily.
-
-TODO: expired datasets / sessions cleanup
 
 ## FAQ
 

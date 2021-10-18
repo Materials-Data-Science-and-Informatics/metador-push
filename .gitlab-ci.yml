@@ -36,7 +36,7 @@ cache: &global-cache
 
 # Generate documentation and expose as Gitlab job artifact, so that it can be downloaded.
 make-docs:
-  image: python:latest
+  image: python:3.9
   stage: deploy
   <<: *prepare-env
   script:
@@ -50,7 +50,7 @@ make-docs:
 
 # Run pre-commit, just to make sure the developers did not mess up.
 run-pre-commit:
-  image: python:latest
+  image: python:3.9
   stage: test
   variables:
   cache:
