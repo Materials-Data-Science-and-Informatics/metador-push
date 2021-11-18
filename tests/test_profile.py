@@ -60,7 +60,7 @@ def test_get_schema_json(test_config):
         Profile.get_schema_json("invalid.schema.json")
     # invalid JSON
     with pytest.raises(SystemExit):
-        Profile.get_schema_json("broken.schema.json")
+        Profile.get_schema_json("broken.schema.json.file")
 
 
 def test_get_profile_json(test_config):

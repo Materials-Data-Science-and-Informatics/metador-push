@@ -45,7 +45,7 @@
         matchPat = patIdx
     }
 
-    /** 
+    /**
       Helper for setting profile schema name and title in header.
       Name maps null to rootSchema and empty string to fallbackSchema.
      */

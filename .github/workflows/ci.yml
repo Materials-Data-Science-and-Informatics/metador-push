@@ -1,0 +1,98 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pre-commit
+            ~/.cache/pip
+          key: ${{ hashFiles('.pre-commit-config.yaml') }}-pre-commit
+      - name: Install and run pre-commit
+        run: |
+          python --version
+          pip --version
+          node --version
+          npm --version
+
+          python -m pip install pre-commit
+          pre-commit run --all-files
+
+  # see https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-first-deployment-with-github_token
+  # to do inital setup of the gh-pages branch
+  docs:
+    needs: test
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install and run pdoc
+        run: |
+          python -m pip install pdoc
+          pdoc -o docs metador
+      - name: Deploy docs to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+
+  test:
+    needs: linting
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ "ubuntu-latest" ]
+        python-version: [ "3.7", "3.8", "3.9", "3.10" ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install tusd (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          wget https://github.com/tus/tusd/releases/download/v1.6.0/tusd_linux_amd64.tar.gz
+          tar xf tusd_linux_amd64.tar.gz
+          mkdir -p ~/.local/bin && mv tusd_linux_amd64/tusd ~/.local/bin
+          echo $HOME/.local/bin >> $GITHUB_PATH
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies (if no cache found)
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      - name: Install library
+        run: poetry install --no-interaction
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          pytest --cov --cov-report=xml
+          coverage report
+      - name: CodeCov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos

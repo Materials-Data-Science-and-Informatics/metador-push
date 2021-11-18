@@ -1,0 +1,19 @@
+name: publish
+on:
+  release:
+    types: [published]
+jobs:
+  pypi:
+    if: ${{ false }} # disabled
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and publish to pypi
+        uses: JRubics/poetry-publish@v1.9
+        with:
+          repository_name: "testpypi"
+          repository_url: "https://test.pypi.org/legacy/"
+          # must be added to repository secrets!
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
+
+  #NOTE: here a dockerhub or GH packages publication would make sense

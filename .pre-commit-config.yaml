@@ -1,6 +1,23 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+    - id: check-symlinks
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: mixed-line-ending
+      args: [--fix=lf]
+    - id: check-yaml
+    - id: check-toml
+    - id: check-json
+    - id: check-ast
+    - id: debug-statements
+    - id: check-merge-conflict
+    - id: check-shebang-scripts-are-executable
+    - id: check-added-large-files
+      args: [--maxkb=10000]
   - repo: https://github.com/pycqa/isort
     rev: "5.9.3"
     hooks:
@@ -24,5 +41,5 @@ repos:
     rev: "v2.3.2"
     hooks:
       - id: prettier
-        additional_dependencies: [prettier@2.3.2, prettier-plugin-svelte]
+        additional_dependencies: [prettier@2.3.2, prettier-plugin-svelte@2.3.1]
         files: "^frontend/"

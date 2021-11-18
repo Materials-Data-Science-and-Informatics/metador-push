@@ -40,7 +40,7 @@ example, you can put completed and annotated datasets into your in-lab repositor
 makes Metador **easy to integrate into your existing workflows**.
 
 To achieve these goals, Metador combines state-of-the-art resumable file-upload technology
-using [Uppy](https://uppy.io) and the [tus](https://tus.io/) protocol 
+using [Uppy](https://uppy.io) and the [tus](https://tus.io/) protocol
 with a [JSON Schema](https://json-schema.org/) driven multi-view metadata editor based on
 [react-jsonschema-form](https://github.com/rjsf-team/react-jsonschema-form)
 and [JSONEditor](https://github.com/josdejong/jsoneditor).
@@ -60,10 +60,10 @@ If you do not care about collecting metadata, feel free to pick a different solu
 ## Installation
 
 If you do not have a recent version of Python (>=3.7) installed, you can use
-[`pyenv`](https://github.com/pyenv/pyenv) to install e.g. Python 3.9 and enable it.
+[`pyenv`](https://github.com/pyenv/pyenv) to install e.g. Python 3.10 and enable it.
 
-Similarly, you need node >= 8 and npm to build the frontend
-and you can use e.g. [NVM](https://github.com/nvm-sh/nvm) to install it locally.
+For the frontend, you need npm >= 7 to build the frontend (default for node >= 16)
+and you can use e.g. [nvm](https://github.com/nvm-sh/nvm) to install it locally.
 
 Download and install [`tusd`](https://github.com/tus/tusd),
 the server component for the Tus protocol that will handle the low-level details
@@ -115,7 +115,7 @@ For serious deployment into an existing infrastructure, some more steps are requ
 
 * *Optional:* For ORCID integration, you need access to the ORCID public API.
 
-* Run `tusd` as required with your setup, passing 
+* Run `tusd` as required with your setup, passing
   `-hooks-http "$(metador-cli tusd-hook-url)"` as argument.
 
 * Run Metador with your configuration: `metador-cli run --conf YOUR_CONFIG_FILE`
@@ -134,7 +134,7 @@ openssl req -nodes -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36
 
 ## Setting up ORCID Authentication
 
-Follow instructions given e.g. 
+Follow instructions given e.g.
 [here](https://info.orcid.org/documentation/integration-guide/registering-a-public-api-client/)
 As redirect URL you should register the value you get from `metador-cli orcid-redir-url`.
 
@@ -217,7 +217,7 @@ so the tusd directory shall be either relative to that location, or an absolute 
 
 To automate this, you can e.g. set up a cronjob to run this script regularily.
 
-## FAQ
+## Technical FAQ
 
 The following never actually asked questions might be of interest to you.
 
@@ -230,8 +230,8 @@ solution.
 
 If you insist on using this service mechanically, in fact it is designed to be as RESTful
 as possible so you might try to script an auto-uploader. The API is accessible under the
-`/docs` route. For uploads you would also need a 
-[tus client](https://tus.io/implementations.html). 
+`/docs` route. For uploads you would also need a
+[tus client](https://tus.io/implementations.html).
 The only difficult point would be the automated ORCID authentication that you must handle.
 There is no and probably will be no "API token" support.
 
@@ -257,55 +257,9 @@ specifically to use this service. No one likes to create new accounts and invent
 passwords, and you probably have more important things to do and do not need the
 additional responsibility of keeping these credentials secure.
 
-If you, against all advice, want to have a custom authentication mechanism, use 
+If you, against all advice, want to have a custom authentication mechanism, use
 this with ORCID disabled, i.e. in "open mode", and then restrict access to the service in
 a different way.
-
-### Security: Are my datasets secure and cannot be stolen or manipulated?
-
-Short answer: if this service is exposed via HTTPS, for all practical purposes the answer
-is **yes**.
-
-OAuth is used to authenticate via ORCID, so authentication is as secure as ORCID is.
-After completing authentication, a classical session cookie is stored, proving that the
-user is signed in. This cookie is not accessible from JavaScript and is using
-all the best practices to counteract typical attacks.
-
-Only with that cookie the user can access the datasets, and only his own datasets that are
-not completed and have not expired yet.
-This is ensured by the fact that the session cookie witnesses an authenticated ORCID
-and each dataset is marked with the ORCID of its creator, so it is only accessible by this
-user. File uploads are also all marked with the Dataset UUID, which only the user knows.
-The risk of abuse can be further minimized if the user signs out after completing their
-work.
-
-So if you trust HTTPS, ORCID, and your own server where you host your instance, 
-you can be reasonably sure that only the user who created a dataset is able to access it
-in any way and that at least no naive attack should succeed.
-
-To gain illicit access to a dataset, an attacker must bypass the 3-legged OAuth procedure,
-or must somehow steal the SessionID of a legitimate user, which, as described, seems to be
-rather infeasible, unless the attacker has already absolute control over the system of the
-uploader. In that case your problem is clearly somewhere else, anyway.
-
-Finally, completed datasets can no longer be accessed by anyone from the client-side and
-therefore can be considered to be as secure as the rest of your system.
-
-### Technical: Why do you use old-fashioned session cookies? Why don't you use Redis?
-
-The classical session-cookie approach is easier to implement, handling JWT correctly is
-more involved and 
-[there are](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/)
-[arguments](https://developer.okta.com/blog/2017/08/17/why-jwts-suck-as-session-tokens)
-that JWT should not be used for sessions or at least have no advantages for this usage,
-especially if the possibility to sign-out a user and invalidate a session is desired.
-
-Concerning Redis - it might be used to persist in-memory data between reloads, but only for
-this, pulling in this dependency seems to be "overkill". As this service is not intended to
-be up-scaled and each instance will probably have probably at most a few dozens of users,
-having a shared cache seems not so important. Possibly Redis might be added as an
-*optional* dependency at some point in the future, if problems arise, but it will never be
-mandatory.
 
 ## Development
 

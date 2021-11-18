@@ -57,7 +57,7 @@
     /**
       Wrap the provided onChange function to fix the following problem:
       When mounting the component, the form automatically modifies
-      the prefilled JSON by adding missing sub-objects. 
+      the prefilled JSON by adding missing sub-objects.
       We don't want these "changes" done on load to be notified upward.
      */
     function wrappedOnChange(func: any): any {

@@ -47,11 +47,11 @@ checksum_tool = 'sha256sum'
 
 # Specify the desired postprocessing.
 #
-# If a HTTP(S) URL is provided, a POST request will be sent with 
+# If a HTTP(S) URL is provided, a POST request will be sent with
 # a JSON body containing {"event": "new_dataset", "location": DATASET_PATH}
 # where DATASET_PATH is the directory of the new dataset.
 #
-# If it is not an URL, it is interpreted as a shell command or script that is run when a 
+# If it is not an URL, it is interpreted as a shell command or script that is run when a
 # dataset is complete with DATASET_PATH as extra positional argument.
 # Your script must be executable and on your PATH for this to work.
 #

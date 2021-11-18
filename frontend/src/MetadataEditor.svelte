@@ -59,8 +59,8 @@
     let jsonEditor: any // reference to JSONEditor to call methods etc.
     let refreshForm = {} // set again to {} to regenerate Form component
 
-    /** 
-        Get updates of JSON metadata. 
+    /**
+        Get updates of JSON metadata.
         JSONEditor passes an object with either a text or json key.
         For react-jsonschema-form updates, we repack the new value into this shape.
      */
