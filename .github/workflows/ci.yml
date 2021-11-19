@@ -39,8 +39,9 @@ jobs:
       - uses: actions/setup-python@v2
       - name: Install and run pdoc
         run: |
+          python -m pip install .
           python -m pip install pdoc
-          pdoc -o docs metador
+          python -m pdoc -o docs ./metador
       - name: Deploy docs to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:

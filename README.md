@@ -1,5 +1,19 @@
 # Metador
 
+[
+![Test](https://img.shields.io/github/workflow/status/Materials-Data-Science-and-Informatics/metador/test?label=test)
+](https://github.com/Materials-Data-Science-and-Informatics/metador/actions?query=workflow:test)
+[
+![Coverage](https://img.shields.io/codecov/c/gh/Materials-Data-Science-and-Informatics/metador?token=BJJ15RHNJA)
+](https://app.codecov.io/gh/Materials-Data-Science-and-Informatics/metador)
+[
+![Docs](https://img.shields.io/badge/read-docs-success)
+](FIXME_GHPAGES_URL/metador)
+[
+![PyPIPkgVersion](https://img.shields.io/pypi/v/metador)
+](https://pypi.org/project/metador/)
+
+
 **M**etadata **E**nrichment and **T**ransmission **A**ssistance for **D**igital **O**bjects in **R**esearch
 
 ## TL;DR
