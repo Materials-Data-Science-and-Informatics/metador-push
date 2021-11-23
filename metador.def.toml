@@ -17,13 +17,13 @@
 # Site where metador is served (without trailing slash).
 # It depends on the way you proxy/route/serve requests to it.
 #
-# With reverse proxy for https, this can be e.g. https://localhost
+# With reverse proxy for https, this can be e.g. https://your-domain.com
 site = 'http://localhost:8000'
 
 # The endpoint URL for file uploads that is accessible from client (with trailing slash).
 # It depends on the -base-path of tusd and the way you proxy/route/serve requests to it.
 #
-# With reverse proxy for https, this can be e.g. https://localhost/tusd/files/
+# With reverse proxy for https, this can be e.g. https://your-domain.com/tusd/files/
 tusd_endpoint = 'http://localhost:1080/files/'
 
 # After that many hours the non-completed datasets have expired and can be cleaned up.
@@ -95,6 +95,7 @@ host = '0.0.0.0'
 port = 8000
 # If a filename for a UNIX socket is provided, uvicorn will bind to it instead of host:port
 # This should be used for proper deployment behind a reverse proxy.
+# NOTE: Set socket to /tmp/uvicorn.sock in your config for use with the docker image!
 socket = ""
 
 # Mostly for developers: reload application on code changes.

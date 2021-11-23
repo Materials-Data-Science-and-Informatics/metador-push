@@ -1,0 +1,5 @@
+.tox
+docs
+.git
+.*cache
+**/node_modules

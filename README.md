@@ -143,7 +143,7 @@ handle proxy headers correctly.
 
 For testing purposes, you can easily generate a self-signed certificate:
 ```
-openssl req -nodes -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+openssl req -nodes -x509 -newkey rsa:4096 -keyout cert.key -out cert.pem -days 365
 ```
 
 ## Setting up ORCID Authentication
@@ -156,6 +156,31 @@ Afterwards, fill out the `orcid` section of your Metadir configuration according
 adding your client ID and secret token.
 
 If you register on the ORCID sandox server, do not forget to set `sandbox=true`!
+
+## Deployment using Docker
+
+To build a Docker image with a pre-configured setup of metador, tusd and nginx, run:
+
+```
+docker build -t metador:latest .
+```
+
+Prepare a directory (e.g. called `metador_rundir`) that contains the following items:
+
+* your Metador configuration `metador.toml`
+* a `profiles` directory containing your dataset profiles (explained below) and JSON schemas
+* SSL certificate and key named `cert.pem` and `cert.key` valid for the domain you will use for accessing Metador
+
+This directory is used both for configuration and retrieval of the data.
+
+To run Metador with your prepared directory `./metador_rundir`, run:
+
+```
+docker run -it --mount type=bind,source="$(pwd)"/metador_rundir,target=/mnt -p 80:80 -p 443:443 metador:latest
+```
+
+Now you should be able to access Metador on your computer
+by visiting `https://localhost` in your browser.
 
 ## Dataset profiles and JSON Schemas
 
