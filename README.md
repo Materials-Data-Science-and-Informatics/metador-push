@@ -9,23 +9,21 @@
 [
 ![Docs](https://img.shields.io/badge/read-docs-success)
 ](FIXME_GHPAGES_URL/metador)
-[
-![PyPIPkgVersion](https://img.shields.io/pypi/v/metador)
-](https://pypi.org/project/metador/)
-
+<!-- TODO: dockerhub badge or something like that, if we ever offer prebuilt containers -->
 
 **M**etadata **E**nrichment and **T**ransmission **A**ssistance for **D**igital **O**bjects in **R**esearch
 
 ## TL;DR
 
 * **Summary:** File upload service with resumable uploads and rich metadata requirements
-* **Purpose:** Comfortably get data from outside while enforcing collection of certain metadata
-* Easy to set up, no complicated dependencies
-* Metadata validation based on file name pattern matching and JSON Schema
+* **Purpose:** Comfortably get data from someone else while **enforcing submission of relevant metadata**
+* Easy to set up, no complicated dependencies or requirements
+* Metadata validation based on dataset profiles using file name pattern matching and [JSON Schema](https://json-schema.org/)
 * Authentication via ORCID, with optional allowlist to restrict access
-* Successfully uploaded and annotated datasets are passed to postprocessing:
+* Successfully uploaded and annotated datasets can be passed over to some post-processing:
   - Either launch a script to handle the completed dataset directory,
-  - or notify a different service via HTTP.
+  - or notify a different service via HTTP,
+  - (or just collect the (meta)data from your "data mailbox" manually)
 
 ## Overview
 
@@ -37,21 +35,23 @@ Unlike a real mailbox where any content can be dropped, Metador wants to help yo
 data receiver, to make sense of the data, by requiring the uploader to fill out a form of
 your choice for each file to provide all necessary metadata.
 
-**Thereby, Metador faciliates FAIRification of research data and forms a boundary between
-the unstructured, unannotated outside world and the FAIR, semantically annotated data
-inside your amazing research institution.**
+**Thereby, Metador faciliates FAIRification of research data by providing a structured
+interface to condensate implicit contextual domain knowledge into machine-readable
+structured metadata.**
 
 If you **formalize** your metadata requirements in the form of JSON Schemas, then Metador
-will **enforce** those requirements, if you let your external partners share their data
+will **enforce** those requirements, if you let your collaborators share their data
 with you through it. At the same time, you are **in full control** of the data, because
 Metador is simple to set-up locally and eliminates the need of a middle-man service that
 assists you with moving larger (i.e., multiple GB) files over the internet.
 
-Using Metador, the sender can upload a dataset (i.e., a set of files) and must annotate
-the files according to your requirements. After the upload and annotation is completed, a
-hook can be triggered that will get a complete dataset for further processing. For
-example, you can put completed and annotated datasets into your in-lab repository. This
-makes Metador **easy to integrate into your existing workflows**.
+Using Metador, the sender can upload a dataset (i.e., a collection of files) and must
+provide metadata for the files according to your requirements. After the upload and
+metadata annotation is completed, Metador can notify other services to collect and further
+process this data (*post-processing hooks*). For example, you can use this to put
+completed and fully annotated datasets into your existing in-lab repository or storage, or
+apply necessary transformations on the data or metadata. This makes Metador **easy to
+integrate into your existing workflows**.
 
 To achieve these goals, Metador combines state-of-the-art resumable file-upload technology
 using [Uppy](https://uppy.io) and the [tus](https://tus.io/) protocol
@@ -61,8 +61,8 @@ and [JSONEditor](https://github.com/josdejong/jsoneditor).
 
 ## Why not a different self-hosted file uploader?
 
-Before starting work on Metador, I was not able to find an existing solution checking all
-of the following boxes:
+To the best of our knowledge, before starting work on Metador, there was no off-the-shelf
+solution checking all of the following boxes:
 
 * lightweight (easy to deploy and use on a typical institutional Linux server)
 * supports convenient upload of large files (with progress indication, pauseable/resumable)
@@ -79,11 +79,11 @@ If you do not have a recent version of Python (>=3.7) installed, you can use
 For the frontend, you need npm >= 7 to build the frontend (default for node >= 16)
 and you can use e.g. [nvm](https://github.com/nvm-sh/nvm) to install it locally.
 
-Download and install [`tusd`](https://github.com/tus/tusd),
+Download and install [`tusd`](https://github.com/tus/tusd) (tested with 1.6.0),
 the server component for the Tus protocol that will handle the low-level details
 of the file uploading process.
 
-First, go to the `frontend` directory and run `npm run build` to compile the frontend.
+First, go to the `frontend` directory and run `npm run build` to build the frontend.
 
 Then install Metador using `poetry install`, if you use poetry,
 or use `pip install --user .` if you use pip (as usual, using a `venv` is recommended).
@@ -93,7 +93,7 @@ or use `pip install --user .` if you use pip (as usual, using a `venv` is recomm
 ### I want to see it in action, now!
 
 Ensure that tusd and Metador are installed
-and that the `tusd` and `metador-cli` scripts are on your path.
+and that the `tusd` and `metador-cli` scripts are on your path, i.e. executable.
 
 Run `tusd` like this: `tusd -hooks-http "$(metador-cli tusd-hook-url)"`
 
@@ -103,23 +103,27 @@ Navigate to `http://localhost:8000/` in your browser.
 
 ### I want to deploy Metador properly!
 
-For serious deployment into an existing infrastructure, some more steps are required:
+As Metador tries to be a general building block and not impose too many assumptions on
+your setup, here only a general overview of the required steps is provided.
+
+For serious deployment into an existing infrastructure, the following steps are required:
 
 * prepare JSON Schemas for the metadata you want to collect for the files.
 
+* write dataset profiles linking the JSON Schemas to file name patterns (explained below).
+
 * think about the way how both `tusd` and Metador will be visible to the outside world.
-  I cannot give you assistance with your specific setup that might involve e.g. Apache
-  or nginx to serve both applications.
+  This probably involves a reverse proxy, e.g. Apache or nginx to serve both applications
+  and take care of HTTPS.
 
-   However your setup might be, you need to make sure that:
+  However your setup might be, you need to make sure that:
 
-   1. both `tusd` and Metador are accessible from the client side (notice that by default
-      they run on two different ports, unless you mask that with route rewriting and
-      forwarding).
+  1. both `tusd` and Metador are accessible from the client side (notice that by default
+    they run on two different ports, unless you mask that with route rewriting).
 
-   2. The passed hook endpoint URL of Metador is accessible by `tusd`.
+  2. The passed hook endpoint URL of Metador is accessible by `tusd`.
 
-   3. The file upload directory of `tusd` is accessible (read + write) by Metador.
+  3. The file upload directory of `tusd` is accessible (read + write) by Metador.
 
 * Use `metador-cli default-conf > metador.toml` to get a copy of the default config file,
   add your JSON schemas and
@@ -128,17 +132,26 @@ For serious deployment into an existing infrastructure, some more steps are requ
   You can delete everything in your config that you do not want to override.
 
 * *Optional:* For ORCID integration, you need access to the ORCID public API.
+  If you don't use ORCID, you have to take care of authorization yourself!
 
 * Run `tusd` as required with your setup, passing
   `-hooks-http "$(metador-cli tusd-hook-url)"` as argument.
 
 * Run Metador with your configuration: `metador-cli run --conf YOUR_CONFIG_FILE`
 
-## Using HTTPS with Uvicorn server
+  Metador will use the current directory as the working directory and also look for
+  profiles and the configuration file there, unless told otherwise via CLI interface or
+  configuration settings.
 
-To enable https, use a reverse proxy that handles https for you.
+### Using HTTPS
+
+**You definitely should set up some kind of encryption! Especially if you work with
+sensitive data, classified data, data under an embargo or even just unpublished data!
+If you do not encrypt your traffic, someone could read it in transit like a postcard!**
+
+To enable https, use a reverse proxy that handles traffic encryption for you.
 You can use the provided example nginx configuration as a starting point.
-Remember to set `-behind-proxy` flag when starting `tusd` in order to
+Remember to set the `-behind-proxy` flag when starting `tusd` in order to
 handle proxy headers correctly.
 
 For testing purposes, you can easily generate a self-signed certificate:
@@ -146,11 +159,15 @@ For testing purposes, you can easily generate a self-signed certificate:
 openssl req -nodes -x509 -newkey rsa:4096 -keyout cert.key -out cert.pem -days 365
 ```
 
+For production use, get a certificate that is signed by your institution, or get
+one from [Let's Encrypt](https://letsencrypt.org/).
+
 ## Setting up ORCID Authentication
 
 Follow instructions given e.g.
 [here](https://info.orcid.org/documentation/integration-guide/registering-a-public-api-client/)
-As redirect URL you should register the value you get from `metador-cli orcid-redir-url`.
+As redirect URL you should register the value you get from `metador-cli orcid-redir-url`
+(the output is based on your configuration).
 
 Afterwards, fill out the `orcid` section of your Metadir configuration accordingly,
 adding your client ID and secret token.
@@ -259,6 +276,14 @@ To automate this, you can e.g. set up a cronjob to run this script regularily.
 ## Technical FAQ
 
 The following never actually asked questions might be of interest to you.
+
+### Feature: Can I upload existing JSON metadata for the files?
+
+The only purpose of Metador is to enable a human-friendly input form to simplify the
+annotation of the data. If the users happen to have JSON files that are valid according to
+the required schema, of course you can just switch to the raw JSON Editor view and paste
+the content there. But if you do already have structured metadata, you most likely do not
+need Metador.
 
 ### Feature: Will there be an API for external tools to automate uploads?
 
