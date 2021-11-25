@@ -172,10 +172,10 @@ Follow instructions given e.g.
 As redirect URL you should register the value you get from `metador-cli orcid-redir-url`
 (the output is based on your configuration).
 
-Afterwards, fill out the `orcid` section of your Metadir configuration accordingly,
+Afterwards, fill out the `orcid` section of your Metador configuration accordingly,
 adding your client ID and secret token.
 
-If you register on the ORCID sandox server, do not forget to set `sandbox=true`!
+If you register on the ORCID sandbox server, do not forget to set `sandbox=true`!
 
 ## Deployment using Docker
 
