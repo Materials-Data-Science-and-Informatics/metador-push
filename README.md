@@ -114,7 +114,8 @@ For serious deployment into an existing infrastructure, the following steps are 
 
 * think about the way how both `tusd` and Metador will be visible to the outside world.
   This probably involves a reverse proxy, e.g. Apache or nginx to serve both applications
-  and take care of HTTPS.
+  and take care of HTTPS. Make sure that the public hostname is an alias for localhost in
+  `/etc/hosts`, if running both services on the same machine.
 
   However your setup might be, you need to make sure that:
 
@@ -160,7 +161,9 @@ openssl req -nodes -x509 -newkey rsa:4096 -keyout cert.key -out cert.pem -days 3
 ```
 
 For production use, get a certificate that is signed by your institution, or get
-one from [Let's Encrypt](https://letsencrypt.org/).
+one from [Let's Encrypt](https://letsencrypt.org/), e.g. by following
+[these](https://www.itzgeek.com/how-tos/linux/debian/how-to-install-lets-encrypt-ssl-certificate-for-nginx-on-debian-11.html)
+[guides](https://stevenwestmoreland.com/2017/11/renewing-certbot-certificates-using-a-systemd-timer.html).
 
 ## Setting up ORCID Authentication
 
