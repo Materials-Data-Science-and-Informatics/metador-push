@@ -73,35 +73,42 @@ If you do not care about collecting metadata, feel free to pick a different solu
 
 ## Installation
 
-If you do not have a recent version of Python (>=3.7) installed, you can use
-[`pyenv`](https://github.com/pyenv/pyenv) to install e.g. Python 3.10 and enable it.
+*If you are not a fluent command line user, it is recommended to let you local system
+administrator set an instance up Metador for you. You should then provide them with the
+domain-specific dataset profiles and JSON Schemas as it is explained further below.*
 
-For the frontend, you need npm >= 7 to build the frontend (default for node >= 16)
-and you can use e.g. [nvm](https://github.com/nvm-sh/nvm) to install it locally.
+* Clone this repository: `git clone git@github.com:Materials-Data-Science-and-Informatics/metador.git`
 
-Download and install [`tusd`](https://github.com/tus/tusd) (tested with 1.6.0),
-the server component for the Tus protocol that will handle the low-level details
-of the file uploading process.
+* Check that you have Python >=3.7 and Node.js >= 14.15 by running `python --version`, `node --version`
 
-First, go to the `frontend` directory and run `npm run build` to build the frontend.
+If you do not have a sufficiently recent Python or Node.js version installed,
+use respectively [`pyenv`](https://github.com/pyenv/pyenv) or [`nvm`](https://github.com/nvm-sh/nvm)
+in order to install a suitable Python or Node.js locally.
 
-Then install Metador using `poetry install`, if you use poetry,
-or use `pip install --user .` if you use pip (as usual, using a `venv` is recommended).
+* Download and install [`tusd`](https://github.com/tus/tusd) (tested with 1.6.0)
+
+This is the server component for the Tus protocol that will handle the low-level details
+of the file uploading process. It is downloaded as a OS-specific executable to be placed into
+either `/usr/bin` (global) or `~/.local/bin` (user) directory.
+
+* go to the `frontend` subdirectory in the cloned repository and run `npm install && npm run build` to build the frontend.
+
+* install Metador using `poetry install`, if you use poetry, otherwise use `pip install --user .` (as usual, using a `venv` is recommended).
 
 ## Usage
 
 ### I want to see it in action, now!
 
-Ensure that tusd and Metador are installed
+* Ensure that tusd and Metador are installed
 and that the `tusd` and `metador-cli` scripts are on your path, i.e. executable.
 
-Run `tusd` like this: `tusd -hooks-http "$(metador-cli tusd-hook-url)"`
+* Run `tusd` like this: `tusd -hooks-http "$(metador-cli tusd-hook-url)"`
 
-Run Metador like this: `metador-cli run`
+* Run Metador like this: `metador-cli run`
 
-Navigate to `http://localhost:8000/` in your browser.
+* Navigate to `http://localhost:8000/` in your browser.
 
-### I want to deploy Metador properly!
+### I want to deploy Metador properly! (for system administrator)
 
 As Metador tries to be a general building block and not impose too many assumptions on
 your setup, here only a general overview of the required steps is provided.
