@@ -73,8 +73,8 @@ If you do not care about collecting metadata, feel free to pick a different solu
 
 ## Installation
 
-*If you are not a fluent command line user, it is recommended to let you local system
-administrator set up an instance up Metador for you. You should then provide them with the
+*If you are not a fluent command line user, it is recommended to let your local system
+administrator set up an instance of Metador for you. You should then provide them with the
 domain-specific dataset profiles and JSON Schemas as it is explained further below.*
 
 * Clone this repository: `git clone git@github.com:Materials-Data-Science-and-Informatics/metador.git`
