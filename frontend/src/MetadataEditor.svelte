@@ -57,6 +57,9 @@
     }
 
     let jsonEditor: any // reference to JSONEditor to call methods etc.
+    let jeContent: JSONVal
+    $: jeContent = { json: editorMetadata }
+
     let refreshForm = {} // set again to {} to regenerate Form component
 
     /**
@@ -71,21 +74,22 @@
             try {
                 newJson = JSON.parse(content.text)
             } catch (err) {
-                // invalid JSON or empty string -> we use empty object
-                newJson = {}
+                // invalid JSON or empty string -> do nothing (yet)
+                return
             }
         }
         const old = Object.assign({}, editorMetadata) // shallow copy
         editorMetadata = newJson
 
         if (old != editorMetadata) {
+            jsonEditor.update(content)
             dispatch("modified", selectedFile)
         }
     }
 
     onMount(() => {
         if (!editorMetadata) {
-            jsonEditor.set({}) // don't accept "null" metadata
+            jsonEditor.set({ json: {} }) // don't accept "null" metadata
         }
     })
 
@@ -111,9 +115,9 @@
 
 <div style="height: 90%;" class:hidden={formView}>
     <JSONEditor
-        bind:json={editorMetadata}
         bind:this={jsonEditor}
         onChange={editorMetadataChanged}
+        content={jeContent}
         {validator} />
 </div>
 <div style="height: 90%;" class:hidden={!formView}>

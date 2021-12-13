@@ -56,7 +56,7 @@
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "svelte-fa": "^2.2.1",
-        "svelte-jsoneditor": "~0.2.7",
+        "svelte-jsoneditor": "~0.3.0",
         "svelte-navigator": "^3.1.5",
         "svelte-notifications": "github:keenethics/svelte-notifications"
     }
