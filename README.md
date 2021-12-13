@@ -93,7 +93,7 @@ either `/usr/bin` (global) or `~/.local/bin` (user) directory.
 
 * go to the `frontend` subdirectory in the cloned repository and run `npm install && npm run build` to build the frontend.
 
-* install Metador using `poetry install`, if you use poetry, otherwise use `pip install --user .` (as usual, using a `venv` is recommended).
+* go back to the top level directory of the repository and install Metador using `poetry install`, if you use poetry, otherwise use `pip install --user .` (as usual, using a `venv` is recommended).
 
 ## Usage
 
