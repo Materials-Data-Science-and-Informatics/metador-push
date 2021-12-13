@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Metador is a metadata-aware mailbox for research data."
 authors = ["Anton Pirogov <a.pirogov@fz-juelich.de>"]
 license = "MIT"
+include = ["*.toml", "*.json", "profiles/*", "frontend/public/**/*"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
