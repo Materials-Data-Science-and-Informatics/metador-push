@@ -367,3 +367,25 @@ The following libraries are used directly (i.e. not only transitively) in this p
 svelte-jsoneditor (ISC), uppy (MIT), Picnic CSS (MIT), Font-Awesome (MIT/CC-BY-4.0), FileSaver.js (MIT), react-jsonschema-form (Apache 2)
 
 More information is in the documentation of the corresponding packages.
+
+## Acknowledgements
+
+<div>
+<img style="vertical-align: middle;" alt="HMC Logo" src="https://helmholtz-metadaten.de/storage/88/hmc_Logo.svg" width=50% height=50% />
+&nbsp;&nbsp;
+<img style="vertical-align: middle;" alt="FZJ Logo" src="https://upload.wikimedia.org/wikipedia/de/8/8b/J%C3%BClich_fz_logo.svg" width=30% height=30% />
+</div>
+<br />
+
+This project was developed at the Institute for Materials Data Science and Informatics
+(IAS-9) of the Jülich Research Center and funded by the Helmholtz Metadata Collaboration
+(HMC), an incubator-platform of the Helmholtz Association within the framework of the
+Information and Data Science strategic initiative.
+
+<div>
+<img src="https://www.seekpng.com/png/detail/770-7706112_eu-flag-and-erc-logo-european-research-council.png" alt="Eu Flag And Erc Logo - European Research Council@seekpng.com" width=50% height=50% />
+<br />
+
+This project has received financial support from the European Research Council through the
+ERC Grant Agreement No. 759419 MuDiLingo (‘A Multiscale Dislocation Language for
+Data-Driven Materials Science’).
