@@ -89,7 +89,7 @@
 <span class="kn">from</span> <span class="nn">..log</span> <span class="kn">import</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">get_auth</span>
 <span class="kn">from</span> <span class="nn">.auth</span> <span class="kn">import</span> <span class="n">Session</span><span class="p">,</span> <span class="n">SessionID</span>
-<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">AUTH_PREF</span><span class="p">,</span> <span class="n">ORCID_ENDPOINT</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">AUTH_PREF</span><span class="p">,</span> <span class="n">ORCID_ENDPOINT</span><span class="p">,</span> <span class="n">local_url_path</span>
 
 <span class="n">routes</span><span class="p">:</span> <span class="n">APIRouter</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">AUTH_PREF</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;orcid-auth-client&quot;</span><span class="p">])</span>
 <span class="sd">&quot;&quot;&quot;Routes to be added to the app to provide the authentication flow.&quot;&quot;&quot;</span>
@@ -190,7 +190,7 @@
     <span class="n">session_id</span> <span class="o">=</span> <span class="n">auth</span><span class="o">.</span><span class="n">new_session</span><span class="p">(</span><span class="n">orcidbearer</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New session: </span><span class="si">{</span><span class="n">session_id</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">auth</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">res</span> <span class="o">=</span> <span class="n">RedirectResponse</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">RedirectResponse</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">local_url_path</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
     <span class="n">maxage</span> <span class="o">=</span> <span class="n">auth</span><span class="o">.</span><span class="n">orcid_conf</span><span class="o">.</span><span class="n">auth_expire_after</span> <span class="o">*</span> <span class="mi">60</span>
     <span class="n">set_paranoid_cookie</span><span class="p">(</span>
         <span class="n">res</span><span class="p">,</span>
@@ -450,7 +450,7 @@
     <span class="n">session_id</span> <span class="o">=</span> <span class="n">auth</span><span class="o">.</span><span class="n">new_session</span><span class="p">(</span><span class="n">orcidbearer</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New session: </span><span class="si">{</span><span class="n">session_id</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">auth</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">res</span> <span class="o">=</span> <span class="n">RedirectResponse</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">RedirectResponse</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">local_url_path</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
     <span class="n">maxage</span> <span class="o">=</span> <span class="n">auth</span><span class="o">.</span><span class="n">orcid_conf</span><span class="o">.</span><span class="n">auth_expire_after</span> <span class="o">*</span> <span class="mi">60</span>
     <span class="n">set_paranoid_cookie</span><span class="p">(</span>
         <span class="n">res</span><span class="p">,</span>
