@@ -8,7 +8,7 @@
 ](https://app.codecov.io/gh/Materials-Data-Science-and-Informatics/metador)
 [
 ![Docs](https://img.shields.io/badge/read-docs-success)
-](FIXME_GHPAGES_URL/metador)
+](https://materials-data-science-and-informatics.github.io/metador/)
 <!-- TODO: dockerhub badge or something like that, if we ever offer prebuilt containers -->
 
 **M**etadata **E**nrichment and **T**ransmission **A**ssistance for **D**igital **O**bjects in **R**esearch
