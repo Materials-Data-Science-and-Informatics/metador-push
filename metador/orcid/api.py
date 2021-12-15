@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from ..log import log
 from . import get_auth
 from .auth import Session, SessionID
-from .util import AUTH_PREF, ORCID_ENDPOINT
+from .util import AUTH_PREF, ORCID_ENDPOINT, local_url_path
 
 routes: APIRouter = APIRouter(prefix=AUTH_PREF, tags=["orcid-auth-client"])
 """Routes to be added to the app to provide the authentication flow."""
@@ -110,7 +110,7 @@ async def orcid_auth(code: Optional[str] = None, state: str = "/"):
     session_id = auth.new_session(orcidbearer)
     log.debug(f"New session: {session_id} -> {auth.sessions[session_id]}")
 
-    res = RedirectResponse(url=state)
+    res = RedirectResponse(url=local_url_path(state))
     maxage = auth.orcid_conf.auth_expire_after * 60
     set_paranoid_cookie(
         res,

@@ -8,7 +8,7 @@ from typing_extensions import Final
 
 from ..log import log
 from .auth import OrcidBearerToken
-from .util import MOCK_ORCID_PREF
+from .util import MOCK_ORCID_PREF, local_url_path
 
 routes = APIRouter(prefix=MOCK_ORCID_PREF, tags=["orcid-server-mock"])
 """Routes to be added to application for Mock ORCID authentication (for development)."""
@@ -49,7 +49,7 @@ async def mock_orcid_authorize(redirect_uri: str, state: Optional[str] = None):
             code = st[1]
     redir_url = redirect_uri + f"?code={code}{st_param}"
     log.debug(f"Redirect to {redir_url}")
-    return RedirectResponse(url=redir_url)
+    return RedirectResponse(url=local_url_path(redir_url))
 
 
 @routes.post("/revoke", status_code=status.HTTP_204_NO_CONTENT)

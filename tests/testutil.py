@@ -13,7 +13,7 @@ def get_free_tcp_port() -> int:
     """Get a free port to bind to (this has a race condition, but it does not matter)."""
     tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    tcp.bind(("", 0))
+    tcp.bind(("127.0.0.1", 0))
     port = tcp.getsockname()
     tcp.close()
     return port[1]

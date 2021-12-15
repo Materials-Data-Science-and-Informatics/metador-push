@@ -153,9 +153,14 @@ async def async_client(test_config):
 async def tus_server(test_config, tmp_path_factory):
     """Launch a tusd instance in the background for running tests."""
     cmd = ["tusd", "-hooks-http", test_config.metador.site + TUSD_HOOK_ROUTE]
+
+    # create directory where tusd is run and adapt the session test_config
+    tusd_cwd = tmp_path_factory.mktemp("tusd_test_dir")
+    test_config.metador.tusd_datadir = (tusd_cwd / "data").resolve()
+
     tusd_proc = await asyncio.subprocess.create_subprocess_exec(
         *cmd,
-        cwd=tmp_path_factory.mktemp("tusd_test_dir"),
+        cwd=tusd_cwd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
     )

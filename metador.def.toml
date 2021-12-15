@@ -25,6 +25,9 @@ site = 'http://localhost:8000'
 #
 # With reverse proxy for https, this can be e.g. https://your-domain.com/tusd/files/
 tusd_endpoint = 'http://localhost:1080/files/'
+# if tusd is run in the same directory as metador, it will create a 'data' directory
+# if your tusd runs somewhere else, adapt this in your configuration
+tusd_datadir = 'data'
 
 # After that many hours the non-completed datasets have expired and can be cleaned up.
 incomplete_expire_after = 48

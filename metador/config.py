@@ -69,6 +69,7 @@ class MetadorConf(BaseModel):
     site: str = "http://localhost:8000"
 
     tusd_endpoint: str = "http://localhost:1080/files/"
+    tusd_datadir: Path = Path("data")
 
     incomplete_expire_after: int = 48
 

@@ -1,6 +1,7 @@
 """Must put this stuff here, to avoid circular imports."""
 
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 
 from typing_extensions import Final
 
@@ -12,6 +13,13 @@ AUTH_PREF: Final[str] = "/oauth"
 
 ORCID_ENDPOINT: Final[str] = "/orcid"
 """Endpoint for auth redirection (visited from UI + redirected back to it from ORCID)."""
+
+
+def local_url_path(url: str):
+    """Sanitize local redirect (make sure there is no scheme+domain attached)."""
+    lst = list(urlsplit(url))
+    lst[0] = lst[1] = ""
+    return urlunsplit(lst)
 
 
 def orcid_redir(pref) -> str:

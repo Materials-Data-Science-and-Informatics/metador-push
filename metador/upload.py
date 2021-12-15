@@ -10,6 +10,7 @@ from fastapi import APIRouter, BackgroundTasks, Header, Response
 from pydantic import BaseModel, ValidationError
 from typing_extensions import Final, Literal
 
+from . import config as c
 from .dataset import Dataset
 from .log import log
 from .util import load_json
@@ -127,13 +128,18 @@ async def tusd_hook(
     # file complete -> import to dataset with original filename, compute checksum
     elif hook_name == TusdHookName.post_finish:
         assert body.Upload.Storage is not None
-        uplloc: Path = body.Upload.Storage.Path
-        renamed: Path = uplloc.parents[0] / filename
+        uplloc: Path = body.Upload.Storage.Path.resolve()
+        if uplloc.parent != c.conf().metador.tusd_datadir.resolve():  # security check
+            return Response(
+                "File location does not match tusd_datadir.", status_code=422
+            )
+
+        renamed: Path = uplloc.parent / filename
         log.debug(f"Upl: {uplloc} -> {renamed}")
         assert uplloc.is_file()
         uplloc.rename(renamed)
         ds.import_file(renamed)
-        Path(str(body.Upload.Storage.Path) + ".info").unlink()  # remove .info file
+        Path(str(uplloc) + ".info").unlink()  # remove .info file
         background_tasks.add_task(ds.compute_checksum, filename)
 
 
