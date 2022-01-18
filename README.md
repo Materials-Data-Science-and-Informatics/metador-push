@@ -337,17 +337,59 @@ a different way.
 
 ## Development
 
-For backend development, you can enable auto-reload of uvicorn in the `metador.toml`.
-For frontend development, run `npm run dev` in the frontend directory in addition to the
-Metador server to get auto-reload.
+### Initial Preparations
+
+To setup Metador for development, perform the following steps:
+
+1. Go to your Metador project directory and run `poetry install`.
+
+2. Next, `pre-commit install` to enable the required pre-commit hooks.
+
+2. Create a separate directory (ideally outside the `metador` project directory),
+   e.g. call it `metador_rundir`.
+
+3. Symlink the `profiles` from the project directory to your runtime directory or create a
+   new profiles directory with your profiles for testing and development.
+
+4. Create a `metador.toml` config file in the runtime directory and override some default
+   settings. You might want to use a configuration like this:
+```
+[metador.log]
+level = 'DEBUG'
+file = 'metador.log'
+
+[orcid]
+enabled = true
+use_fake = true
+sandbox = true
+
+[uvicorn]
+reload = true
+```
+
+The option `use_fake` will enable a dummy sign-on that does not use real ORCID servers and
+does not need having an ORCID. When `use_fake` is disabled, but `sandbox` is enabled,
+Metador instead will use the [ORCID test server](https://sandbox.orcid.org/) instead of
+the real one. Notice that both the test and production servers of ORCID respectively need
+the setting up described above and a registered user account.
+
+### Running Metador for development
+
+To start, you should first go to the Metador project directory run `poetry shell`.
+Then switch to the runtime directory (the one with your `metador.toml`)
+and run `metador-cli run`.
+
+For frontend development, you can run `npm run dev` in the frontend directory in addition
+to the Metador server to get auto-reload for the frontend. Be sure to use the frontend
+served by the backend server (by default running on port 8000), though!
 
 Before commiting, run `pytest` and make sure you did not break anything.
 
-To generate documentation, run `pdoc -o docs metador`.
+To generate documentation locally, run `pdoc -o docs metador`.
 
 To check coverage, use `pytest --cov`
 
-Also verify that the pre-commit hooks all run successfully.
+Also verify that the pre-commit hooks all run and complete successfully.
 
 ## Copyright and Licence
 
