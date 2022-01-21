@@ -1,5 +1,6 @@
 # Metador
 
+![Project status](https://img.shields.io/badge/status-beta-%23ffff00)
 [
 ![Test](https://img.shields.io/github/workflow/status/Materials-Data-Science-and-Informatics/metador/test?label=test)
 ](https://github.com/Materials-Data-Science-and-Informatics/metador/actions?query=workflow:test)
