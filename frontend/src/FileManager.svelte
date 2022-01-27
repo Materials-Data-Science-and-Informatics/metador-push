@@ -145,7 +145,7 @@
                 }
 
                 notify(`${file ? file : "Dataset"} deleted`)
-                hasFiles = dataset.files.length > 0
+                hasFiles = Object.keys(dataset.files).length > 0
             })
             .catch(() => {
                 notify(`Cannot delete ${file ? file : dataset.id}!`, "danger")
