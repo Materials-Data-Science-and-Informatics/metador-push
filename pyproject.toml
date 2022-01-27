@@ -25,7 +25,7 @@ pytest-cov = "^2.12.1"
 pytest-asyncio = "^0.15.1"
 aiotus = "^0.1.8"
 importlib-metadata = "^4.6.1"
-tox = "^3.23.1"
+aiohttp = "^3.8.1"
 
 [tool.poetry.scripts]
 metador-cli = 'metador.cli:app'
@@ -44,16 +44,3 @@ filterwarnings = [
 
 [tool.coverage.run]
 source = ['metador']
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-isolated_build = true
-envlist = py37, py38, py39
-
-[testenv]
-whitelist_externals = poetry
-commands =
-    poetry install -v
-    poetry run pytest tests/
-"""

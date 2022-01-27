@@ -45,8 +45,8 @@ profile_dir = 'profiles'
 # It will have subdirs "staging" and "complete" for datasets
 # and also contain some temporary files.
 data_dir = 'metador_data'
-# Checksum tool to use (sha256sum and sha512sum are supported).
-checksum_tool = 'sha256sum'
+# Checksum algorithm to use (sha256 and sha512 are supported).
+checksum = 'sha256'
 
 # Specify the desired postprocessing.
 #

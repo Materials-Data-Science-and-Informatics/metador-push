@@ -39,7 +39,7 @@
 
     // setInterval jobs waiting for checksum of new uploads
     let checksumPollJobs = new Map()
-    const checksumFilename: string = dataset.checksumTool + "s.txt"
+    const checksumFilename: string = dataset.checksumAlg + "sums.txt"
 
     const dispatch = createEventDispatcher() // for sending events
     const notify = getNotifier() // for showing notifications

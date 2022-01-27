@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -18,7 +17,7 @@ from pydantic import BaseModel
 from typing_extensions import Final
 
 from . import util
-from .config import ChecksumTool, conf
+from .config import conf
 from .log import log
 from .orcid.auth import OrcidStr
 from .profile import Profile, UnsafeJSON
@@ -79,7 +78,7 @@ class Dataset(BaseModel):
     expires: datetime
     """Expiry date and time (if not completed by then)."""
 
-    checksumTool: ChecksumTool
+    checksumAlg: util.ChecksumAlg
     """Fix checksum tool in a dataset (should stay consistent throughout config change)."""
 
     profile: Profile
@@ -228,20 +227,12 @@ class Dataset(BaseModel):
             return False
 
         try:
-            ret = subprocess.run(
-                [self.checksumTool, filepath],
-                check=True,
-                capture_output=True,
-                encoding="utf-8",
-            ).stdout.split(maxsplit=1)
-            assert Path(ret[1].rstrip()) == filepath  # sanity-check
-            file_checksum = ret[0]
-            self.files[filename].checksum = file_checksum
+            self.files[filename].checksum = util.hashsum(filepath, self.checksumAlg)
         except FileNotFoundError:
-            log.error(f"Tool {self.checksumTool} not found!")
+            log.error(f"File {filepath} not found, cannot compute hashsum!")
             return False
-        except subprocess.CalledProcessError:
-            log.error(f"Failed {self.checksumTool} on {filepath}: non-zero exit code!")
+        except ValueError:
+            log.error(f"Hashing algorithm {self.checksumAlg} is not supported!")
             return False
 
         self.save()
@@ -326,7 +317,7 @@ class Dataset(BaseModel):
                     outfile.flush()
 
         # create a checksum file (e.g. sha256sums.txt)
-        with open(target_dir / (self.checksumTool + "s.txt"), "w") as outfile:
+        with open(target_dir / (self.checksumAlg + "sums.txt"), "w") as outfile:
             for name, dat in sorted(self.files.items()):
                 outfile.write(f"{name}  {dat.checksum}\n")
                 outfile.flush()
@@ -401,7 +392,7 @@ class Dataset(BaseModel):
             created=now,
             expires=now + tdiff,
             profile=profile,
-            checksumTool=conf().metador.checksum_tool,
+            checksumAlg=conf().metador.checksum,
         )
 
         ds._upload_dir().mkdir()  # create underlying upload directory

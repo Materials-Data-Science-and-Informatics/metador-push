@@ -1,7 +1,9 @@
 """General utility functions."""
 
+import hashlib
 import json
 import sys
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Set, Union
 from urllib.error import HTTPError
@@ -97,3 +99,30 @@ def critical_exit(msg: str) -> None:
     """
     log.critical(msg)
     sys.exit(1)
+
+
+class ChecksumAlg(str, Enum):
+    """The supported checksum tools."""
+
+    SHA256 = "sha256"
+    SHA512 = "sha512"
+
+
+_hashlib_algs = {ChecksumAlg.SHA256: hashlib.sha256, ChecksumAlg.SHA512: hashlib.sha512}
+
+
+def hashsum(file: Path, alg: ChecksumAlg):
+    """Compute hashsum for a file using selected algorithm."""
+    try:
+        h = _hashlib_algs[alg]()
+    except KeyError:
+        raise ValueError(f"Unsupported hashsum: {alg}")
+
+    with open(file, "rb") as f:
+        while True:
+            chunk = f.read(h.block_size)
+            if not chunk:
+                break
+            h.update(chunk)
+
+    return h.hexdigest()

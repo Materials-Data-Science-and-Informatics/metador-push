@@ -8,11 +8,10 @@ from pathlib import Path
 import pytest
 
 from metador import dataset, pkg_res
-from metador.config import ChecksumTool
 from metador.dataset import Dataset
 from metador.postprocessing import pass_to_postprocessing
 from metador.profile import Profile
-from metador.util import load_json
+from metador.util import ChecksumAlg, load_json
 
 from .test_auth import OTHER_ORCID, SOME_ORCID
 from .testutil import get_with_retries
@@ -179,7 +178,7 @@ def test_file_handling(test_profiles, dummy_file):
     assert ds.files.keys() == {file1.name, "my_file"}
 
     # now test checksums
-    assert ds.checksumTool == ChecksumTool.SHA256SUM
+    assert ds.checksumAlg == ChecksumAlg.SHA256
     assert ds.files[file1.name].checksum is None
     assert ds.files["my_file"].checksum is None
 
@@ -199,9 +198,9 @@ def test_file_handling(test_profiles, dummy_file):
     assert ds.files["my_file"].checksum == DUMMY_SHA256
 
     # trigger actual error with checksum tool (missing tool, missing file...)
-    ds.checksumTool = "invalidTool"  # type: ignore
+    ds.checksumAlg = "invalid"  # type: ignore
     assert not ds.compute_checksum(file1.name)
-    ds.checksumTool = ChecksumTool.SHA256SUM
+    ds.checksumAlg = ChecksumAlg.SHA256
     ds._upload_filepath(file1.name).unlink()  # kill file, keep entry
     assert not ds.compute_checksum(file1.name)
 

@@ -13,6 +13,7 @@ from typing_extensions import Final
 from . import __basepath__
 from .log import init_logger, log
 from .orcid import auth
+from .util import ChecksumAlg
 
 ################################################################
 
@@ -37,13 +38,6 @@ class LogLevel(str, Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
-
-
-class ChecksumTool(str, Enum):
-    """The supported checksum tools."""
-
-    SHA256SUM = "sha256sum"
-    SHA512SUM = "sha512sum"
 
 
 class LogConf(BaseModel):
@@ -76,7 +70,7 @@ class MetadorConf(BaseModel):
     profile_dir: Path = Path("profiles")
     data_dir: Path = Path("metador_data")
 
-    checksum_tool: ChecksumTool = ChecksumTool.SHA256SUM
+    checksum: ChecksumAlg = ChecksumAlg.SHA256
 
     completion_hook: Optional[str] = None
 
