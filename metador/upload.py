@@ -93,36 +93,45 @@ async def tusd_hook(
     log.debug(body)
 
     if META_DATASET not in upl_meta:
-        return Response("Exactly one dataset ID must be attached.", status_code=400)
+        msg = "Exactly one dataset ID must be attached."
+        log.debug(msg)
+        return Response(msg, status_code=400)
     ds_id_str: str = upl_meta[META_DATASET]
 
     if META_FILENAME not in upl_meta:  # or len(upl_meta[META_FILENAME]) > 1:
-        return Response("Exactly one filename must be attached.", status_code=400)
+        msg = "Exactly one filename must be attached."
+        log.debug(msg)
+        return Response(msg, status_code=400)
     filename: str = upl_meta[META_FILENAME]
 
     if filename.find("/") >= 0:
-        return Response("Invalid filename: may not contain /", status_code=422)
+        msg = "Invalid filename: may not contain /"
+        log.debug(msg)
+        return Response(msg, status_code=422)
 
     try:
         ds_id: UUID = UUID(ds_id_str)
         ds: Dataset = Dataset.get_dataset(ds_id)
     except (ValueError, AttributeError):
-        return Response(f"Invalid dataset ID: {ds_id_str}", status_code=422)
+        msg = f"Invalid dataset ID: {ds_id_str}"
+        log.debug(msg)
+        return Response(msg, status_code=422)
     except KeyError:
-        return Response("No such dataset.", status_code=404)
+        msg = "No such dataset."
+        log.debug(msg)
+        return Response(msg, status_code=404)
 
     if hook_name == TusdHookName.pre_create:
         if filename in ds.files:
-            return Response(
-                f"File {filename} already exists. Refused.", status_code=422
-            )
+            msg = f"File {filename} already exists. Refused."
+            log.debug(msg)
+            return Response(msg, status_code=422)
         # NOTE: we cover only the trivial false schema, allowing to reject files on purpose
         # It is overkill trying to detect complex logically unsatisfiable schemas.
         if ds.profile.get_schema_for(filename) == False:
-            return Response(
-                f"A file called {filename} is forbidden in this dataset.",
-                status_code=422,
-            )
+            msg = f"A file called {filename} is forbidden in this dataset."
+            log.debug(msg)
+            return Response(msg, status_code=422)
         return None  # 200 OK, no body
 
     # file complete -> import to dataset with original filename, compute checksum
@@ -130,9 +139,9 @@ async def tusd_hook(
         assert body.Upload.Storage is not None
         uplloc: Path = body.Upload.Storage.Path.resolve()
         if uplloc.parent != c.conf().metador.tusd_datadir.resolve():  # security check
-            return Response(
-                "File location does not match tusd_datadir.", status_code=422
-            )
+            msg = "File location does not match tusd_datadir."
+            log.debug(msg)
+            return Response(msg, status_code=422)
 
         renamed: Path = uplloc.parent / filename
         log.debug(f"Upl: {uplloc} -> {renamed}")
