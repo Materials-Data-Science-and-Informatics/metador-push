@@ -84,8 +84,7 @@
     "composition",
     "crystalStructure",
     "latticeParamLength",
-    "latticeParamAngle",
-    "dataFiles"
+    "latticeParamAngle"
   ],
   "definitions": {
     "Dim3D": {
@@ -165,19 +164,19 @@
         "phi1": {
           "title": "Phi1",
           "exclusiveMaximum": 360,
-          "minimum": 0,
+          "minimum": -360,
           "type": "number"
         },
         "phi": {
           "title": "Phi",
           "exclusiveMaximum": 180,
-          "minimum": 0,
+          "minimum": -360,
           "type": "number"
         },
         "phi2": {
           "title": "Phi2",
           "exclusiveMaximum": 360,
-          "minimum": 0,
+          "minimum": -360,
           "type": "number"
         }
       },
@@ -270,10 +269,9 @@
       "description": "Image snapshot of TEM experiment.",
       "type": "object",
       "properties": {
-        "description": {
-          "title": "Description",
-          "description": "Description of what is seen in this file.",
-          "minLength": 1,
+        "notes": {
+          "title": "Notes",
+          "description": "Additional notes about this file.",
           "type": "string"
         },
         "date": {
@@ -348,7 +346,6 @@
         }
       },
       "required": [
-        "description",
         "date",
         "temperature",
         "unitScale",
@@ -363,10 +360,9 @@
       "description": "Video recording of TEM experiment.",
       "type": "object",
       "properties": {
-        "description": {
-          "title": "Description",
-          "description": "Description of what is seen in this file.",
-          "minLength": 1,
+        "notes": {
+          "title": "Notes",
+          "description": "Additional notes about this file.",
           "type": "string"
         },
         "date": {
@@ -447,7 +443,6 @@
         }
       },
       "required": [
-        "description",
         "date",
         "temperature",
         "unitScale",

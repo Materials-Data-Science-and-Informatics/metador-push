@@ -8,6 +8,6 @@
   "rootSchema": "tem_experiment.schema.json",
   "patterns": [
     {"pattern": ".*\\.mp4", "useSchema": "video"},
-    {"pattern": ".*\\.jpg", "useSchema": "image"}],
+    {"pattern": ".*\\.(?:jpe?g|png)", "useSchema": "image"}],
   "fallbackSchema": false
 }
