@@ -85,7 +85,7 @@
                                 <a class="variable" href="#Dataset.expires">expires</a>
                         </li>
                         <li>
-                                <a class="variable" href="#Dataset.checksumTool">checksumTool</a>
+                                <a class="variable" href="#Dataset.checksumAlg">checksumAlg</a>
                         </li>
                         <li>
                                 <a class="variable" href="#Dataset.profile">profile</a>
@@ -183,7 +183,6 @@
 
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
@@ -193,7 +192,7 @@
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Final</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
-<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">ChecksumTool</span><span class="p">,</span> <span class="n">conf</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">conf</span>
 <span class="kn">from</span> <span class="nn">.log</span> <span class="kn">import</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">.orcid.auth</span> <span class="kn">import</span> <span class="n">OrcidStr</span>
 <span class="kn">from</span> <span class="nn">.profile</span> <span class="kn">import</span> <span class="n">Profile</span><span class="p">,</span> <span class="n">UnsafeJSON</span>
@@ -254,7 +253,7 @@
     <span class="n">expires</span><span class="p">:</span> <span class="n">datetime</span>
     <span class="sd">&quot;&quot;&quot;Expiry date and time (if not completed by then).&quot;&quot;&quot;</span>
 
-    <span class="n">checksumTool</span><span class="p">:</span> <span class="n">ChecksumTool</span>
+    <span class="n">checksumAlg</span><span class="p">:</span> <span class="n">util</span><span class="o">.</span><span class="n">ChecksumAlg</span>
     <span class="sd">&quot;&quot;&quot;Fix checksum tool in a dataset (should stay consistent throughout config change).&quot;&quot;&quot;</span>
 
     <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span>
@@ -403,20 +402,12 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">ret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="p">,</span> <span class="n">filepath</span><span class="p">],</span>
-                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="n">Path</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span> <span class="o">==</span> <span class="n">filepath</span>  <span class="c1"># sanity-check</span>
-            <span class="n">file_checksum</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="n">file_checksum</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">hashsum</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="si">}</span><span class="s2"> not found!&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2"> not found, cannot compute hashsum!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">: non-zero exit code!&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hashing algorithm </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span><span class="si">}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -501,7 +492,7 @@
                     <span class="n">outfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
         <span class="c1"># create a checksum file (e.g. sha256sums.txt)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_dir</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span> <span class="o">+</span> <span class="s2">&quot;s.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_dir</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span> <span class="o">+</span> <span class="s2">&quot;sums.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dat</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">dat</span><span class="o">.</span><span class="n">checksum</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
@@ -576,7 +567,7 @@
             <span class="n">created</span><span class="o">=</span><span class="n">now</span><span class="p">,</span>
             <span class="n">expires</span><span class="o">=</span><span class="n">now</span> <span class="o">+</span> <span class="n">tdiff</span><span class="p">,</span>
             <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
-            <span class="n">checksumTool</span><span class="o">=</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">checksum_tool</span><span class="p">,</span>
+            <span class="n">checksumAlg</span><span class="o">=</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">ds</span><span class="o">.</span><span class="n">_upload_dir</span><span class="p">()</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>  <span class="c1"># create underlying upload directory</span>
@@ -877,7 +868,7 @@
     <span class="n">expires</span><span class="p">:</span> <span class="n">datetime</span>
     <span class="sd">&quot;&quot;&quot;Expiry date and time (if not completed by then).&quot;&quot;&quot;</span>
 
-    <span class="n">checksumTool</span><span class="p">:</span> <span class="n">ChecksumTool</span>
+    <span class="n">checksumAlg</span><span class="p">:</span> <span class="n">util</span><span class="o">.</span><span class="n">ChecksumAlg</span>
     <span class="sd">&quot;&quot;&quot;Fix checksum tool in a dataset (should stay consistent throughout config change).&quot;&quot;&quot;</span>
 
     <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span>
@@ -1026,20 +1017,12 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">ret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="p">,</span> <span class="n">filepath</span><span class="p">],</span>
-                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="n">Path</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span> <span class="o">==</span> <span class="n">filepath</span>  <span class="c1"># sanity-check</span>
-            <span class="n">file_checksum</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="n">file_checksum</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">hashsum</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="si">}</span><span class="s2"> not found!&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2"> not found, cannot compute hashsum!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">: non-zero exit code!&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hashing algorithm </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span><span class="si">}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -1124,7 +1107,7 @@
                     <span class="n">outfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
         <span class="c1"># create a checksum file (e.g. sha256sums.txt)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_dir</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span> <span class="o">+</span> <span class="s2">&quot;s.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_dir</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span> <span class="o">+</span> <span class="s2">&quot;sums.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dat</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">dat</span><span class="o">.</span><span class="n">checksum</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
@@ -1199,7 +1182,7 @@
             <span class="n">created</span><span class="o">=</span><span class="n">now</span><span class="p">,</span>
             <span class="n">expires</span><span class="o">=</span><span class="n">now</span> <span class="o">+</span> <span class="n">tdiff</span><span class="p">,</span>
             <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
-            <span class="n">checksumTool</span><span class="o">=</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">checksum_tool</span><span class="p">,</span>
+            <span class="n">checksumAlg</span><span class="o">=</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">ds</span><span class="o">.</span><span class="n">_upload_dir</span><span class="p">()</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>  <span class="c1"># create underlying upload directory</span>
@@ -1319,10 +1302,10 @@
 
 
                             </div>
-                            <div id="Dataset.checksumTool" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#Dataset.checksumTool">#&nbsp;&nbsp</a>
+                            <div id="Dataset.checksumAlg" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Dataset.checksumAlg">#&nbsp;&nbsp</a>
 
-        <span class="name">checksumTool</span><span class="annotation">: <a href="config.html#ChecksumTool">metador.config.ChecksumTool</a></span>
+        <span class="name">checksumAlg</span><span class="annotation">: <a href="util.html#ChecksumAlg">metador.util.ChecksumAlg</a></span>
     </div>
 
             <div class="docstring"><p>Fix checksum tool in a dataset (should stay consistent throughout config change).</p>
@@ -1614,20 +1597,12 @@ the error message per file (empty filename = root metadata validation result).</
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">ret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="p">,</span> <span class="n">filepath</span><span class="p">],</span>
-                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="n">Path</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span> <span class="o">==</span> <span class="n">filepath</span>  <span class="c1"># sanity-check</span>
-            <span class="n">file_checksum</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="n">file_checksum</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">hashsum</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="si">}</span><span class="s2"> not found!&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2"> not found, cannot compute hashsum!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">: non-zero exit code!&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hashing algorithm </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span><span class="si">}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -1748,7 +1723,7 @@ the error message per file (empty filename = root metadata validation result).</
                     <span class="n">outfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
         <span class="c1"># create a checksum file (e.g. sha256sums.txt)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_dir</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumTool</span> <span class="o">+</span> <span class="s2">&quot;s.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_dir</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksumAlg</span> <span class="o">+</span> <span class="s2">&quot;sums.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dat</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">dat</span><span class="o">.</span><span class="n">checksum</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
@@ -1886,7 +1861,7 @@ and produce the directory in the 'complete' directory. Return path.</p>
             <span class="n">created</span><span class="o">=</span><span class="n">now</span><span class="p">,</span>
             <span class="n">expires</span><span class="o">=</span><span class="n">now</span> <span class="o">+</span> <span class="n">tdiff</span><span class="p">,</span>
             <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
-            <span class="n">checksumTool</span><span class="o">=</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">checksum_tool</span><span class="p">,</span>
+            <span class="n">checksumAlg</span><span class="o">=</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">ds</span><span class="o">.</span><span class="n">_upload_dir</span><span class="p">()</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>  <span class="c1"># create underlying upload directory</span>

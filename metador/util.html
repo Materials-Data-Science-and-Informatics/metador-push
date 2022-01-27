@@ -51,6 +51,21 @@
             <li>
                     <a class="function" href="#critical_exit">critical_exit</a>
             </li>
+            <li>
+                    <a class="class" href="#ChecksumAlg">ChecksumAlg</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="variable" href="#ChecksumAlg.SHA256">SHA256</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#ChecksumAlg.SHA512">SHA512</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="function" href="#hashsum">hashsum</a>
+            </li>
     </ul>
 
 
@@ -74,8 +89,10 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;General utility functions.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">urllib.error</span> <span class="kn">import</span> <span class="n">HTTPError</span>
@@ -171,6 +188,33 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ChecksumAlg</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The supported checksum tools.&quot;&quot;&quot;</span>
+
+    <span class="n">SHA256</span> <span class="o">=</span> <span class="s2">&quot;sha256&quot;</span>
+    <span class="n">SHA512</span> <span class="o">=</span> <span class="s2">&quot;sha512&quot;</span>
+
+
+<span class="n">_hashlib_algs</span> <span class="o">=</span> <span class="p">{</span><span class="n">ChecksumAlg</span><span class="o">.</span><span class="n">SHA256</span><span class="p">:</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">,</span> <span class="n">ChecksumAlg</span><span class="o">.</span><span class="n">SHA512</span><span class="p">:</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha512</span><span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">hashsum</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">alg</span><span class="p">:</span> <span class="n">ChecksumAlg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute hashsum for a file using selected algorithm.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">_hashlib_algs</span><span class="p">[</span><span class="n">alg</span><span class="p">]()</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported hashsum: </span><span class="si">{</span><span class="n">alg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">block_size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">chunk</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 </pre></div>
 
         </details>
@@ -364,6 +408,143 @@
             <div class="docstring"><p>Show critical error message and terminate application.</p>
 
 <p>Only to be used for misconfiguration errors on startup.</p>
+</div>
+
+
+                </section>
+                <section id="ChecksumAlg">
+                                <div class="attr class">
+        <a class="headerlink" href="#ChecksumAlg">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">ChecksumAlg</span><wbr>(<span class="base">builtins.str</span>, <span class="base">enum.Enum</span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ChecksumAlg</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The supported checksum tools.&quot;&quot;&quot;</span>
+
+    <span class="n">SHA256</span> <span class="o">=</span> <span class="s2">&quot;sha256&quot;</span>
+    <span class="n">SHA512</span> <span class="o">=</span> <span class="s2">&quot;sha512&quot;</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>The supported checksum tools.</p>
+</div>
+
+
+                            <div id="ChecksumAlg.SHA256" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#ChecksumAlg.SHA256">#&nbsp;&nbsp</a>
+
+        <span class="name">SHA256</span><span class="default_value"> = &lt;<a href="#ChecksumAlg.SHA256">ChecksumAlg.SHA256</a>: &#39;sha256&#39;&gt;</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="ChecksumAlg.SHA512" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#ChecksumAlg.SHA512">#&nbsp;&nbsp</a>
+
+        <span class="name">SHA512</span><span class="default_value"> = &lt;<a href="#ChecksumAlg.SHA512">ChecksumAlg.SHA512</a>: &#39;sha512&#39;&gt;</span>
+    </div>
+
+    
+
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt>enum.Enum</dt>
+                                <dd id="ChecksumAlg.name" class="variable">name</dd>
+                <dd id="ChecksumAlg.value" class="variable">value</dd>
+
+            </div>
+            <div><dt>builtins.str</dt>
+                                <dd id="ChecksumAlg.encode" class="function">encode</dd>
+                <dd id="ChecksumAlg.replace" class="function">replace</dd>
+                <dd id="ChecksumAlg.split" class="function">split</dd>
+                <dd id="ChecksumAlg.rsplit" class="function">rsplit</dd>
+                <dd id="ChecksumAlg.join" class="function">join</dd>
+                <dd id="ChecksumAlg.capitalize" class="function">capitalize</dd>
+                <dd id="ChecksumAlg.casefold" class="function">casefold</dd>
+                <dd id="ChecksumAlg.title" class="function">title</dd>
+                <dd id="ChecksumAlg.center" class="function">center</dd>
+                <dd id="ChecksumAlg.count" class="function">count</dd>
+                <dd id="ChecksumAlg.expandtabs" class="function">expandtabs</dd>
+                <dd id="ChecksumAlg.find" class="function">find</dd>
+                <dd id="ChecksumAlg.partition" class="function">partition</dd>
+                <dd id="ChecksumAlg.index" class="function">index</dd>
+                <dd id="ChecksumAlg.ljust" class="function">ljust</dd>
+                <dd id="ChecksumAlg.lower" class="function">lower</dd>
+                <dd id="ChecksumAlg.lstrip" class="function">lstrip</dd>
+                <dd id="ChecksumAlg.rfind" class="function">rfind</dd>
+                <dd id="ChecksumAlg.rindex" class="function">rindex</dd>
+                <dd id="ChecksumAlg.rjust" class="function">rjust</dd>
+                <dd id="ChecksumAlg.rstrip" class="function">rstrip</dd>
+                <dd id="ChecksumAlg.rpartition" class="function">rpartition</dd>
+                <dd id="ChecksumAlg.splitlines" class="function">splitlines</dd>
+                <dd id="ChecksumAlg.strip" class="function">strip</dd>
+                <dd id="ChecksumAlg.swapcase" class="function">swapcase</dd>
+                <dd id="ChecksumAlg.translate" class="function">translate</dd>
+                <dd id="ChecksumAlg.upper" class="function">upper</dd>
+                <dd id="ChecksumAlg.startswith" class="function">startswith</dd>
+                <dd id="ChecksumAlg.endswith" class="function">endswith</dd>
+                <dd id="ChecksumAlg.removeprefix" class="function">removeprefix</dd>
+                <dd id="ChecksumAlg.removesuffix" class="function">removesuffix</dd>
+                <dd id="ChecksumAlg.isascii" class="function">isascii</dd>
+                <dd id="ChecksumAlg.islower" class="function">islower</dd>
+                <dd id="ChecksumAlg.isupper" class="function">isupper</dd>
+                <dd id="ChecksumAlg.istitle" class="function">istitle</dd>
+                <dd id="ChecksumAlg.isspace" class="function">isspace</dd>
+                <dd id="ChecksumAlg.isdecimal" class="function">isdecimal</dd>
+                <dd id="ChecksumAlg.isdigit" class="function">isdigit</dd>
+                <dd id="ChecksumAlg.isnumeric" class="function">isnumeric</dd>
+                <dd id="ChecksumAlg.isalpha" class="function">isalpha</dd>
+                <dd id="ChecksumAlg.isalnum" class="function">isalnum</dd>
+                <dd id="ChecksumAlg.isidentifier" class="function">isidentifier</dd>
+                <dd id="ChecksumAlg.isprintable" class="function">isprintable</dd>
+                <dd id="ChecksumAlg.zfill" class="function">zfill</dd>
+                <dd id="ChecksumAlg.format" class="function">format</dd>
+                <dd id="ChecksumAlg.format_map" class="function">format_map</dd>
+                <dd id="ChecksumAlg.maketrans" class="function">maketrans</dd>
+
+            </div>
+                                </dl>
+                            </div>
+                </section>
+                <section id="hashsum">
+                            <div class="attr function"><a class="headerlink" href="#hashsum">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">hashsum</span><span class="signature">(file: pathlib.Path, alg: <a href="#ChecksumAlg">metador.util.ChecksumAlg</a>)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">hashsum</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">alg</span><span class="p">:</span> <span class="n">ChecksumAlg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute hashsum for a file using selected algorithm.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">_hashlib_algs</span><span class="p">[</span><span class="n">alg</span><span class="p">]()</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported hashsum: </span><span class="si">{</span><span class="n">alg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">block_size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">chunk</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Compute hashsum for a file using selected algorithm.</p>
 </div>
 
 

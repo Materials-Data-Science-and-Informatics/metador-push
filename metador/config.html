@@ -58,18 +58,6 @@
 
             </li>
             <li>
-                    <a class="class" href="#ChecksumTool">ChecksumTool</a>
-                            <ul class="memberlist">
-                        <li>
-                                <a class="variable" href="#ChecksumTool.SHA256SUM">SHA256SUM</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#ChecksumTool.SHA512SUM">SHA512SUM</a>
-                        </li>
-                </ul>
-
-            </li>
-            <li>
                     <a class="class" href="#LogConf">LogConf</a>
                             <ul class="memberlist">
                         <li>
@@ -189,6 +177,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">__basepath__</span>
 <span class="kn">from</span> <span class="nn">.log</span> <span class="kn">import</span> <span class="n">init_logger</span><span class="p">,</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">.orcid</span> <span class="kn">import</span> <span class="n">auth</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">ChecksumAlg</span>
 
 <span class="c1">################################################################</span>
 
@@ -213,13 +202,6 @@
     <span class="n">WARNING</span> <span class="o">=</span> <span class="s2">&quot;WARNING&quot;</span>
     <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">&quot;ERROR&quot;</span>
     <span class="n">CRITICAL</span> <span class="o">=</span> <span class="s2">&quot;CRITICAL&quot;</span>
-
-
-<span class="k">class</span> <span class="nc">ChecksumTool</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The supported checksum tools.&quot;&quot;&quot;</span>
-
-    <span class="n">SHA256SUM</span> <span class="o">=</span> <span class="s2">&quot;sha256sum&quot;</span>
-    <span class="n">SHA512SUM</span> <span class="o">=</span> <span class="s2">&quot;sha512sum&quot;</span>
 
 
 <span class="k">class</span> <span class="nc">LogConf</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -252,7 +234,7 @@
     <span class="n">profile_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;profiles&quot;</span><span class="p">)</span>
     <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;metador_data&quot;</span><span class="p">)</span>
 
-    <span class="n">checksum_tool</span><span class="p">:</span> <span class="n">ChecksumTool</span> <span class="o">=</span> <span class="n">ChecksumTool</span><span class="o">.</span><span class="n">SHA256SUM</span>
+    <span class="n">checksum</span><span class="p">:</span> <span class="n">ChecksumAlg</span> <span class="o">=</span> <span class="n">ChecksumAlg</span><span class="o">.</span><span class="n">SHA256</span>
 
     <span class="n">completion_hook</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -539,109 +521,6 @@
                                 </dl>
                             </div>
                 </section>
-                <section id="ChecksumTool">
-                                <div class="attr class">
-        <a class="headerlink" href="#ChecksumTool">#&nbsp;&nbsp</a>
-
-        
-        <span class="def">class</span>
-        <span class="name">ChecksumTool</span><wbr>(<span class="base">builtins.str</span>, <span class="base">enum.Enum</span>):
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ChecksumTool</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The supported checksum tools.&quot;&quot;&quot;</span>
-
-    <span class="n">SHA256SUM</span> <span class="o">=</span> <span class="s2">&quot;sha256sum&quot;</span>
-    <span class="n">SHA512SUM</span> <span class="o">=</span> <span class="s2">&quot;sha512sum&quot;</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>The supported checksum tools.</p>
-</div>
-
-
-                            <div id="ChecksumTool.SHA256SUM" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#ChecksumTool.SHA256SUM">#&nbsp;&nbsp</a>
-
-        <span class="name">SHA256SUM</span><span class="default_value"> = &lt;<a href="#ChecksumTool.SHA256SUM">ChecksumTool.SHA256SUM</a>: &#39;sha256sum&#39;&gt;</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="ChecksumTool.SHA512SUM" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#ChecksumTool.SHA512SUM">#&nbsp;&nbsp</a>
-
-        <span class="name">SHA512SUM</span><span class="default_value"> = &lt;<a href="#ChecksumTool.SHA512SUM">ChecksumTool.SHA512SUM</a>: &#39;sha512sum&#39;&gt;</span>
-    </div>
-
-    
-
-                            </div>
-                            <div class="inherited">
-                                <h5>Inherited Members</h5>
-                                <dl>
-                                    <div><dt>enum.Enum</dt>
-                                <dd id="ChecksumTool.name" class="variable">name</dd>
-                <dd id="ChecksumTool.value" class="variable">value</dd>
-
-            </div>
-            <div><dt>builtins.str</dt>
-                                <dd id="ChecksumTool.encode" class="function">encode</dd>
-                <dd id="ChecksumTool.replace" class="function">replace</dd>
-                <dd id="ChecksumTool.split" class="function">split</dd>
-                <dd id="ChecksumTool.rsplit" class="function">rsplit</dd>
-                <dd id="ChecksumTool.join" class="function">join</dd>
-                <dd id="ChecksumTool.capitalize" class="function">capitalize</dd>
-                <dd id="ChecksumTool.casefold" class="function">casefold</dd>
-                <dd id="ChecksumTool.title" class="function">title</dd>
-                <dd id="ChecksumTool.center" class="function">center</dd>
-                <dd id="ChecksumTool.count" class="function">count</dd>
-                <dd id="ChecksumTool.expandtabs" class="function">expandtabs</dd>
-                <dd id="ChecksumTool.find" class="function">find</dd>
-                <dd id="ChecksumTool.partition" class="function">partition</dd>
-                <dd id="ChecksumTool.index" class="function">index</dd>
-                <dd id="ChecksumTool.ljust" class="function">ljust</dd>
-                <dd id="ChecksumTool.lower" class="function">lower</dd>
-                <dd id="ChecksumTool.lstrip" class="function">lstrip</dd>
-                <dd id="ChecksumTool.rfind" class="function">rfind</dd>
-                <dd id="ChecksumTool.rindex" class="function">rindex</dd>
-                <dd id="ChecksumTool.rjust" class="function">rjust</dd>
-                <dd id="ChecksumTool.rstrip" class="function">rstrip</dd>
-                <dd id="ChecksumTool.rpartition" class="function">rpartition</dd>
-                <dd id="ChecksumTool.splitlines" class="function">splitlines</dd>
-                <dd id="ChecksumTool.strip" class="function">strip</dd>
-                <dd id="ChecksumTool.swapcase" class="function">swapcase</dd>
-                <dd id="ChecksumTool.translate" class="function">translate</dd>
-                <dd id="ChecksumTool.upper" class="function">upper</dd>
-                <dd id="ChecksumTool.startswith" class="function">startswith</dd>
-                <dd id="ChecksumTool.endswith" class="function">endswith</dd>
-                <dd id="ChecksumTool.removeprefix" class="function">removeprefix</dd>
-                <dd id="ChecksumTool.removesuffix" class="function">removesuffix</dd>
-                <dd id="ChecksumTool.isascii" class="function">isascii</dd>
-                <dd id="ChecksumTool.islower" class="function">islower</dd>
-                <dd id="ChecksumTool.isupper" class="function">isupper</dd>
-                <dd id="ChecksumTool.istitle" class="function">istitle</dd>
-                <dd id="ChecksumTool.isspace" class="function">isspace</dd>
-                <dd id="ChecksumTool.isdecimal" class="function">isdecimal</dd>
-                <dd id="ChecksumTool.isdigit" class="function">isdigit</dd>
-                <dd id="ChecksumTool.isnumeric" class="function">isnumeric</dd>
-                <dd id="ChecksumTool.isalpha" class="function">isalpha</dd>
-                <dd id="ChecksumTool.isalnum" class="function">isalnum</dd>
-                <dd id="ChecksumTool.isidentifier" class="function">isidentifier</dd>
-                <dd id="ChecksumTool.isprintable" class="function">isprintable</dd>
-                <dd id="ChecksumTool.zfill" class="function">zfill</dd>
-                <dd id="ChecksumTool.format" class="function">format</dd>
-                <dd id="ChecksumTool.format_map" class="function">format_map</dd>
-                <dd id="ChecksumTool.maketrans" class="function">maketrans</dd>
-
-            </div>
-                                </dl>
-                            </div>
-                </section>
                 <section id="LogConf">
                                 <div class="attr class">
         <a class="headerlink" href="#LogConf">#&nbsp;&nbsp</a>
@@ -766,7 +645,7 @@
     <span class="n">profile_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;profiles&quot;</span><span class="p">)</span>
     <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;metador_data&quot;</span><span class="p">)</span>
 
-    <span class="n">checksum_tool</span><span class="p">:</span> <span class="n">ChecksumTool</span> <span class="o">=</span> <span class="n">ChecksumTool</span><span class="o">.</span><span class="n">SHA256SUM</span>
+    <span class="n">checksum</span><span class="p">:</span> <span class="n">ChecksumAlg</span> <span class="o">=</span> <span class="n">ChecksumAlg</span><span class="o">.</span><span class="n">SHA256</span>
 
     <span class="n">completion_hook</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
