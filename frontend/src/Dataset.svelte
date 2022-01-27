@@ -43,6 +43,7 @@
     }
 
     let modified = false // from MetadataEditor component
+    let hasFiles = false // modified by FileManager
 
     /** Handle event that the metadata JSON has been modified. */
     function setModified(e: CustomEvent<null | string>) {
@@ -169,7 +170,10 @@
             <b>To complete until:</b>
             <span class:urgent={completionUrgent()}>{expiryDateStr()}</span>
         </span>
-        <button class="mainButton" disabled={modified} on:click={submitDataset}>
+        <button
+            class="mainButton"
+            disabled={modified || !hasFiles}
+            on:click={submitDataset}>
             <Fa icon={faFileExport} /> Submit</button>
     </div>
     <div id="dataset-app">
@@ -177,6 +181,7 @@
             <FileManager
                 bind:dataset
                 bind:selectedFile
+                bind:hasFiles
                 on:select={getMetadata}
                 unsavedChanges={modified} />
         </div>

@@ -30,6 +30,7 @@
     export let dataset: Dataset // current local state of dataset
     export let selectedFile: string | null = null // currently selected file
     export let unsavedChanges: boolean
+    export let hasFiles: boolean
 
     // local vars:
     let uppy = null // uppy object
@@ -91,6 +92,7 @@
     function uploadSuccess(file: string) {
         // reflect addition of the new file in dataset
         dataset.files[file] = { checksum: null, metadata: null }
+        hasFiles = true
         notify(`Upload of ${file} complete`)
 
         // start polling for the checksum
@@ -143,6 +145,7 @@
                 }
 
                 notify(`${file ? file : "Dataset"} deleted`)
+                hasFiles = dataset.files.length > 0
             })
             .catch(() => {
                 notify(`Cannot delete ${file ? file : dataset.id}!`, "danger")
