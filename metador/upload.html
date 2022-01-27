@@ -215,36 +215,45 @@
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">META_DATASET</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">upl_meta</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;Exactly one dataset ID must be attached.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Exactly one dataset ID must be attached.&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
     <span class="n">ds_id_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">upl_meta</span><span class="p">[</span><span class="n">META_DATASET</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">META_FILENAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">upl_meta</span><span class="p">:</span>  <span class="c1"># or len(upl_meta[META_FILENAME]) &gt; 1:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;Exactly one filename must be attached.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Exactly one filename must be attached.&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
     <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">upl_meta</span><span class="p">[</span><span class="n">META_FILENAME</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;Invalid filename: may not contain /&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid filename: may not contain /&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">ds_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">ds_id_str</span><span class="p">)</span>
         <span class="n">ds</span><span class="p">:</span> <span class="n">Dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="n">ds_id</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid dataset ID: </span><span class="si">{</span><span class="n">ds_id_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid dataset ID: </span><span class="si">{</span><span class="n">ds_id_str</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;No such dataset.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No such dataset.&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">hook_name</span> <span class="o">==</span> <span class="n">TusdHookName</span><span class="o">.</span><span class="n">pre_create</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> already exists. Refused.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span>
-            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> already exists. Refused.&quot;</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
         <span class="c1"># NOTE: we cover only the trivial false schema, allowing to reject files on purpose</span>
         <span class="c1"># It is overkill trying to detect complex logically unsatisfiable schemas.</span>
         <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">get_schema_for</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;A file called </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> is forbidden in this dataset.&quot;</span><span class="p">,</span>
-                <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;A file called </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> is forbidden in this dataset.&quot;</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># 200 OK, no body</span>
 
     <span class="c1"># file complete -&gt; import to dataset with original filename, compute checksum</span>
@@ -252,9 +261,9 @@
         <span class="k">assert</span> <span class="n">body</span><span class="o">.</span><span class="n">Upload</span><span class="o">.</span><span class="n">Storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="n">uplloc</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">Upload</span><span class="o">.</span><span class="n">Storage</span><span class="o">.</span><span class="n">Path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">uplloc</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="n">c</span><span class="o">.</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">tusd_datadir</span><span class="o">.</span><span class="n">resolve</span><span class="p">():</span>  <span class="c1"># security check</span>
-            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
-                <span class="s2">&quot;File location does not match tusd_datadir.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span>
-            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;File location does not match tusd_datadir.&quot;</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
 
         <span class="n">renamed</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">uplloc</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">filename</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Upl: </span><span class="si">{</span><span class="n">uplloc</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">renamed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -727,36 +736,45 @@
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">META_DATASET</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">upl_meta</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;Exactly one dataset ID must be attached.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Exactly one dataset ID must be attached.&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
     <span class="n">ds_id_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">upl_meta</span><span class="p">[</span><span class="n">META_DATASET</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">META_FILENAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">upl_meta</span><span class="p">:</span>  <span class="c1"># or len(upl_meta[META_FILENAME]) &gt; 1:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;Exactly one filename must be attached.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Exactly one filename must be attached.&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
     <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">upl_meta</span><span class="p">[</span><span class="n">META_FILENAME</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;Invalid filename: may not contain /&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid filename: may not contain /&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">ds_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">ds_id_str</span><span class="p">)</span>
         <span class="n">ds</span><span class="p">:</span> <span class="n">Dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="n">ds_id</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid dataset ID: </span><span class="si">{</span><span class="n">ds_id_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid dataset ID: </span><span class="si">{</span><span class="n">ds_id_str</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;No such dataset.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No such dataset.&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">hook_name</span> <span class="o">==</span> <span class="n">TusdHookName</span><span class="o">.</span><span class="n">pre_create</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> already exists. Refused.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span>
-            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> already exists. Refused.&quot;</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
         <span class="c1"># NOTE: we cover only the trivial false schema, allowing to reject files on purpose</span>
         <span class="c1"># It is overkill trying to detect complex logically unsatisfiable schemas.</span>
         <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">get_schema_for</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;A file called </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> is forbidden in this dataset.&quot;</span><span class="p">,</span>
-                <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;A file called </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> is forbidden in this dataset.&quot;</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># 200 OK, no body</span>
 
     <span class="c1"># file complete -&gt; import to dataset with original filename, compute checksum</span>
@@ -764,9 +782,9 @@
         <span class="k">assert</span> <span class="n">body</span><span class="o">.</span><span class="n">Upload</span><span class="o">.</span><span class="n">Storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="n">uplloc</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">Upload</span><span class="o">.</span><span class="n">Storage</span><span class="o">.</span><span class="n">Path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">uplloc</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="n">c</span><span class="o">.</span><span class="n">conf</span><span class="p">()</span><span class="o">.</span><span class="n">metador</span><span class="o">.</span><span class="n">tusd_datadir</span><span class="o">.</span><span class="n">resolve</span><span class="p">():</span>  <span class="c1"># security check</span>
-            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
-                <span class="s2">&quot;File location does not match tusd_datadir.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span>
-            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;File location does not match tusd_datadir.&quot;</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">)</span>
 
         <span class="n">renamed</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">uplloc</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">filename</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Upl: </span><span class="si">{</span><span class="n">uplloc</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">renamed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
