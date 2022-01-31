@@ -164,7 +164,7 @@ class Profile(BaseModel):
         if filename is None:
             return self.schemas[self.rootSchema]
         for pat in self.patterns:
-            pmatch = re.match(pat.pattern, filename)
+            pmatch = re.match(pat.pattern, filename, re.IGNORECASE)
             if pmatch and pmatch.group(0) == filename:
                 return self.schemas[pat.useSchema]
         return self.schemas[self.fallbackSchema]

@@ -79,7 +79,7 @@ export type Dataset = {
     creator: string
     created: string
     expires: string
-    checksumTool: string
+    checksumAlg: string
     profile: Profile
     rootMeta: JSONVal
     files: FileInfos
@@ -90,7 +90,7 @@ export function getFirstMatchingPattern(
     filename: string
 ): Pattern | null {
     for (const pat of patterns) {
-        const reg = new RegExp(`^${pat.pattern}$`)
+        const reg = new RegExp(`^${pat.pattern}$`, "i") // case-insensitive full match
         if (reg.test(filename)) {
             return pat
         }
@@ -117,7 +117,7 @@ export function deepCopyJSON(json: JSONVal): JSONVal {
     return JSON.parse(JSON.stringify(json))
 }
 
-/** Recursively triverse the $ref entries in the given schema, apply function to value. */
+/** Recursively traverse the $ref entries in the given schema, apply function to value. */
 function traverseRefs(o: JSONVal, func: (_: string) => string): void {
     // match on JSON type for recursion
     if (Array.isArray(o)) {

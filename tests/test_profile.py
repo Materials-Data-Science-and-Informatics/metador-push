@@ -40,6 +40,9 @@ def test_get_schema_for(test_config):
     assert pr.get_schema_for("Some image.jpg") == True
     # should be true.schema.json, which is loaded and is true
     assert pr.get_schema_for("some Movie.mp4") == True
+    # should also be case-insensitive
+    assert pr.get_schema_for("some Movie.Mp4") == True
+    assert pr.get_schema_for("Some IMAGE.JPG") == True
     # should be fallback schema, which is __FALSE__ which is false
     assert pr.get_schema_for("some-website.htm") == False
     # test that the match is complete and not somewhere in path -> should fallback (false)
