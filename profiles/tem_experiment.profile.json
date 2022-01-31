@@ -2,12 +2,12 @@
   "title": "TEM Crystallography Dataset",
   "description": "Images and videos from a crystallographic TEM experiment.",
   "schemas": {
-    "video": { "$ref": "tem_experiment.schema.json#/definitions/TEMExperimentVideo" },
-    "image": { "$ref": "tem_experiment.schema.json#/definitions/TEMExperimentImage" }
+    "video": { "$ref": "tem_experiment.schema.json#/$defs/TEMExperimentVideo" },
+    "image": { "$ref": "tem_experiment.schema.json#/$defs/TEMExperimentImage" }
   },
   "rootSchema": "tem_experiment.schema.json",
   "patterns": [
     {"pattern": ".*\\.mp4", "useSchema": "video"},
-    {"pattern": ".*\\.(?:jpe?g|png)", "useSchema": "image"}],
+    {"pattern": ".*\\.(?:jpe?g|png|tiff?)", "useSchema": "image"}],
   "fallbackSchema": false
 }

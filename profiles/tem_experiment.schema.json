@@ -9,12 +9,12 @@
       "type": "string"
     },
     "authorORCID": {
-      "title": "Authororcid",
+      "title": "Author ORCID",
       "description": "ORCID of author.",
       "type": "string"
     },
     "authorEmail": {
-      "title": "Authoremail",
+      "title": "Author E-Mail",
       "description": "E-mail of author",
       "type": "string",
       "pattern": "^[^@]+@[^@]+$"
@@ -31,8 +31,25 @@
       "type": "string"
     },
     "sampleId": {
-      "title": "Sampleid",
+      "title": "Sample ID",
       "description": "Name or identifier of the sample used in the experiment.",
+      "type": "string"
+    },
+    "date": {
+      "title": "Date",
+      "description": "Date on which the experiment has been performed.",
+      "type": "string",
+      "pattern": "^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))$"
+    },
+    "temperature": {
+      "title": "Temperature",
+      "description": "Temperature of sample during experiment (K).",
+      "minimum": 0,
+      "type": "number"
+    },
+    "masterFilename": {
+      "title": "Master Video Filename",
+      "description": "Name of master / source video recording all uploaded files are derived from.",
       "type": "string"
     },
     "composition": {
@@ -40,40 +57,29 @@
       "description": "Chemical composition of the sample.",
       "type": "string"
     },
-    "sampleSize": {
-      "title": "Samplesize",
-      "description": "Dimensions of the sample in (\u00b5m).",
-      "allOf": [
-        {
-          "$ref": "#/definitions/Dim3D"
-        }
-      ]
-    },
     "crystalStructure": {
       "description": "Crystal structure of the sample (FCC, BCC, HCP).",
-      "allOf": [
-        {
-          "$ref": "#/definitions/TEMCrystalStructure"
-        }
-      ]
+      "$ref": "#/$defs/TEMCrystalStructure"
+    },
+    "sampleSize": {
+      "title": "Sample Size",
+      "description": "Dimensions of the sample in (\u00b5m).",
+      "$ref": "#/$defs/OptDim3D"
     },
     "latticeParamLength": {
-      "title": "Latticeparamlength",
+      "title": "Lattice Parameter Lengths",
       "description": "Lengths a,b,c of the lattice parameter (nm).",
-      "allOf": [
-        {
-          "$ref": "#/definitions/Dim3D"
-        }
-      ]
+      "$ref": "#/$defs/Dim3D"
     },
     "latticeParamAngle": {
-      "title": "Latticeparamangle",
+      "title": "Lattice Parameter Angles",
       "description": "Angles alpha,beta,gamma of the lattice parameter (degrees).",
-      "allOf": [
-        {
-          "$ref": "#/definitions/TEMLatticeAngles"
-        }
-      ]
+      "$ref": "#/$defs/TEMLatticeAngles"
+    },
+    "eulerAngles": {
+      "title": "Euler Angles",
+      "description": "Euler angles of the grain in degrees (\u03c61 : 0-360\u00b0, \u03c6 : 0-180\u00b0, \u03c62 : 0-360\u00b0) at 0 degree tilt.",
+      "$ref": "#/$defs/EulerAngles"
     }
   },
   "required": [
@@ -81,15 +87,44 @@
     "authorORCID",
     "description",
     "sampleId",
+    "date",
+    "temperature",
     "composition",
     "crystalStructure",
     "latticeParamLength",
-    "latticeParamAngle"
+    "latticeParamAngle",
+    "masterFilename",
+    "eulerAngles"
   ],
-  "definitions": {
+
+  "$defs": {
+    "OptDim3D": {
+      "title": "3D Dimensions",
+      "type": "object",
+      "properties": {
+        "width": {
+          "title": "Width",
+          "description": "Size along x axis.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "height": {
+          "title": "Height",
+          "description": "Size along y axis.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "length": {
+          "title": "Length",
+          "description": "Size along z axis.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        }
+      }
+    },
+
     "Dim3D": {
-      "title": "Dim3D",
-      "description": "Dimensions of a 3D object.",
+      "title": "3D Dimensions",
       "type": "object",
       "properties": {
         "width": {
@@ -118,8 +153,7 @@
       ]
     },
     "TEMCrystalStructure": {
-      "title": "TEMCrystalStructure",
-      "description": "An enumeration.",
+      "title": "TEM Crystal Structure",
       "enum": [
         "Face-Centered Cubic",
         "Body-Centered Cubic",
@@ -128,7 +162,7 @@
       ]
     },
     "TEMLatticeAngles": {
-      "title": "TEMLatticeAngles",
+      "title": "TEM Lattice Angles",
       "type": "object",
       "properties": {
         "alpha": {
@@ -157,7 +191,7 @@
       ]
     },
     "EulerAngles": {
-      "title": "EulerAngles",
+      "title": "Euler Angles",
       "description": "Euler angles of the grain in degrees (\u03c61 : 0-360\u00b0, \u03c6 : 0-180\u00b0, \u03c62 : 0-360\u00b0)",
       "type": "object",
       "properties": {
@@ -187,50 +221,43 @@
       ]
     },
     "CrystalVec": {
-      "title": "CrystalVec",
+      "title": "Crystal Vector",
       "description": "Crystallographic vector given as Miller index (h, k, l).",
       "type": "string",
       "pattern": "^-?\\d,\\s*-?\\d+,\\s*-?\\d+$"
     },
     "LocatedSlipSystem": {
-      "title": "LocatedSlipSystem",
+      "title": "Located Slip System",
       "description": "Information about a slip system in an experiment setup.",
       "type": "object",
       "properties": {
+        "notes": {
+          "title": "Notes",
+          "description": "Additional notes about the slip system.",
+          "type": "string"
+        },
         "burgersVector": {
-          "title": "Burgersvector",
+          "title": "Burgers Vector",
           "description": "Burgers vector (h, k, l)",
-          "allOf": [
-            {
-              "$ref": "#/definitions/CrystalVec"
-            }
-          ]
+          "$ref": "#/$defs/CrystalVec"
         },
         "slipPlane": {
-          "title": "Slipplane",
+          "title": "Slip Plane",
           "description": "Slip plane normal vector (h, k, l)",
-          "allOf": [
-            {
-              "$ref": "#/definitions/CrystalVec"
-            }
-          ]
+          "$ref": "#/$defs/CrystalVec"
         },
         "schmidFactor": {
-          "title": "Schmidfactor",
+          "title": "Schmid Factor",
           "description": "Schmid factor",
           "type": "number"
         },
         "gVector": {
-          "title": "Gvector",
+          "title": "G-Vector",
           "description": "Diffraction vector (h, k, l)",
-          "allOf": [
-            {
-              "$ref": "#/definitions/CrystalVec"
-            }
-          ]
+          "$ref": "#/$defs/CrystalVec"
         },
         "planeAngle": {
-          "title": "Planeangle",
+          "title": "Plane Angle",
           "description": "Angle (\u03b1) in degrees between image plane and slip plane",
           "exclusiveMinimum": -360,
           "exclusiveMaximum": 360,
@@ -238,11 +265,7 @@
         }
       },
       "required": [
-        "burgersVector",
-        "slipPlane",
-        "schmidFactor",
-        "gVector",
-        "planeAngle"
+        "gVector"
       ]
     },
     "Pos2D": {
@@ -251,11 +274,11 @@
       "type": "object",
       "properties": {
         "x": {
-          "title": "X",
+          "title": "x",
           "type": "number"
         },
         "y": {
-          "title": "Y",
+          "title": "y",
           "type": "number"
         }
       },
@@ -264,8 +287,9 @@
         "y"
       ]
     },
+
     "TEMExperimentImage": {
-      "title": "TEMExperimentImage",
+      "title": "TEM Experiment Image",
       "description": "Image snapshot of TEM experiment.",
       "type": "object",
       "properties": {
@@ -274,20 +298,8 @@
           "description": "Additional notes about this file.",
           "type": "string"
         },
-        "date": {
-          "title": "Date",
-          "description": "Date on which the experiment has been performed.",
-          "type": "string",
-          "pattern": "^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))$"
-        },
-        "temperature": {
-          "title": "Temperature",
-          "description": "Temperature of sample during experiment (K).",
-          "minimum": 0,
-          "type": "number"
-        },
         "unitScale": {
-          "title": "Unitscale",
+          "title": "Unit Scale",
           "description": "Unit scale (\u00b5m/pixel)",
           "exclusiveMinimum": 0,
           "type": "number"
@@ -299,14 +311,11 @@
           "type": "number"
         },
         "tiltAngle": {
-          "title": "Tiltangle",
+          "title": "Tilt Angle",
           "description": "Tilt around Y-axis in degrees(right-hand (TODO: confirm?), positive=clockwise)",
           "exclusiveMinimum": -360,
           "exclusiveMaximum": 360,
           "type": "number"
-        },
-        "eulerAngles": {
-          "$ref": "#/definitions/EulerAngles"
         },
         "elongation": {
           "title": "Elongation",
@@ -314,7 +323,7 @@
           "type": "number"
         },
         "appliedStress": {
-          "title": "Appliedstress",
+          "title": "Applied Stress",
           "description": "Applied stress in MPa (positive = pressure)",
           "type": "number"
         },
@@ -323,40 +332,41 @@
           "description": "Relevant slip systems (TODO: better description?)",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/LocatedSlipSystem"
+            "$ref": "#/$defs/LocatedSlipSystem"
           }
+        },
+        "snapshotTime": {
+          "title": "Image Snapshot Time",
+          "description": "Snaptshot time of image (wrt. source video time)",
+          "type": "string",
+          "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$"
         },
         "center": {
           "title": "Center",
-          "description": "Center of the image (X,Y) in TODO unit(wrt. fixed reference point in sample)",
+          "description": "Center of the image (X,Y) in (TODO unit) (wrt. fixed reference point in sample)",
           "allOf": [
             {
-              "$ref": "#/definitions/Pos2D"
+              "$ref": "#/$defs/Pos2D"
             }
           ]
         },
         "pileupPos": {
-          "title": "Pileuppos",
-          "description": "Position of pile-up (X,Y) in TODO unit(wrt. fixed reference point in sample)",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Pos2D"
-            }
-          ]
+          "title": "Pileup Position",
+          "description": "Positions of pile-up (X,Y) in (TODO unit) (wrt. fixed reference point in sample)",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pos2D"
+          }
         }
       },
       "required": [
-        "date",
-        "temperature",
         "unitScale",
         "tiltAngle",
-        "eulerAngles",
-        "elongation",
         "slipSystems"
       ]
     },
     "TEMExperimentVideo": {
-      "title": "TEMExperimentVideo",
+      "title": "TEM Experiment Video",
       "description": "Video recording of TEM experiment.",
       "type": "object",
       "properties": {
@@ -365,20 +375,8 @@
           "description": "Additional notes about this file.",
           "type": "string"
         },
-        "date": {
-          "title": "Date",
-          "description": "Date on which the experiment has been performed.",
-          "type": "string",
-          "pattern": "^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))$"
-        },
-        "temperature": {
-          "title": "Temperature",
-          "description": "Temperature of sample during experiment (K).",
-          "minimum": 0,
-          "type": "number"
-        },
         "unitScale": {
-          "title": "Unitscale",
+          "title": "Unit Scale",
           "description": "Unit scale (\u00b5m/pixel)",
           "exclusiveMinimum": 0,
           "type": "number"
@@ -390,14 +388,11 @@
           "type": "number"
         },
         "tiltAngle": {
-          "title": "Tiltangle",
+          "title": "Tilt Angle",
           "description": "Tilt around Y-axis in degrees(right-hand (TODO: confirm?), positive=clockwise)",
           "exclusiveMinimum": -360,
           "exclusiveMaximum": 360,
           "type": "number"
-        },
-        "eulerAngles": {
-          "$ref": "#/definitions/EulerAngles"
         },
         "elongation": {
           "title": "Elongation",
@@ -405,7 +400,7 @@
           "type": "number"
         },
         "appliedStress": {
-          "title": "Appliedstress",
+          "title": "Applied Stress",
           "description": "Applied stress in MPa (positive = pressure)",
           "type": "number"
         },
@@ -414,17 +409,17 @@
           "description": "Relevant slip systems (TODO: better description?)",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/LocatedSlipSystem"
+            "$ref": "#/$defs/LocatedSlipSystem"
           }
         },
         "cutStart": {
-          "title": "Cutstart",
+          "title": "Video Cut - Start",
           "description": "Start time (wrt. source video)",
           "type": "string",
           "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$"
         },
         "cutEnd": {
-          "title": "Cutend",
+          "title": "Video Cut - End",
           "description": "End time (wrt. source video)",
           "type": "string",
           "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$"
@@ -443,17 +438,12 @@
         }
       },
       "required": [
-        "date",
-        "temperature",
         "unitScale",
         "tiltAngle",
-        "eulerAngles",
-        "elongation",
         "slipSystems",
         "cutStart",
         "cutEnd",
-        "speed",
-        "framerate"
+        "speed"
       ]
     }
   }
