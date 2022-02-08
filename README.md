@@ -12,6 +12,12 @@
 ](https://materials-data-science-and-informatics.github.io/metador/)
 <!-- TODO: dockerhub badge or something like that, if we ever offer prebuilt containers -->
 
+<div>
+<img style="center-align: middle;" alt="Metador Logo" src="https://user-images.githubusercontent.com/89833997/152970167-5ee9f7b1-9efa-4c26-9a3f-6652d1499142.png" width=70% height=70% />
+&nbsp;&nbsp;
+</div>
+<br />
+
 **M**etadata **E**nrichment and **T**ransmission **A**ssistance for **D**igital **O**bjects in **R**esearch
 
 ## TL;DR
