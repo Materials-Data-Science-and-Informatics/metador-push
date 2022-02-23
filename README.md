@@ -152,6 +152,14 @@ For serious deployment into an existing infrastructure, the following steps are 
   profiles and the configuration file there, unless told otherwise via CLI interface or
   configuration settings.
 
+* To start metador and tusd automatically on start of the system or virtual machine,
+  look at the example `.service` files. These must be adapted according to your setup
+  and placed in `/etc/systemd/system`.
+  After doing this, they can be enabled with
+  `systemctl enable metador` and `systemctl enable metador-tusd`,
+  and managed just like any other background service, i.e. the logs that are printed to
+  the standard output then can be inspected with `journalctl`.
+
 ### Using HTTPS
 
 **You definitely should set up some kind of encryption! Especially if you work with

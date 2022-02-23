@@ -1,0 +1,13 @@
+# example systemd service file for starting tusd,
+# which is assumed to be installed in /usr/bin
+# and configured for a hook URL matching some configuration (change accordingly)
+[Unit]
+Description=Metador Tusd
+
+[Service]
+User=metador
+WorkingDirectory=/metador
+ExecStart=/usr/bin/tusd -behind-proxy -hooks-http https://metador.MYSITE.COM/tusd-events
+
+[Install]
+WantedBy=multi-user.target
