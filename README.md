@@ -32,6 +32,8 @@
   - or notify a different service via HTTP,
   - (or just collect the (meta)data from your "data mailbox" manually)
 
+https://user-images.githubusercontent.com/371708/155495188-caa23208-3092-4639-acfc-970f062f98c4.mp4
+
 ## Overview
 
 Metador is a metadata-aware mailbox for research data.
