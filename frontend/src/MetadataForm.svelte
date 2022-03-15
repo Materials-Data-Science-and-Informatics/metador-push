@@ -68,6 +68,12 @@
         }
     }
 
+    // Issue #9.3:Enhancement done - Text area to wrap longer text fields of description and notes
+    const uiSchema = {
+        description : { "ui:widget" : "textarea" },
+        notes : { "ui:widget" : "textarea" },
+    }
+
     const e = React.createElement
     onMount(() => {
         // the form cannot handle true/false schemas
@@ -85,6 +91,7 @@
                     liveValidate: true,
                     noHtml5Validate: true,
                     schema: preprocessedSchema,
+                    uiSchema: uiSchema,
                     formData: prefill ? prefill : {}, // just initial pre-fill data
                     onChange: wrappedOnChange(onChange),
                     /* ref: (c) => (component = c), // reference to React comp. instance */
