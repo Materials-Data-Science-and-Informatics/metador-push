@@ -70,8 +70,8 @@
 
     // Issue #9.3:Enhancement done - Text area to wrap longer text fields of description and notes
     const uiSchema = {
-        description : { "ui:widget" : "textarea" },
-        notes : { "ui:widget" : "textarea" },
+        description: { "ui:widget": "textarea" },
+        notes: { "ui:widget": "textarea" },
     }
 
     const e = React.createElement
