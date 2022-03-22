@@ -365,8 +365,8 @@ def test_example_dataset(test_profiles, dummy_file):
     # check existence/absence of expected output files
     assert path.name == str(ds.id)
     filenames = {}
-    for path in path.glob("*"):
-        filenames[path.name] = path
+    for p in path.glob("*"):
+        filenames[p.name] = p
 
     assert "document.txt" + dataset.METADATA_SUF in filenames
     assert "video.mp4" + dataset.METADATA_SUF in filenames

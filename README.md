@@ -12,11 +12,7 @@
 ](https://materials-data-science-and-informatics.github.io/metador/)
 <!-- TODO: dockerhub badge or something like that, if we ever offer prebuilt containers -->
 
-<div>
-<img style="center-align: middle;" alt="Metador Logo" src="https://user-images.githubusercontent.com/89833997/152970167-5ee9f7b1-9efa-4c26-9a3f-6652d1499142.png" width=70% height=70% />
-&nbsp;&nbsp;
-</div>
-<br />
+<img style="center-align: middle;" alt="Metador Logo" src="https://github.com/Materials-Data-Science-and-Informatics/Logos/raw/main/Metador/Metador_Logo_Text.png" width=70% height=70% />
 
 **M**etadata **E**nrichment and **T**ransmission **A**ssistance for **D**igital **O**bjects in **R**esearch
 
@@ -430,9 +426,9 @@ More information is in the documentation of the corresponding packages.
 ## Acknowledgements
 
 <div>
-<img style="vertical-align: middle;" alt="HMC Logo" src="https://helmholtz-metadaten.de/storage/88/hmc_Logo.svg" width=50% height=50% />
+<img style="vertical-align: middle;" alt="HMC Logo" src="https://github.com/Materials-Data-Science-and-Informatics/Logos/raw/main/HMC/HMC_Logo_M.png" width=50% height=50% />
 &nbsp;&nbsp;
-<img style="vertical-align: middle;" alt="FZJ Logo" src="https://upload.wikimedia.org/wikipedia/de/8/8b/J%C3%BClich_fz_logo.svg" width=30% height=30% />
+<img style="vertical-align: middle;" alt="FZJ Logo" src="https://github.com/Materials-Data-Science-and-Informatics/Logos/raw/main/FZJ/FZJ.png" width=30% height=30% />
 </div>
 <br />
 
@@ -441,9 +437,7 @@ This project was developed at the Institute for Materials Data Science and Infor
 (HMC), an incubator-platform of the Helmholtz Association within the framework of the
 Information and Data Science strategic initiative.
 
-<div>
-<img src="https://www.seekpng.com/png/detail/770-7706112_eu-flag-and-erc-logo-european-research-council.png" alt="Eu Flag And Erc Logo - European Research Council@seekpng.com" width=50% height=50% />
-<br />
+<img src="https://user-images.githubusercontent.com/371708/156158094-9b5fff08-ec62-4dc3-9715-dfe5be432fa2.png" width=50% height=50% />
 
 This project has received financial support from the European Research Council through the
 ERC Grant Agreement No. 759419 MuDiLingo (‘A Multiscale Dislocation Language for
