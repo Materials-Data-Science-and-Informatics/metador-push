@@ -121,9 +121,7 @@
         fetchJSON("/api/datasets/" + dsId)
             .then((data) => {
                 dataset = data as Dataset
-                console.log(dataset)
                 hasFiles = Object.keys(dataset.files).length > 0
-                console.log("has files:", hasFiles)
                 getMetadata()
                 datasetReady = true
             })
@@ -211,6 +209,8 @@
     }
     #dataset-app {
         display: flex;
+        padding: 20px;
+        margin-bottom: 10px;
     }
     #file-list {
         flex: 1;
