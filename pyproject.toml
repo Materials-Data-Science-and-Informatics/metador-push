@@ -16,6 +16,7 @@ toml = "^0.10.2"
 colorlog = "^5.0.1"
 jsonschema = {extras = ["format"], version = "^3.2.0"}
 typing-extensions = "^3.10.0"
+pydantic = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 pdoc = "^7.1.1"

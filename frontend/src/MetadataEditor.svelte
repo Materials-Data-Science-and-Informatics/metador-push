@@ -102,7 +102,7 @@
     }
 </script>
 
-<span style="display: flex; margin-bottom: 10px;">
+<span style="display: flex; margin-bottom: 20px;">
     <h4>{"Metadata of " + (selectedFile ? selectedFile : "Dataset")}</h4>
     <button
         disabled={!modified}
@@ -120,7 +120,7 @@
         content={jeContent}
         {validator} />
 </div>
-<div style="height: 90%;" class:hidden={!formView}>
+<div style="height: 90%; margin-bottom: 10px;" class:hidden={!formView}>
     {#key refreshForm}
         <MetadataForm
             {schema}

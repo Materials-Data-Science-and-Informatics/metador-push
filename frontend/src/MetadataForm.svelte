@@ -40,6 +40,10 @@
     // "additionalProperties" producing a generic "Add item" button.
     import Form from "@rjsf/material-ui"
 
+    // Issue #9.2:Enhancement - To disable scrolling on numeric textfields
+    // Importing Textfield component to create a custom component to replace all textfields with numeric value
+    import CustomTextWidget from "./CustomTextWidget"
+
     import type { JSONVal } from "./util"
 
     // props in:
@@ -68,6 +72,18 @@
         }
     }
 
+    // Issue #9.2:Enhancement - To disable scrolling on numeric textfields
+    // Overriding default widget used for numeric valued properties (ones with up-down buttons), with the custom component
+    const customWidgets = {
+        TextWidget: CustomTextWidget,
+    }
+
+    // Issue #9.3:Enhancement done - Text area to wrap longer text fields of description and notes
+    const uiSchema = {
+        description: { "ui:widget": "textarea" },
+        notes: { "ui:widget": "textarea" },
+    }
+
     const e = React.createElement
     onMount(() => {
         // the form cannot handle true/false schemas
@@ -85,6 +101,8 @@
                     liveValidate: true,
                     noHtml5Validate: true,
                     schema: preprocessedSchema,
+                    uiSchema: uiSchema,
+                    widgets: customWidgets,
                     formData: prefill ? prefill : {}, // just initial pre-fill data
                     onChange: wrappedOnChange(onChange),
                     /* ref: (c) => (component = c), // reference to React comp. instance */
