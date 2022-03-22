@@ -1,7 +1,7 @@
 # Authors and Contributors
 
-**Main authors** are persons whose contributions significantly shaped 
-the state of the software at some point in time. 
+**Main authors** are persons whose contributions significantly shaped
+the state of the software at some point in time.
 **Additional contributors** are persons who are not main authors,
 but contributed non-trivially to this software,
 e.g. by providing smaller fixes and enhancements to the code and/or documentation.
