@@ -63,7 +63,7 @@
     },
     "sampleSize": {
       "title": "Sample Size",
-      "description": "Dimensions of the sample in (\u00b5m).",
+      "description": "Dimensions of the sample in (mm). Sample rests on the XY-plane and user views the sample along Z-axis",
       "$ref": "#/$defs/OptDim3D"
     },
     "latticeParamLength": {
@@ -102,21 +102,21 @@
       "title": "3D Dimensions",
       "type": "object",
       "properties": {
+        "length": {
+          "title": "Length",
+          "description": "Size along X axis.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
         "width": {
           "title": "Width",
-          "description": "Size along x axis.",
+          "description": "Size along Y axis.",
           "exclusiveMinimum": 0,
           "type": "number"
         },
         "height": {
           "title": "Height",
-          "description": "Size along y axis.",
-          "exclusiveMinimum": 0,
-          "type": "number"
-        },
-        "length": {
-          "title": "Length",
-          "description": "Size along z axis.",
+          "description": "Size along Z axis.",
           "exclusiveMinimum": 0,
           "type": "number"
         }
@@ -222,7 +222,7 @@
     },
     "CrystalVec": {
       "title": "Crystal Vector",
-      "description": "Crystallographic vector given as Miller index (h, k, l).",
+      "description": "Crystallographic vector given as Miller index (h, k, l). Input format is - h, k, l",
       "type": "string",
       "pattern": "^-?\\d,\\s*-?\\d+,\\s*-?\\d+$"
     },
@@ -238,12 +238,12 @@
         },
         "burgersVector": {
           "title": "Burgers Vector",
-          "description": "Burgers vector (h, k, l)",
+          "description": "Burgers vector (h, k, l). [Input format: h, k, l]",
           "$ref": "#/$defs/CrystalVec"
         },
         "slipPlane": {
           "title": "Slip Plane",
-          "description": "Slip plane normal vector (h, k, l)",
+          "description": "Slip plane normal vector (h, k, l). [Input format: h, k, l]",
           "$ref": "#/$defs/CrystalVec"
         },
         "schmidFactor": {
@@ -253,7 +253,7 @@
         },
         "gVector": {
           "title": "G-Vector",
-          "description": "Diffraction vector (h, k, l)",
+          "description": "Diffraction vector (h, k, l). [Input format: h, k, l]",
           "$ref": "#/$defs/CrystalVec"
         },
         "planeAngle": {
@@ -312,7 +312,7 @@
         },
         "tiltAngle": {
           "title": "Tilt Angle",
-          "description": "Tilt around Y-axis in degrees(right-hand (TODO: confirm?), positive=clockwise)",
+          "description": "Tilt around Y-axis in degrees (right hand rule, when viewed from the top or Z axis, the system is counterclockwise - positive)",
           "exclusiveMinimum": -360,
           "exclusiveMaximum": 360,
           "type": "number"
@@ -328,8 +328,8 @@
           "type": "number"
         },
         "slipSystems": {
-          "title": "Slipsystems",
-          "description": "Relevant slip systems (TODO: better description?)",
+          "title": "Slip Systems",
+          "description": "If more than one slip system inside this video, please specify which slip system you are referring to/what features it has (e.g., located right in the middle of the video); if there is only one slip system, then 'default'",
           "type": "array",
           "items": {
             "$ref": "#/$defs/LocatedSlipSystem"
@@ -343,7 +343,7 @@
         },
         "center": {
           "title": "Center",
-          "description": "Center of the image (X,Y) in (TODO unit) (wrt. fixed reference point in sample)",
+          "description": "Center of the image (X,Y) (wrt. fixed reference point in sample)",
           "allOf": [
             {
               "$ref": "#/$defs/Pos2D"
@@ -351,8 +351,8 @@
           ]
         },
         "pileupPos": {
-          "title": "Pileup Position",
-          "description": "Positions of pile-up (X,Y) in (TODO unit) (wrt. fixed reference point in sample)",
+          "title": "Pile-up Position",
+          "description": "Positions of pile-up (X,Y) (wrt. fixed reference point in sample)",
           "type": "array",
           "items": {
             "$ref": "#/$defs/Pos2D"
