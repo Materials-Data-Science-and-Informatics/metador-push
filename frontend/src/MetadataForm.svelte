@@ -78,10 +78,41 @@
         TextWidget: CustomTextWidget,
     }
 
-    // Issue #9.3:Enhancement done - Text area to wrap longer text fields of description and notes
+    // Issue #9.3:Enhancement - Text area to wrap longer text fields of description and notes
     const uiSchema = {
         description: { "ui:widget": "textarea" },
         notes: { "ui:widget": "textarea" },
+    }
+
+    // Issue #3:Enhancement - Improve validation error messages
+    function transformErrors(errors) {
+        return errors.map((error) => {
+            if (error.name === "pattern") {
+                let prop = error.property
+                if (prop.includes("authorEmail")) {
+                    error.message = "please enter a valid email address"
+                }
+                if (prop.includes("date")) {
+                    error.message = "please enter a valid as YYYY-MM-DD"
+                }
+                if (
+                    prop.includes("CrystalVec") ||
+                    prop.includes("burgersVector") ||
+                    prop.includes("slipPlane") ||
+                    prop.includes("gVector")
+                ) {
+                    error.message = "enter vector in format: h, k, l"
+                }
+                if (
+                    prop.includes("snapshotTime") ||
+                    prop.includes("cutStart") ||
+                    prop.includes("cutEnd")
+                ) {
+                    error.message = "enter time in format - HH:MM:SS"
+                }
+            }
+            return error
+        })
     }
 
     const e = React.createElement
@@ -108,6 +139,7 @@
                     /* ref: (c) => (component = c), // reference to React comp. instance */
                     ErrorList: () => e("span"), // remove global error list on top
                     //TODO: move it to the bottom, somehow?
+                    transformErrors: transformErrors,
                 },
                 // pass empty child to prevent creation of submit button,
                 // see e.g. rjsf Github issue #1602

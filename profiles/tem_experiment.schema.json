@@ -222,7 +222,7 @@
     },
     "CrystalVec": {
       "title": "Crystal Vector",
-      "description": "Crystallographic vector given as Miller index (h, k, l). Input format is - h, k, l",
+      "description": "Crystallographic vector given as Miller index (h, k, l).",
       "type": "string",
       "pattern": "^-?\\d,\\s*-?\\d+,\\s*-?\\d+$"
     },
@@ -238,12 +238,12 @@
         },
         "burgersVector": {
           "title": "Burgers Vector",
-          "description": "Burgers vector (h, k, l). [Input format: h, k, l]",
+          "description": "Burgers vector (h, k, l).",
           "$ref": "#/$defs/CrystalVec"
         },
         "slipPlane": {
           "title": "Slip Plane",
-          "description": "Slip plane normal vector (h, k, l). [Input format: h, k, l]",
+          "description": "Slip plane normal vector (h, k, l).",
           "$ref": "#/$defs/CrystalVec"
         },
         "schmidFactor": {
@@ -253,7 +253,7 @@
         },
         "gVector": {
           "title": "G-Vector",
-          "description": "Diffraction vector (h, k, l). [Input format: h, k, l]",
+          "description": "Diffraction vector (h, k, l).",
           "$ref": "#/$defs/CrystalVec"
         },
         "planeAngle": {
