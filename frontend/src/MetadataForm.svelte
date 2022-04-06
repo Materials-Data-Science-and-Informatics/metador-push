@@ -88,27 +88,44 @@
     function transformErrors(errors) {
         return errors.map((error) => {
             if (error.name === "pattern") {
-                let prop = error.property
-                if (prop.includes("authorEmail")) {
-                    error.message = "please enter a valid email address"
+                let errorPath = error.schemaPath
+                let revPath = errorPath.split("/")
+                let nonRootSchema =
+                    schema["$ref"] &&
+                    schema["$ref"] != undefined &&
+                    schema["$ref"] != null
+                let nonRootProp
+                let refArr
+
+                if (nonRootSchema) {
+                    let schemaRef = schema["$ref"]
+                    refArr = schemaRef.split("/")
+                    nonRootProp = revPath[1] == refArr[1] ? false : true
                 }
-                if (prop.includes("date")) {
-                    error.message = "please enter a valid as YYYY-MM-DD"
-                }
-                if (
-                    prop.includes("CrystalVec") ||
-                    prop.includes("burgersVector") ||
-                    prop.includes("slipPlane") ||
-                    prop.includes("gVector")
-                ) {
-                    error.message = "enter vector in format: h, k, l"
-                }
-                if (
-                    prop.includes("snapshotTime") ||
-                    prop.includes("cutStart") ||
-                    prop.includes("cutEnd")
-                ) {
-                    error.message = "enter time in format - HH:MM:SS"
+
+                // for metadata of video or image form
+                if (nonRootSchema) {
+                    if (nonRootProp) {
+                        //For properties defined in the image/video schema [ex: snapShotTime]
+                        error.message =
+                            schema[`${refArr[1]}`][`${refArr[2]}`][`${refArr[3]}`][
+                                `${refArr[4]}`
+                            ][`${revPath[1]}`][
+                                `${revPath[2]}`
+                            ].additionalProperties.default
+                    } else {
+                        //For properties defined in the root schema but is being used in image/video schema [ex: CrystalVec]
+                        error.message =
+                            schema[`${revPath[1]}`][`${revPath[2]}`][`${revPath[3]}`][
+                                `${revPath[4]}`
+                            ].additionalProperties.default
+                    }
+                } // for metadata of dataset form
+                else {
+                    error.message =
+                        schema[`${revPath[1]}`][
+                            `${revPath[2]}`
+                        ].additionalProperties.default
                 }
             }
             return error

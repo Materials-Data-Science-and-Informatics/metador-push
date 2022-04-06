@@ -102,12 +102,19 @@
     }
 </script>
 
-<span style="display: flex; margin-bottom: 20px;">
+<div class="floating-header">
     <h4>{"Metadata of " + (selectedFile ? selectedFile : "Dataset")}</h4>
+    <button
+        disabled={!modified}
+        style="margin-left: 10px;"
+        title="save data in this form"
+        on:click={() => dispatch("save", editorMetadata)}>
+        <Fa icon={faSave} />
+    </button>
     <span style="margin-left: 10px;" />
     <button on:click={() => setFormView(true)} disabled={formView}>Form</button>
     <button on:click={() => setFormView(false)} disabled={!formView}>Editor</button>
-</span>
+</div>
 
 <div style="height: 90%;" class:hidden={formView}>
     <JSONEditor
@@ -116,7 +123,9 @@
         content={jeContent}
         {validator} />
 </div>
-<div style="display:flex;" class:hidden={!formView}>
+<div
+    style="display:flex; margin-bottom: 20px; padding-bottom:10px;"
+    class:hidden={!formView}>
     {#key refreshForm}
         <MetadataForm
             {schema}
@@ -125,19 +134,16 @@
     {/key}
 </div>
 
-<span
-    style="display: flex; flex-direction:row; justify-content: right; margin-bottom: 20px; padding-bottom:10px">
-    <button
-        disabled={!modified}
-        style="margin-left: 10px; float: right"
-        title="save data in this form"
-        on:click={() => dispatch("save", editorMetadata)}>
-        <Fa icon={faSave} />
-    </button>
-</span>
-
 <style>
     .hidden {
         display: none !important;
+    }
+    .floating-header {
+        display: flex;
+        flex-direction: row;
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 1;
     }
 </style>

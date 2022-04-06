@@ -17,7 +17,12 @@
       "title": "Author E-Mail",
       "description": "E-mail of author",
       "type": "string",
-      "pattern": "^[^@]+@[^@]+$"
+      "pattern": "^[^@]+@[^@]+$",
+      "additionalProperties": {
+        "type": "string",
+        "description": "validation error message for author email property of root schema",
+        "default": "please enter a valid email address"
+      }
     },
     "description": {
       "title": "Description",
@@ -39,7 +44,12 @@
       "title": "Date",
       "description": "Date on which the experiment has been performed.",
       "type": "string",
-      "pattern": "^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))$"
+      "pattern": "^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))$",
+      "additionalProperties": {
+        "type": "string",
+        "description": "validation error message for date property of root schema",
+        "default": "please enter a valid as YYYY-MM-DD"
+      }
     },
     "temperature": {
       "title": "Temperature",
@@ -82,6 +92,7 @@
       "$ref": "#/$defs/EulerAngles"
     }
   },
+
   "required": [
     "author",
     "authorORCID",
@@ -224,7 +235,12 @@
       "title": "Crystal Vector",
       "description": "Crystallographic vector given as Miller index (h, k, l).",
       "type": "string",
-      "pattern": "^-?\\d,\\s*-?\\d+,\\s*-?\\d+$"
+      "pattern": "^-?\\d,\\s*-?\\d+,\\s*-?\\d+$",
+      "additionalProperties": {
+        "type": "string",
+        "description": "validation error message for vector properties of root schema",
+        "default": "enter vector in format: h, k, l"
+      }
     },
     "LocatedSlipSystem": {
       "title": "Located Slip System",
@@ -339,7 +355,12 @@
           "title": "Image Snapshot Time",
           "description": "Snaptshot time of image (wrt. source video time)",
           "type": "string",
-          "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$"
+          "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$",
+          "additionalProperties": {
+            "type": "string",
+            "description": "validation error message for snap shot time property of image schema",
+            "default": "enter time in format - HH:MM:SS"
+          }
         },
         "center": {
           "title": "Center",
@@ -416,13 +437,23 @@
           "title": "Video Cut - Start",
           "description": "Start time (wrt. source video)",
           "type": "string",
-          "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$"
+          "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$",
+          "additionalProperties": {
+            "type": "string",
+            "description": "validation error message for cut start property of video schema",
+            "default": "enter time in format - HH:MM:SS"
+          }
         },
         "cutEnd": {
           "title": "Video Cut - End",
           "description": "End time (wrt. source video)",
           "type": "string",
-          "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$"
+          "pattern": "^(\\d{2}:)?\\d{2}:\\d{2}$",
+          "additionalProperties": {
+            "type": "string",
+            "description": "validation error message for cut end property of video schema",
+            "default": "enter time in format - HH:MM:SS"
+          }
         },
         "speed": {
           "title": "Speed",
@@ -437,6 +468,7 @@
           "type": "integer"
         }
       },
+
       "required": [
         "unitScale",
         "tiltAngle",
@@ -446,5 +478,6 @@
         "speed"
       ]
     }
+
   }
 }
