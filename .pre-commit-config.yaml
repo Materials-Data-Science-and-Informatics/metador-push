@@ -33,12 +33,12 @@ repos:
       - id: flake8
         additional_dependencies: [flake8-docstrings, flake8-bugbear]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v0.942"
+    rev: "v0.910"
     hooks:
       - id: mypy
         additional_dependencies: [types-toml]
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v2.6.2"
+    rev: "v2.3.2"
     hooks:
       - id: prettier
         additional_dependencies: [prettier@2.3.2, prettier-plugin-svelte@2.3.1]
