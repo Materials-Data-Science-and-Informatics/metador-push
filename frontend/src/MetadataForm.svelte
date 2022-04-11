@@ -88,48 +88,39 @@
     function transformErrors(errors) {
         return errors.map((error) => {
             if (error.name === "pattern") {
-                let errorPath = error.schemaPath
-                let revPath = errorPath.split("/")
-                let nonRootSchema =
-                    schema["$ref"] &&
-                    schema["$ref"] != undefined &&
-                    schema["$ref"] != null
-                let nonRootProp
-                let refArr
-
-                if (nonRootSchema) {
-                    let schemaRef = schema["$ref"]
-                    refArr = schemaRef.split("/")
-                    nonRootProp = revPath[1] == refArr[1] ? false : true
-                }
-
-                // for metadata of video or image form
-                if (nonRootSchema) {
-                    if (nonRootProp) {
-                        //For properties defined in the image/video schema [ex: snapShotTime]
-                        error.message =
-                            schema[`${refArr[1]}`][`${refArr[2]}`][`${refArr[3]}`][
-                                `${refArr[4]}`
-                            ][`${revPath[1]}`][
-                                `${revPath[2]}`
-                            ].additionalProperties.default
-                    } else {
-                        //For properties defined in the root schema but is being used in image/video schema [ex: CrystalVec]
-                        error.message =
-                            schema[`${revPath[1]}`][`${revPath[2]}`][`${revPath[3]}`][
-                                `${revPath[4]}`
-                            ].additionalProperties.default
-                    }
-                } // for metadata of dataset form
-                else {
-                    error.message =
-                        schema[`${revPath[1]}`][
-                            `${revPath[2]}`
-                        ].additionalProperties.default
-                }
+                // Error objects schemaPath contains reference to the property that
+                // contains definition of the pattern causing validation failure.
+                // In this path, the reference to the property that contains this definition
+                // will always be at one position prior to the last node in the path.
+                // Hence the property is extracted by first spliting the path,
+                // then reversing the resultant array to reaching for the string at the 1st position within the array.
+                let errPath = error.schemaPath
+                let errProp = errPath.split("/").reverse()[1]
+                error.message = traverse(schema, errProp)
             }
             return error
         })
+    }
+
+    // Function to traverse the schema until property for which validation fails, is found
+    function traverse(obj, prop) {
+        if (obj.hasOwnProperty(prop)) {
+            // Required propertys object is found and the custom error message defined within it, is returned
+            return obj[prop].additionalProperties.default
+        } else {
+            for (var key in obj) {
+                let result
+                // In JS, arrays aren't primitives but are 'Array' objects i.e., they are based off of objects
+                // Hence one needs to explicitly rule out the item being filtered is not only an object
+                // but also that it is not a derivative of a JS object - an Array.
+                if (typeof obj[key] == "object" && !Array.isArray(obj[key])) {
+                    result = traverse(obj[key], prop)
+                    // if the property required is not found this function returns 'undefined'
+                    if (result != undefined) return result
+                    else continue
+                }
+            }
+        }
     }
 
     const e = React.createElement
