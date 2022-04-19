@@ -45,6 +45,7 @@
     import CustomTextWidget from "./CustomTextWidget"
 
     import type { JSONVal } from "./util"
+    import _ from "lodash"
 
     // props in:
     export let schema: JSONVal //schema to validate against (must be self-contained)
@@ -88,38 +89,53 @@
     function transformErrors(errors) {
         return errors.map((error) => {
             if (error.name === "pattern") {
-                // Error objects schemaPath contains reference to the property that
-                // contains definition of the pattern causing validation failure.
-                // In this path, the reference to the property that contains this definition
-                // will always be at one position prior to the last node in the path.
-                // Hence the property is extracted by first spliting the path,
-                // then reversing the resultant array to reaching for the string at the 1st position within the array.
-                let errPath = error.schemaPath
-                let errProp = errPath.split("/").reverse()[1]
-                error.message = traverse(schema, errProp)
+                let errPath = error.schemaPath.replace("#/", "")
+                let pathArr = errPath.split("/")
+
+                let defObject = traversePath(pathArr)
+                // In case of properties defined within the referenced video/image schema, the path provided by the error object (schemaPath)
+                // is incomplete. In case pattern validation fails for such properties, on traversing the path provided in the error object,
+                // the required definition object is not returned,(null is returned instead)
+                if (defObject === null && schema["$ref"]) {
+                    // To access the definition object of such properties, we create the complete path, by using the
+                    // $ref value in the schema object. This provides us the path upto the first error node, as per the schemaPath of the error object.
+                    // Thus the complete path is put together by concatenation of the two [schema.$ref + error.schemaPath], with minor string clean-up.
+                    let completeErrArr = schema["$ref"]
+                        .replace("#/", "")
+                        .split("/")
+                        .concat(pathArr)
+                    defObject = traversePath(completeErrArr)
+                }
+                error.message = defObject["additionalProperties"].default
             }
             return error
         })
     }
 
-    // Function to traverse the schema until property for which validation fails, is found
-    function traverse(obj, prop) {
+    // Function to walk through the path nodes as provided within the `path` node array.
+    function traversePath(path) {
+        let inObject = schema
+        for (let idx = 0; idx < path.length - 1; idx++) {
+            let lookFor = path[idx]
+            inObject = findFirst(lookFor, inObject)
+        }
+        return inObject
+    }
+
+    // Function to provide the first instance of a definition object, for the required `prop` key if it exists within the traversable `obj`
+    function findFirst(prop, obj) {
         if (obj.hasOwnProperty(prop)) {
-            // Required propertys object is found and the custom error message defined within it, is returned
-            return obj[prop].additionalProperties.default
+            return obj[prop]
         } else {
+            let result = null
             for (var key in obj) {
-                let result
-                // In JS, arrays aren't primitives but are 'Array' objects i.e., they are based off of objects
-                // Hence one needs to explicitly rule out the item being filtered is not only an object
-                // but also that it is not a derivative of a JS object - an Array.
                 if (typeof obj[key] == "object" && !Array.isArray(obj[key])) {
-                    result = traverse(obj[key], prop)
-                    // if the property required is not found this function returns 'undefined'
-                    if (result != undefined) return result
+                    result = findFirst(prop, obj[key])
+                    if (result != null) return result
                     else continue
                 }
             }
+            return result
         }
     }
 
