@@ -45,7 +45,6 @@
     import CustomTextWidget from "./CustomTextWidget"
 
     import type { JSONVal } from "./util"
-    import _ from "lodash"
 
     // props in:
     export let schema: JSONVal //schema to validate against (must be self-contained)
@@ -117,26 +116,13 @@
         let inObject = schema
         for (let idx = 0; idx < path.length - 1; idx++) {
             let lookFor = path[idx]
-            inObject = findFirst(lookFor, inObject)
+            // if the path node we are looking for is not found in the object where we expect it to be,
+            // we are looking in the wrong object. (This happens in case of properties defined in video/image schema)
+            // In that case we stop traversing and need to correct/complete the required path to the definition where validation failed
+            if (inObject[lookFor] == undefined) return null
+            inObject = inObject[lookFor]
         }
         return inObject
-    }
-
-    // Function to provide the first instance of a definition object, for the required `prop` key if it exists within the traversable `obj`
-    function findFirst(prop, obj) {
-        if (obj.hasOwnProperty(prop)) {
-            return obj[prop]
-        } else {
-            let result = null
-            for (var key in obj) {
-                if (typeof obj[key] == "object" && !Array.isArray(obj[key])) {
-                    result = findFirst(prop, obj[key])
-                    if (result != null) return result
-                    else continue
-                }
-            }
-            return result
-        }
     }
 
     const e = React.createElement
