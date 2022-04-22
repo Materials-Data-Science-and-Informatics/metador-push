@@ -90,15 +90,23 @@
             if (error.name === "pattern") {
                 let errPath = error.schemaPath.replace("#/", "")
                 let pathArr = errPath.split("/")
-
                 let defObject = traversePath(pathArr)
-                // In case of properties defined within the referenced video/image schema, the path provided by the error object (schemaPath)
-                // is incomplete. In case pattern validation fails for such properties, on traversing the path provided in the error object,
-                // the required definition object is not returned,(null is returned instead)
-                if (defObject === null && schema["$ref"]) {
-                    // To access the definition object of such properties, we create the complete path, by using the
-                    // $ref value in the schema object. This provides us the path upto the first error node, as per the schemaPath of the error object.
-                    // Thus the complete path is put together by concatenation of the two [schema.$ref + error.schemaPath], with minor string clean-up.
+                /*
+                In case of properties defined within sub-schemas that are referenced to
+                within the schema object available to the form, the reference is indicated
+                via the existence of a $ref key on the top-level of the forms schema.
+                But, the path provided by the error object (schemaPath) is found to be incomplete,
+                as information regarding the use of refs within the schema is not captured in by it.
+                When pattern validation fails for such properties, walking along the path provided in
+                the error object does not return the required definition object.
+                */
+                if (schema["$ref"] && defObject === null) {
+                    /*
+                    To access the definition object of such properties,
+                    we create the complete path, by using the $ref value in the schema object.
+                    This provides us the path upto the first error node, as per the schemaPath of the error object.
+                    The complete path is put together by concatenation of the two [schema.$ref + error.schemaPath].
+                    */
                     let completeErrArr = schema["$ref"]
                         .replace("#/", "")
                         .split("/")
@@ -111,18 +119,16 @@
         })
     }
 
-    // Function to walk through the path nodes as provided within the `path` node array.
+    // Function to walk through the path nodes as provided within the `path` array.
+    // If found, returns the required defintion object else returns null
     function traversePath(path) {
-        let inObject = schema
+        let currentObject = schema
         for (let idx = 0; idx < path.length - 1; idx++) {
-            let lookFor = path[idx]
-            // if the path node we are looking for is not found in the object where we expect it to be,
-            // we are looking in the wrong object. (This happens in case of properties defined in video/image schema)
-            // In that case we stop traversing and need to correct/complete the required path to the definition where validation failed
-            if (inObject[lookFor] == undefined) return null
-            inObject = inObject[lookFor]
+            let findKey = path[idx]
+            if (currentObject[findKey] == undefined) return null
+            currentObject = currentObject[findKey]
         }
-        return inObject
+        return currentObject
     }
 
     const e = React.createElement
