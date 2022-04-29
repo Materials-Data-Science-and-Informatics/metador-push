@@ -126,7 +126,13 @@
         for (let idx = 0; idx < path.length - 1; idx++) {
             let findKey = path[idx]
             if (currentObject[findKey] == undefined) return null
-            currentObject = currentObject[findKey]
+            else if (currentObject.constructor == Array) {
+                let id = parseInt(findKey)
+                if (isNaN(id)) {
+                    throw new Error(`Invalid array index ${id} in path ${path}`)
+                }
+                currentObject = currentObject[id]
+            } else currentObject = currentObject[findKey]
         }
         return currentObject
     }
