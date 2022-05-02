@@ -78,10 +78,63 @@
         TextWidget: CustomTextWidget,
     }
 
-    // Issue #9.3:Enhancement done - Text area to wrap longer text fields of description and notes
+    // Issue #9.3:Enhancement - Text area to wrap longer text fields of description and notes
     const uiSchema = {
         description: { "ui:widget": "textarea" },
         notes: { "ui:widget": "textarea" },
+    }
+
+    // Issue #3:Enhancement - Improve validation error messages
+    function transformErrors(errors) {
+        return errors.map((error) => {
+            if (error.name === "pattern") {
+                let errPath = error.schemaPath.replace("#/", "")
+                let pathArr = errPath.split("/")
+                let defObject = traversePath(pathArr)
+                /*
+                In case of properties defined within sub-schemas that are referenced to
+                within the schema object available to the form, the reference is indicated
+                via the existence of a $ref key on the top-level of the forms schema.
+                But, the path provided by the error object (schemaPath) is found to be incomplete,
+                as information regarding the use of refs within the schema is not captured in by it.
+                When pattern validation fails for such properties, walking along the path provided in
+                the error object does not return the required definition object.
+                */
+                if (schema["$ref"] && defObject === null) {
+                    /*
+                    To access the definition object of such properties,
+                    we create the complete path, by using the $ref value in the schema object.
+                    This provides us the path upto the first error node, as per the schemaPath of the error object.
+                    The complete path is put together by concatenation of the two [schema.$ref + error.schemaPath].
+                    */
+                    let completeErrArr = schema["$ref"]
+                        .replace("#/", "")
+                        .split("/")
+                        .concat(pathArr)
+                    defObject = traversePath(completeErrArr)
+                }
+                error.message = defObject["additionalProperties"].default
+            }
+            return error
+        })
+    }
+
+    // Function to walk through the path nodes as provided within the `path` array.
+    // If found, returns the required defintion object else returns null
+    function traversePath(path) {
+        let currentObject = schema
+        for (let idx = 0; idx < path.length - 1; idx++) {
+            let findKey = path[idx]
+            if (currentObject[findKey] == undefined) return null
+            else if (currentObject.constructor == Array) {
+                let id = parseInt(findKey)
+                if (isNaN(id)) {
+                    throw new Error(`Invalid array index ${id} in path ${path}`)
+                }
+                currentObject = currentObject[id]
+            } else currentObject = currentObject[findKey]
+        }
+        return currentObject
     }
 
     const e = React.createElement
@@ -108,6 +161,7 @@
                     /* ref: (c) => (component = c), // reference to React comp. instance */
                     ErrorList: () => e("span"), // remove global error list on top
                     //TODO: move it to the bottom, somehow?
+                    transformErrors: transformErrors,
                 },
                 // pass empty child to prevent creation of submit button,
                 // see e.g. rjsf Github issue #1602
