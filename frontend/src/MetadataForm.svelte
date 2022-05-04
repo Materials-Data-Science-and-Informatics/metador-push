@@ -113,7 +113,13 @@
                         .concat(pathArr)
                     defObject = traversePath(completeErrArr)
                 }
-                error.message = defObject["additionalProperties"].default
+
+                if (
+                    defObject["additionalProperties"] != undefined &&
+                    defObject["additionalProperties"].default != undefined
+                ) {
+                    error.message = defObject["additionalProperties"].default
+                }
             }
             return error
         })
