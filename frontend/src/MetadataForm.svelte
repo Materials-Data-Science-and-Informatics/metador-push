@@ -116,9 +116,9 @@
 
                 if (
                     defObject["additionalProperties"] != undefined &&
-                    defObject["additionalProperties"].default != undefined
+                    defObject["additionalProperties"]["default"] != undefined
                 ) {
-                    error.message = defObject["additionalProperties"].default
+                    error.message = defObject["additionalProperties"]["default"]
                 }
             }
             return error
