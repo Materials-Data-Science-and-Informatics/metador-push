@@ -1,0 +1,134 @@
+{
+  "title": "Custom errors toy example",
+  "description": "This dataset is used to test custom errors for strings with pattern.",
+  "schemas": {
+    "emb1": {
+      "type": "object",
+      "properties": {
+        "nested": {
+          "type": "object",
+          "properties": {
+            "direct": {
+              "type": "string",
+              "pattern": "^x$",
+              "additionalProperties": {
+                "type": "string",
+                "default": "error message for /nested/direct"
+              }
+            },
+            "indirect": {
+              "$ref": "emb1#/$defs/indirect"
+            },
+            "arrayDirect": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^x$",
+                "additionalProperties": {
+                  "type": "string",
+                  "default": "error message for /nested/arrayDirect/[index]"
+                }
+              }
+            },
+            "arrayIndirect": {
+              "type": "array",
+              "items": {
+                "$ref": "emb1#/$defs/indirect2"
+              }
+            },
+            "indirectArray": {
+              "$ref": "emb1#/$defs/arrayDef"
+            },
+            "external": {
+              "$ref": "emb2"
+            },
+            "any": {
+              "anyOf": [
+                {
+                  "$ref": "emb1#/$defs/option1"
+                },
+                {
+                  "$ref": "emb1#/$defs/option2"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "$defs": {
+        "indirect": {
+          "type": "string",
+          "pattern": "^x$",
+          "additionalProperties": {
+            "type": "string",
+            "default": "error message for /nested/indirect"
+          }
+        },
+        "indirect2": {
+          "type": "string",
+          "pattern": "^x$",
+          "additionalProperties": {
+            "type": "string",
+            "default": "error message for /nested/arrayIndirect/[N]"
+          }
+        },
+        "arrayDef": {
+          "type": "array",
+          "items": {
+            "$ref": "emb1#/$defs/indirect3"
+          }
+        },
+        "indirect3": {
+          "type": "string",
+          "pattern": "^x$",
+          "additionalProperties": {
+            "type": "string",
+            "default": "error message for /nested/indirectArray/[N]"
+          }
+        },
+        "option1": {
+          "type": "string",
+          "pattern": "^x$",
+          "additionalProperties": {
+            "type": "string",
+            "default": "error message for /nested/any (option 1)"
+          }
+        },
+        "option2": {
+          "type": "string",
+          "pattern": "^y$",
+          "additionalProperties": {
+            "type": "string",
+            "default": "error message for /nested/any (option 2)"
+          }
+        }
+      }
+    },
+    "emb2": {
+      "type": "object",
+      "properties": {
+        "other": {
+          "type": "object",
+          "properties": {
+            "indirect": {
+              "$ref": "emb2#/$defs/indirect"
+            }
+          }
+        }
+      },
+      "$defs": {
+        "indirect": {
+          "type": "string",
+          "pattern": "^x$",
+          "additionalProperties": {
+            "type": "string",
+            "default": "error message for /external/other/indirect"
+          }
+        }
+      }
+    }
+  },
+  "rootSchema": "emb1",
+  "patterns": [],
+  "fallbackSchema": false
+}

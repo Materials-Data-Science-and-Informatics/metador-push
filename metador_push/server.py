@@ -47,10 +47,12 @@ cleanup_task: asyncio.Task  # reference to started cleanup task
 def on_startup():
     """Initialize singletons based on config."""
     # must (re-)init logging here (otherwise won't work properly with uvicorn reload)
-    init_logger(conf().metador.log.level.value, conf().metador.log.file)
+    init_logger(conf().metador_push.log.level.value, conf().metador_push.log.file)
     # prepare stuff as configured
-    orcid.init_auth(conf().metador.site, conf().orcid, conf().metador.data_dir)
-    Profile.load_profiles(conf().metador.profile_dir)
+    orcid.init_auth(
+        conf().metador_push.site, conf().orcid, conf().metador_push.data_dir
+    )
+    Profile.load_profiles(conf().metador_push.profile_dir)
     Dataset.load_datasets()
 
     global cleanup_task
@@ -70,13 +72,13 @@ async def on_shutdown():
 @app.get("/site-base")
 async def site_base():
     """Return the configured site prefix. Useful for correct client-side routing."""
-    return conf().metador.site
+    return conf().metador_push.site
 
 
 @app.get("/tusd-endpoint")
 async def tusd_endpoint():
     """Return the configured tusd endpoint to be used by client."""
-    return conf().metador.tusd_endpoint
+    return conf().metador_push.tusd_endpoint
 
 
 FRONTEND_DIR: Final[Path] = pkg_res("frontend/public")

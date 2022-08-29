@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-import metador.profile as profile
-from metador.profile import TRIV_FALSE, TRIV_TRUE, Profile
-from metador.util import load_json
+import metador_push.profile as profile
+from metador_push.profile import TRIV_FALSE, TRIV_TRUE, Profile
+from metador_push.util import load_json
 
 
 def test_load_get_profiles(test_config, tmp_path):
@@ -20,7 +20,7 @@ def test_load_get_profiles(test_config, tmp_path):
         Profile.load_profiles(tmp_path)
 
     # load our embedded profiles (this will persist as long as the module is loaded)
-    Profile.load_profiles(test_config.metador.profile_dir)
+    Profile.load_profiles(test_config.metador_push.profile_dir)
 
     # test that profile directory loads properly
     prs = Profile.get_profiles()
@@ -98,7 +98,9 @@ def test_profile_load(test_config):
         assert pat.useSchema in pr.schemas
 
     # check that the embedded schema is actually the one loaded from file
-    genericSchema = load_json(test_config.metador.profile_dir / "generic.schema.json")
+    genericSchema = load_json(
+        test_config.metador_push.profile_dir / "generic.schema.json"
+    )
     assert pr.schemas["generic.schema.json"] == genericSchema
 
     # simple check what we expect to see there: the always present trivial ones,

@@ -1,4 +1,4 @@
-# Default configuration file for Metador.
+# Default configuration file for Metador Push.
 #
 # You can and should override some of those values in your own config.
 # All entries that are missing in your config will take the following default values.
@@ -9,12 +9,13 @@
 # NOT relative to location of this config.
 #
 # A minimal deployment configuration with ORCID and behind a reverse proxy will need:
-# metador.site, metador.tusd_endpoint, orcid.enabled, orcid.client_id, orcid.client_secret
+# metador-push.site, metador-push.tusd_endpoint,
+# orcid.enabled, orcid.client_id, orcid.client_secret
 # For a possible setup, check out the example nginx configuration file.
 ##########################################################################################
 
-[metador]
-# Site where metador is served (without trailing slash).
+[metador-push]
+# Site where metador-push is served (without trailing slash).
 # It depends on the way you proxy/route/serve requests to it.
 #
 # With reverse proxy for https, this can be e.g. https://your-domain.com
@@ -25,7 +26,7 @@ site = 'http://localhost:8000'
 #
 # With reverse proxy for https, this can be e.g. https://your-domain.com/tusd/files/
 tusd_endpoint = 'http://localhost:1080/files/'
-# if tusd is run in the same directory as metador, it will create a 'data' directory
+# if tusd is run in the same directory as metador-push , it will create a 'data' directory
 # if your tusd runs somewhere else, adapt this in your configuration
 tusd_datadir = 'data'
 
@@ -44,7 +45,7 @@ profile_dir = 'profiles'
 # Location to store all application data and state.
 # It will have subdirs "staging" and "complete" for datasets
 # and also contain some temporary files.
-data_dir = 'metador_data'
+data_dir = 'metador-push_data'
 # Checksum algorithm to use (sha256 and sha512 are supported).
 checksum = 'sha256'
 
@@ -61,11 +62,11 @@ checksum = 'sha256'
 # In any case, your post-processing is responsible for (re)moving the passed-in directory.
 # completion_hook = 'your_script.py'
 
-[metador.log]
+[metador-push.log]
 # Granularity of logging.
 level = 'INFO'
 # Filename where logs go. if not set, only console log is used.
-# file = 'metador.log'
+# file = 'metador-push.log'
 
 ################
 
@@ -79,7 +80,7 @@ auth_expire_after = 180
 # If the file itself is empty, then _no one_ can use the instance.
 # allowlist_file = 'allowlist.txt'
 
-# You need to get API credentials for your Metador instance in your ORCID account. See:
+# You need to get API credentials for your Metador Push instance in your ORCID account. See:
 # https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/#Get_some_client_credentials
 client_id = ''
 client_secret = ''
@@ -93,7 +94,7 @@ use_fake = false
 
 [uvicorn]
 # The host and port used by uvicorn for binding.
-# These are only respected if you launch your application using `metador-cli run`.
+# These are only respected if you launch your application using `metador-push run`.
 host = '0.0.0.0'
 port = 8000
 # If a filename for a UNIX socket is provided, uvicorn will bind to it instead of host:port

@@ -26,7 +26,7 @@ def version() -> None:
 @app.command()
 def default_conf() -> None:
     """
-    Output a default metador.toml file.
+    Output a default metador-push.toml file.
 
     It contains all available configuration options.
     """
@@ -36,15 +36,15 @@ def default_conf() -> None:
 @app.command()
 def tusd_hook_url(config: Optional[Path] = None) -> None:
     """Output the route to construct a hook path for tusd."""
-    c.init_conf(config)  # correct result depends on configured metador.site
-    print(c.conf().metador.site + TUSD_HOOK_ROUTE)
+    c.init_conf(config)  # correct result depends on configured metador-push.site
+    print(c.conf().metador_push.site + TUSD_HOOK_ROUTE)
 
 
 @app.command()
 def orcid_redir_url(config: Optional[Path] = None) -> None:
     """URL that should be registered as the ORCID API redirect."""
-    c.init_conf(config)  # correct result depends on configured metador.site
-    print(orcid_redir(c.conf().metador.site))
+    c.init_conf(config)  # correct result depends on configured metador-push.site
+    print(orcid_redir(c.conf().metador_push.site))
 
 
 @app.command()
@@ -96,7 +96,7 @@ def run(config: Optional[Path] = None) -> None:  # pragma: no cover
     else:  # for use behind reverse proxy
         uvicorn_args["uds"] = c.conf().uvicorn.socket
 
-    uvicorn.run("metador.server:app", **uvicorn_args)
+    uvicorn.run("metador_push.server:app", **uvicorn_args)
 
 
 if __name__ == "__main__":  # pragma: no cover

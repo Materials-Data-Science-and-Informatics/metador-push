@@ -1,20 +1,18 @@
-# Metador
+# Metador Push
 
 ![Project status](https://img.shields.io/badge/status-beta-%23ffff00)
 [
-![Test](https://img.shields.io/github/workflow/status/Materials-Data-Science-and-Informatics/metador/test?label=test)
-](https://github.com/Materials-Data-Science-and-Informatics/metador/actions?query=workflow:test)
+![Test](https://img.shields.io/github/workflow/status/Materials-Data-Science-and-Informatics/metador-push/test?label=test)
+](https://github.com/Materials-Data-Science-and-Informatics/metador-push/actions?query=workflow:test)
 [
-![Coverage](https://img.shields.io/codecov/c/gh/Materials-Data-Science-and-Informatics/metador?token=BJJ15RHNJA)
-](https://app.codecov.io/gh/Materials-Data-Science-and-Informatics/metador)
+![Coverage](https://img.shields.io/codecov/c/gh/Materials-Data-Science-and-Informatics/metador-push?token=BJJ15RHNJA)
+](https://app.codecov.io/gh/Materials-Data-Science-and-Informatics/metador-push)
 [
 ![Docs](https://img.shields.io/badge/read-docs-success)
-](https://materials-data-science-and-informatics.github.io/metador/)
+](https://materials-data-science-and-informatics.github.io/metador-push/)
 <!-- TODO: dockerhub badge or something like that, if we ever offer prebuilt containers -->
 
-<img style="center-align: middle;" alt="Metador Logo" src="https://github.com/Materials-Data-Science-and-Informatics/Logos/raw/main/Metador/Metador_Logo_Text.png" width=70% height=70% />
-
-**M**etadata **E**nrichment and **T**ransmission **A**ssistance for **D**igital **O**bjects in **R**esearch
+<img style="center-align: middle;" alt="Metador Logo" src="https://github.com/Materials-Data-Science-and-Informatics/Logos/raw/main/Metador/Metador_Logo_Text.png" width=70% height=70% /> **Push**
 
 ## TL;DR
 
@@ -32,33 +30,33 @@ https://user-images.githubusercontent.com/371708/155495188-caa23208-3092-4639-ac
 
 ## Overview
 
-Metador is a metadata-aware mailbox for research data.
+Metador Push is a metadata-aware mailbox for research data.
 
 Like a real mailbox, it should be really simple to set up and use and should not be in your way.
 
-Unlike a real mailbox where any content can be dropped, Metador wants to help you, the
+Unlike a real mailbox where any content can be dropped, Metador Push wants to help you, the
 data receiver, to make sense of the data, by requiring the uploader to fill out a form of
 your choice for each file to provide all necessary metadata.
 
-**Thereby, Metador faciliates FAIRification of research data by providing a structured
+**Thereby, Metador Push faciliates FAIRification of research data by providing a structured
 interface to condensate implicit contextual domain knowledge into machine-readable
 structured metadata.**
 
-If you **formalize** your metadata requirements in the form of JSON Schemas, then Metador
+If you **formalize** your metadata requirements in the form of JSON Schemas, then Metador Push
 will **enforce** those requirements, if you let your collaborators share their data
 with you through it. At the same time, you are **in full control** of the data, because
-Metador is simple to set-up locally and eliminates the need of a middle-man service that
+Metador Push is simple to set-up locally and eliminates the need of a middle-man service that
 assists you with moving larger (i.e., multiple GB) files over the internet.
 
-Using Metador, the sender can upload a dataset (i.e., a collection of files) and must
+Using Metador Push, the sender can upload a dataset (i.e., a collection of files) and must
 provide metadata for the files according to your requirements. After the upload and
-metadata annotation is completed, Metador can notify other services to collect and further
+metadata annotation is completed, Metador Push can notify other services to collect and further
 process this data (*post-processing hooks*). For example, you can use this to put
 completed and fully annotated datasets into your existing in-lab repository or storage, or
-apply necessary transformations on the data or metadata. This makes Metador **easy to
+apply necessary transformations on the data or metadata. This makes Metador Push **easy to
 integrate into your existing workflows**.
 
-To achieve these goals, Metador combines state-of-the-art resumable file-upload technology
+To achieve these goals, Metador Push combines state-of-the-art resumable file-upload technology
 using [Uppy](https://uppy.io) and the [tus](https://tus.io/) protocol
 with a [JSON Schema](https://json-schema.org/) driven multi-view metadata editor based on
 [react-jsonschema-form](https://github.com/rjsf-team/react-jsonschema-form)
@@ -66,23 +64,23 @@ and [JSONEditor](https://github.com/josdejong/jsoneditor).
 
 ## Why not a different self-hosted file uploader?
 
-To the best of our knowledge, before starting work on Metador, there was no off-the-shelf
+To the best of our knowledge, before starting work on Metador Push, there was no off-the-shelf
 solution checking all of the following boxes:
 
 * lightweight (easy to deploy and use on a typical institutional Linux server)
 * supports convenient upload of large files (with progress indication, pauseable/resumable)
 * supports rich and expressive metadata annotation that is **generic** (schema-driven)
 
-If you care about this combination of features, then Metador is for you.
+If you care about this combination of features, then Metador Push is for you.
 If you do not care about collecting metadata, feel free to pick a different solution.
 
 ## Installation
 
 *If you are not a fluent command line user, it is recommended to let your local system
-administrator set up an instance of Metador for you. You should then provide them with the
+administrator set up an instance of Metador Push for you. You should then provide them with the
 domain-specific dataset profiles and JSON Schemas as it is explained further below.*
 
-* Clone this repository: `git clone git@github.com:Materials-Data-Science-and-Informatics/metador.git`
+* Clone this repository: `git clone git@github.com:Materials-Data-Science-and-Informatics/metador-push.git`
 
 * Check that you have Python >=3.7 and Node.js >= 14.15 by running `python --version`, `node --version`
 
@@ -98,24 +96,25 @@ either `/usr/bin` (global) or `~/.local/bin` (user) directory.
 
 * go to the `frontend` subdirectory in the cloned repository and run `npm install && npm run build` to build the frontend.
 
-* go back to the top level directory of the repository and install Metador using `poetry install`, if you use poetry, otherwise use `pip install --user .` (as usual, using a `venv` is recommended).
+* go back to the top level directory of the repository and install Metador Push using `poetry install`,
+  if you use poetry, otherwise use `pip install --user .` (as usual, using a `venv` is recommended).
 
 ## Usage
 
 ### I want to see it in action, now!
 
-* Ensure that tusd and Metador are installed
-and that the `tusd` and `metador-cli` scripts are on your path, i.e. executable.
+* Ensure that tusd and Metador Push are installed
+and that the `tusd` and `metador-push-cli` scripts are on your path, i.e. executable.
 
-* Run `tusd` like this: `tusd -hooks-http "$(metador-cli tusd-hook-url)"`
+* Run `tusd` like this: `tusd -hooks-http "$(metador-push-cli tusd-hook-url)"`
 
-* Run Metador like this: `metador-cli run`
+* Run Metador Push like this: `metador-push-cli run`
 
 * Navigate to `http://localhost:8000/` in your browser.
 
-### I want to deploy Metador properly! (for system administrator)
+### I want to deploy Metador Push properly! (for system administrator)
 
-As Metador tries to be a general building block and not impose too many assumptions on
+As Metador Push tries to be a general building block and not impose too many assumptions on
 your setup, here only a general overview of the required steps is provided.
 
 For serious deployment into an existing infrastructure, the following steps are required:
@@ -124,19 +123,19 @@ For serious deployment into an existing infrastructure, the following steps are 
 
 * write dataset profiles linking the JSON Schemas to file name patterns (explained below).
 
-* think about the way how both `tusd` and Metador will be visible to the outside world.
+* think about the way how both `tusd` and Metador Push will be visible to the outside world.
   This probably involves a reverse proxy, e.g. Apache or nginx to serve both applications
   and take care of HTTPS. Make sure that the public hostname is an alias for localhost in
   `/etc/hosts`, if running both services on the same machine.
 
   However your setup might be, you need to make sure that:
 
-  1. both `tusd` and Metador are accessible from the client side (notice that by default
+  1. both `tusd` and Metador Push are accessible from the client side (notice that by default
     they run on two different ports, unless you mask that with route rewriting).
 
-  2. The passed hook endpoint URL of Metador is accessible by `tusd`.
+  2. The passed hook endpoint URL of Metador Push is accessible by `tusd`.
 
-  3. The file upload directory of `tusd` is accessible (read + write) by Metador.
+  3. The file upload directory of `tusd` is accessible (read + write) by Metador Push.
 
 * Use `metador-cli default-conf > metador.toml` to get a copy of the default config file,
   add your JSON schemas and
@@ -148,19 +147,19 @@ For serious deployment into an existing infrastructure, the following steps are 
   If you don't use ORCID, you have to take care of authorization yourself!
 
 * Run `tusd` as required with your setup, passing
-  `-hooks-http "$(metador-cli tusd-hook-url)"` as argument.
+  `-hooks-http "$(metador-push-cli tusd-hook-url)"` as argument.
 
-* Run Metador with your configuration: `metador-cli run --conf YOUR_CONFIG_FILE`
+* Run Metador Push with your configuration: `metador-push-cli run --conf YOUR_CONFIG_FILE`
 
-  Metador will use the current directory as the working directory and also look for
+  Metador Push will use the current directory as the working directory and also look for
   profiles and the configuration file there, unless told otherwise via CLI interface or
   configuration settings.
 
-* To start metador and tusd automatically on start of the system or virtual machine,
+* To start metador-push and tusd automatically on start of the system or virtual machine,
   look at the example `.service` files. These must be adapted according to your setup
   and placed in `/etc/systemd/system`.
   After doing this, they can be enabled with
-  `systemctl enable metador` and `systemctl enable metador-tusd`,
+  `systemctl enable metador-push` and `systemctl enable metador-push-tusd`,
   and managed just like any other background service, i.e. the logs that are printed to
   the standard output then can be inspected with `journalctl`.
 
@@ -189,37 +188,37 @@ one from [Let's Encrypt](https://letsencrypt.org/), e.g. by following
 
 Follow instructions given e.g.
 [here](https://info.orcid.org/documentation/integration-guide/registering-a-public-api-client/)
-As redirect URL you should register the value you get from `metador-cli orcid-redir-url`
+As redirect URL you should register the value you get from `metador-push-cli orcid-redir-url`
 (the output is based on your configuration).
 
-Afterwards, fill out the `orcid` section of your Metador configuration accordingly,
+Afterwards, fill out the `orcid` section of your Metador Push configuration accordingly,
 adding your client ID and secret token.
 
 If you register on the ORCID sandbox server, do not forget to set `sandbox=true`!
 
 ## Deployment using Docker
 
-To build a Docker image with a pre-configured setup of metador, tusd and nginx, run:
+To build a Docker image with a pre-configured setup of metador-push, tusd and nginx, run:
 
 ```
-docker build -t metador:latest .
+docker build -t metador-push:latest .
 ```
 
-Prepare a directory (e.g. called `metador_rundir`) that contains the following items:
+Prepare a directory (e.g. called `metador-push_rundir`) that contains the following items:
 
-* your Metador configuration `metador.toml`
+* your Metador Push configuration `metador-push.toml`
 * a `profiles` directory containing your dataset profiles (explained below) and JSON schemas
-* SSL certificate and key named `cert.pem` and `cert.key` valid for the domain you will use for accessing Metador
+* SSL certificate and key named `cert.pem` and `cert.key` valid for the domain you will use for accessing Metador Push
 
 This directory is used both for configuration and retrieval of the data.
 
-To run Metador with your prepared directory `./metador_rundir`, run:
+To run Metador Push with your prepared directory `./metador-push_rundir`, run:
 
 ```
-docker run -it --mount type=bind,source="$(pwd)"/metador_rundir,target=/mnt -p 80:80 -p 443:443 metador:latest
+docker run -it --mount type=bind,source="$(pwd)"/metador-push_rundir,target=/mnt -p 80:80 -p 443:443 metador-push:latest
 ```
 
-Now you should be able to access Metador on your computer
+Now you should be able to access Metador Push on your computer
 by visiting `https://localhost` in your browser.
 
 ## Dataset profiles and JSON Schemas
@@ -290,7 +289,7 @@ normal operation they will be removed/relocated when a file upload is completed.
 In the case that an upload is abandoned, these intermediate files will stay there forever,
 unless cleaned up.
 
-To clean up, you can run `metador-cli tusd-cleanup YOUR_TUSD_DATA_DIR`. The command should
+To clean up, you can run `metador-push-cli tusd-cleanup YOUR_TUSD_DATA_DIR`. The command should
 be launched in the same directory where the server is run and with the same configuration,
 so the tusd directory shall be either relative to that location, or an absolute path.
 
@@ -302,11 +301,11 @@ The following never actually asked questions might be of interest to you.
 
 ### Feature: Can I upload existing JSON metadata for the files?
 
-The only purpose of Metador is to enable a human-friendly input form to simplify the
+The only purpose of Metador Push is to enable a human-friendly input form to simplify the
 annotation of the data. If the users happen to have JSON files that are valid according to
 the required schema, of course you can just switch to the raw JSON Editor view and paste
 the content there. But if you do already have structured metadata, you most likely do not
-need Metador.
+need Metador Push.
 
 ### Feature: Will there be an API for external tools to automate uploads?
 
@@ -352,24 +351,24 @@ a different way.
 
 ### Initial Preparations
 
-To setup Metador for development, perform the following steps:
+To setup Metador Push for development, perform the following steps:
 
-1. Go to your Metador project directory and run `poetry install`.
+1. Go to your Metador Push project directory and run `poetry install`.
 
 2. Next, `pre-commit install` to enable the required pre-commit hooks.
 
-2. Create a separate directory (ideally outside the `metador` project directory),
-   e.g. call it `metador_rundir`.
+2. Create a separate directory (ideally outside the `metador-push` project directory),
+   e.g. call it `metador-push_rundir`.
 
 3. Symlink the `profiles` from the project directory to your runtime directory or create a
    new profiles directory with your profiles for testing and development.
 
-4. Create a `metador.toml` config file in the runtime directory and override some default
+4. Create a `metador-push.toml` config file in the runtime directory and override some default
    settings. You might want to use a configuration like this:
 ```
-[metador.log]
+[metador-push.log]
 level = 'DEBUG'
-file = 'metador.log'
+file = 'metador-push.log'
 
 [orcid]
 enabled = true
@@ -382,23 +381,23 @@ reload = true
 
 The option `use_fake` will enable a dummy sign-on that does not use real ORCID servers and
 does not need having an ORCID. When `use_fake` is disabled, but `sandbox` is enabled,
-Metador instead will use the [ORCID test server](https://sandbox.orcid.org/) instead of
+Metador Push instead will use the [ORCID test server](https://sandbox.orcid.org/) instead of
 the real one. Notice that both the test and production servers of ORCID respectively need
 the setting up described above and a registered user account.
 
-### Running Metador for development
+### Running Metador Push for development
 
-To start, you should first go to the Metador project directory run `poetry shell`.
-Then switch to the runtime directory (the one with your `metador.toml`)
-and run `metador-cli run`.
+To start, you should first go to the Metador Push project directory run `poetry shell`.
+Then switch to the runtime directory (the one with your `metador-push.toml`)
+and run `metador-push-cli run`.
 
 For frontend development, you can run `npm run dev` in the frontend directory in addition
-to the Metador server to get auto-reload for the frontend. Be sure to use the frontend
+to the Metador Push server to get auto-reload for the frontend. Be sure to use the frontend
 served by the backend server (by default running on port 8000), though!
 
 Before commiting, run `pytest` and make sure you did not break anything.
 
-To generate documentation locally, run `pdoc -o docs metador`.
+To generate documentation locally, run `pdoc -o docs metador-push`.
 
 To check coverage, use `pytest --cov`
 

@@ -11,16 +11,16 @@ import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 
-import metador.config as config
-import metador.log
-import metador.server as server
-from metador import pkg_res
-from metador.config import LogLevel, conf
-from metador.dataset import Dataset
-from metador.orcid.mock import MOCK_TOKEN
-from metador.postprocessing import DatasetNotification
-from metador.profile import Profile
-from metador.upload import TUSD_HOOK_ROUTE
+import metador_push.config as config
+import metador_push.log
+import metador_push.server as server
+from metador_push import pkg_res
+from metador_push.config import LogLevel, conf
+from metador_push.dataset import Dataset
+from metador_push.orcid.mock import MOCK_TOKEN
+from metador_push.postprocessing import DatasetNotification
+from metador_push.profile import Profile
+from metador_push.upload import TUSD_HOOK_ROUTE
 
 from .testutil import (
     AsyncLiveStream,
@@ -64,14 +64,16 @@ def test_config(testutils, tmp_path_factory):
     """Initialize config for test environment."""
     config.init_conf()
 
-    tmpdir = tmp_path_factory.mktemp("metador_test_datadir")
+    tmpdir = tmp_path_factory.mktemp("metador_push.test_datadir")
 
-    conf().metador.log.level = LogLevel.DEBUG
-    conf().metador.log.file = Path("test_metador.log")
-    metador.log.init_logger(conf().metador.log.level.value, conf().metador.log.file)
+    conf().metador_push.log.level = LogLevel.DEBUG
+    conf().metador_push.log.file = Path("test_metador_push.log")
+    metador_push.log.init_logger(
+        conf().metador_push.log.level.value, conf().metador_push.log.file
+    )
 
-    conf().metador.profile_dir = pkg_res("profiles")
-    conf().metador.data_dir = tmpdir
+    conf().metador_push.profile_dir = pkg_res("profiles")
+    conf().metador_push.data_dir = tmpdir
 
     conf().orcid.enabled = True
     conf().orcid.use_fake = True
@@ -79,7 +81,7 @@ def test_config(testutils, tmp_path_factory):
     # use different port than default for testing
     # to not interfere with possibly running actual dev instance
     conf().uvicorn.port = get_free_tcp_port()
-    conf().metador.site = f"http://localhost:{conf().uvicorn.port}"
+    conf().metador_push.site = f"http://localhost:{conf().uvicorn.port}"
 
     allowlistfile = tmpdir / "allowlist.txt"
     with open(allowlistfile, "w") as file:
@@ -129,7 +131,7 @@ def dummy_file(testutils, tmp_path_factory):
 @pytest.fixture(scope="session")
 def test_profiles(test_config):
     """Initialize config and profiles for test environment."""
-    Profile.load_profiles(test_config.metador.profile_dir)
+    Profile.load_profiles(test_config.metador_push.profile_dir)
 
 
 @pytest.fixture
@@ -145,18 +147,20 @@ def test_datasets(test_profiles):
 @pytest.fixture
 async def async_client(test_config):
     """Return an automatically closed async http client."""
-    async with AsyncClient(app=server.app, base_url=test_config.metador.site) as ac:
+    async with AsyncClient(
+        app=server.app, base_url=test_config.metador_push.site
+    ) as ac:
         yield ac
 
 
 @pytest.fixture
 async def tus_server(test_config, tmp_path_factory):
     """Launch a tusd instance in the background for running tests."""
-    cmd = ["tusd", "-hooks-http", test_config.metador.site + TUSD_HOOK_ROUTE]
+    cmd = ["tusd", "-hooks-http", test_config.metador_push.site + TUSD_HOOK_ROUTE]
 
     # create directory where tusd is run and adapt the session test_config
     tusd_cwd = tmp_path_factory.mktemp("tusd_test_dir")
-    test_config.metador.tusd_datadir = (tusd_cwd / "data").resolve()
+    test_config.metador_push.tusd_datadir = (tusd_cwd / "data").resolve()
 
     tusd_proc = await asyncio.subprocess.create_subprocess_exec(
         *cmd,

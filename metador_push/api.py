@@ -133,7 +133,7 @@ async def put_dataset(ds_uuid: UUID):
             status_code=422,
         )
 
-    compl_hook = conf().metador.completion_hook
+    compl_hook = conf().metador_push.completion_hook
     if compl_hook is not None:
         await pass_to_postprocessing(compl_hook, path)
 

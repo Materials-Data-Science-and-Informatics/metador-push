@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from metador import dataset, pkg_res
-from metador.dataset import Dataset
-from metador.postprocessing import pass_to_postprocessing
-from metador.profile import Profile
-from metador.util import ChecksumAlg, load_json
+from metador_push import dataset, pkg_res
+from metador_push.dataset import Dataset
+from metador_push.postprocessing import pass_to_postprocessing
+from metador_push.profile import Profile
+from metador_push.util import ChecksumAlg, load_json
 
 from .test_auth import OTHER_ORCID, SOME_ORCID
 from .testutil import get_with_retries
@@ -31,10 +31,10 @@ def test_dummy_file(dummy_file):
 def test_load_datasets(test_config, tmp_path):
     """Invalid data dir should throw, missing subdirs should be created."""
     # try initializing from non-existing data_dir
-    tmp = test_config.metador.data_dir
-    test_config.metador.data_dir = Path(tmp_path / "missing_dir")
+    tmp = test_config.metador_push.data_dir
+    test_config.metador_push.data_dir = Path(tmp_path / "missing_dir")
     Dataset.load_datasets()
-    test_config.metador.data_dir = tmp
+    test_config.metador_push.data_dir = tmp
 
     # now init directories, check that they are still empty
     Dataset.load_datasets()

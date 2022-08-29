@@ -7,10 +7,10 @@ import aiotus
 import pytest
 from aiotus.common import ProtocolError
 
-from metador.dataset import Dataset
-from metador.profile import Profile
-from metador.server import app
-from metador.upload import META_DATASET, META_FILENAME
+from metador_push.dataset import Dataset
+from metador_push.profile import Profile
+from metador_push.server import app
+from metador_push.upload import META_DATASET, META_FILENAME
 
 from .testutil import UvicornTestServer, wait_until
 
@@ -62,7 +62,7 @@ async def test_upload_tus(
 ):
     """Try uploading files with valid and invalid metadata."""
     file = dummy_file("testupload.txt")
-    tusd_url = test_config.metador.tusd_endpoint
+    tusd_url = test_config.metador_push.tusd_endpoint
 
     # try without required fields
     meta = {META_FILENAME: "some_file"}  # missing dataset

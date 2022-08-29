@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 import toml
-from pydantic import BaseModel, Extra, ValidationError
+from pydantic import BaseModel, Extra, Field, ValidationError
 from typing_extensions import Final
 
 from . import __basepath__
@@ -19,10 +19,10 @@ from .util import ChecksumAlg
 
 # some constants not exposed to the user
 
-DEF_CONFIG_FILE: Final[Path] = __basepath__ / "metador.def.toml"
+DEF_CONFIG_FILE: Final[Path] = __basepath__ / "metador-push.def.toml"
 """Default name of config file, used e.g. by CLI to provide the user a skeleton."""
 
-CONFFILE_ENVVAR: Final[str] = "METADOR_CONF"
+CONFFILE_ENVVAR: Final[str] = "METADOR_PUSH_CONF"
 """Environment variable name to pass or store config location (needed for restarts!)"""
 
 ################################################################
@@ -68,7 +68,7 @@ class MetadorConf(BaseModel):
     incomplete_expire_after: int = 48
 
     profile_dir: Path = Path("profiles")
-    data_dir: Path = Path("metador_data")
+    data_dir: Path = Path("metador-push_data")
 
     checksum: ChecksumAlg = ChecksumAlg.SHA256
 
@@ -81,7 +81,7 @@ class UvicornConf(BaseModel):
     """
     Host and port used by uvicorn for binding.
 
-    These are only respected if you launch your application using `metador-cli run`.
+    These are only respected if you launch your application using `metador-push run`.
     """
 
     class Config:
@@ -106,7 +106,7 @@ class Conf(BaseModel):
         extra = Extra.forbid
 
     orcid: auth.OrcidConf = auth.OrcidConf()
-    metador: MetadorConf = MetadorConf()
+    metador_push: MetadorConf = Field(MetadorConf(), alias="metador-push")
     uvicorn: UvicornConf = UvicornConf()
 
 
@@ -169,8 +169,8 @@ def init_conf(conffile: Optional[Path] = None) -> None:
     if conffile:
         os.environ[CONFFILE_ENVVAR] = str(conffile)
     # If we get no filename, try to use config in CWD
-    elif Path("metador.toml").is_file():
-        os.environ[CONFFILE_ENVVAR] = "metador.toml"
+    elif Path("metador-push.toml").is_file():
+        os.environ[CONFFILE_ENVVAR] = "metador-push.toml"
 
     # load the config from filename stored in env var
     if CONFFILE_ENVVAR in os.environ:

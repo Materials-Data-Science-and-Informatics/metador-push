@@ -29,7 +29,7 @@ LOG_FMT: Final[str] = re.sub(r"<\w+>", "", META_FMT)
 FORMATTER_CLR: Final[Formatter] = ColoredFormatter(LOG_FMT_CLR, datefmt=FMT_DATE)
 FORMATTER: Final[Formatter] = logging.Formatter(LOG_FMT, datefmt=FMT_DATE)
 
-log: Final[Logger] = logging.getLogger("metador")
+log: Final[Logger] = logging.getLogger("metador-push")
 """Our application-wide logger. Import and use this."""
 
 
@@ -70,4 +70,4 @@ def patch_uvicorn_log_format() -> None:  # pragma: no cover
     # add our own logger to the console output beside of uvicorn, with color!
     #
     # FIXME: the level here is ignored for some reason, it is basically "no filter"
-    # LOGGING_CONFIG['loggers']['metador'] = {'handlers': ['default'], 'level': 'INFO'}
+    # LOGGING_CONFIG['loggers']['metador-push'] = {'handlers': ['default'], 'level': 'INFO'}

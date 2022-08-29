@@ -1,0 +1,14 @@
+# Example service file launching metador-push,
+# assuming there is a user metador with homedir /metador
+# (which is also the data directory)
+# and assuming that the configuration and profiles live in /metador-push_rundir
+[Unit]
+Description=Metador Push
+
+[Service]
+User=metador
+WorkingDirectory=/metador-push_rundir
+ExecStart=/metador/.local/bin/metador-push run
+
+[Install]
+WantedBy=multi-user.target

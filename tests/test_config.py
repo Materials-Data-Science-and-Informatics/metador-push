@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 import toml
 
-import metador
-import metador.config as c
+import metador_push
+import metador_push.config as c
 
 
 def test_global_def_conf(testutils, test_config):
@@ -52,7 +52,7 @@ def test_toml_pydantic_consistent(testutils, test_config):
     testutils.reset_conf()
 
     # this should raise no exceptions
-    tomlconf = toml.load(metador.pkg_res("metador.def.toml"))
+    tomlconf = toml.load(metador_push.pkg_res("metador-push.def.toml"))
 
     # loading toml defaults onto the builtin defaults should make no difference
     # as we have Extra.forbid in the pydantic model,

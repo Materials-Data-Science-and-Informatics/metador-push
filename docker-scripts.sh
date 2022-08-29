@@ -15,18 +15,18 @@ if [ "$1" = 'setup' ]; then
 
     echo "Setting up nginx..."
     rm /etc/nginx/sites-enabled/default
-    cp metador-tusd-nginx.conf /etc/nginx/conf.d/
+    cp metador-push-tusd-nginx.conf /etc/nginx/conf.d/
     make-ssl-cert generate-default-snakeoil --force-overwrite
 
     echo "Installing tusd..."
     curl -sSL https://github.com/tus/tusd/releases/download/v1.6.0/tusd_linux_amd64.tar.gz -o tusd.tar.gz && tar xf tusd.tar.gz && mv tusd_linux_amd64/tusd /usr/local/bin
 
-    echo "Building metador frontend..."
+    echo "Building metador-push frontend..."
     cd frontend
     npm install
     cd ..
 
-    echo "Building metador backend..."
+    echo "Building metador-push backend..."
     poetry config virtualenvs.in-project true
     poetry install --no-dev
 
@@ -44,7 +44,7 @@ elif [ "$1" = 'run' ]; then
     source .venv/bin/activate
     cd /mnt
     tusd -behind-proxy -hooks-http https://localhost/tusd-events &
-    metador-cli run
+    metador-push run
 
 else
     # run passed command and arguments

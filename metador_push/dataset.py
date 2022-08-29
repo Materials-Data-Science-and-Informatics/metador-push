@@ -95,12 +95,12 @@ class Dataset(BaseModel):
     @classmethod
     def _staging_dir(cls) -> Path:
         """Return directory for incomplete datasets (editable by client)."""
-        return conf().metador.data_dir / STAGING_DIR_NAME
+        return conf().metador_push.data_dir / STAGING_DIR_NAME
 
     @classmethod
     def _complete_dir(cls) -> Path:
         """Return directory for complete datasets (handled by post-processing)."""
-        return conf().metador.data_dir / COMPLETE_DIR_NAME
+        return conf().metador_push.data_dir / COMPLETE_DIR_NAME
 
     @classmethod
     def _persist_filename(cls, ds_id: UUID) -> Path:
@@ -385,14 +385,14 @@ class Dataset(BaseModel):
     def create(cls, profile: Profile, creator: Optional[OrcidStr] = None) -> Dataset:
         """Create a new dataset and its directory + persistence file, return it."""
         now = datetime.now()
-        tdiff = timedelta(hours=conf().metador.incomplete_expire_after)
+        tdiff = timedelta(hours=conf().metador_push.incomplete_expire_after)
         ds = cls(
             id=uuid1(),
             creator=creator,
             created=now,
             expires=now + tdiff,
             profile=profile,
-            checksumAlg=conf().metador.checksum,
+            checksumAlg=conf().metador_push.checksum,
         )
 
         ds._upload_dir().mkdir()  # create underlying upload directory
@@ -447,7 +447,7 @@ class Dataset(BaseModel):
     @classmethod
     def _prepare_dirs(cls) -> None:
         """Create directory structure for datasets at location specified in config."""
-        data_dir = conf().metador.data_dir
+        data_dir = conf().metador_push.data_dir
         if not data_dir.is_dir():
             data_dir.mkdir()
         if not cls._staging_dir().is_dir():

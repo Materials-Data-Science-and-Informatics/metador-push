@@ -138,7 +138,9 @@ async def tusd_hook(
     elif hook_name == TusdHookName.post_finish:
         assert body.Upload.Storage is not None
         uplloc: Path = body.Upload.Storage.Path.resolve()
-        if uplloc.parent != c.conf().metador.tusd_datadir.resolve():  # security check
+        if (
+            uplloc.parent != c.conf().metador_push.tusd_datadir.resolve()
+        ):  # security check
             msg = "File location does not match tusd_datadir."
             log.debug(msg)
             return Response(msg, status_code=422)

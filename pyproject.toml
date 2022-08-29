@@ -1,21 +1,21 @@
 [tool.poetry]
-name = "metador"
+name = "metador-push"
 version = "0.1.0"
-description = "Metador is a metadata-aware mailbox for research data."
+description = "Metador Push is a metadata-aware mailbox for research data."
 authors = ["Anton Pirogov <a.pirogov@fz-juelich.de>"]
 license = "MIT"
 include = ["*.toml", "*.json", "profiles/*", "frontend/public/**/*"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-typer = "^0.3.2"
+typer = "^0.6.1"
 fastapi = {version = "0.70.1", extras = ["all"]}
 python-multipart = "^0.0.5"
 httpx = "^0.18.1"
 toml = "^0.10.2"
 colorlog = "^5.0.1"
-jsonschema = {extras = ["format"], version = "^3.2.0"}
-typing-extensions = "^3.10.0"
+jsonschema = {extras = ["format"], version = "^4.14.0"}
+typing-extensions = "^4.3.0"
 pydantic = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
@@ -29,7 +29,7 @@ importlib-metadata = "^4.6.1"
 aiohttp = "^3.8.1"
 
 [tool.poetry.scripts]
-metador-cli = 'metador.cli:app'
+metador-push = 'metador_push.cli:app'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

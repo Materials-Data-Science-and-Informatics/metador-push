@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "MetadorProfile",
+  "title": "MetadorPushProfile",
   "description": "Describes which files of a dataset must have which kind of metadata.",
   "type": "object",
   "properties": {

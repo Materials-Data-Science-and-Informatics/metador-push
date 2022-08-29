@@ -4,11 +4,11 @@ from uuid import UUID, uuid1
 import pytest
 from httpx import URL
 
-from metador.config import conf
-from metador.dataset import Dataset
-from metador.orcid import get_auth, init_auth
-from metador.orcid.mock import MOCK_TOKEN
-from metador.profile import Profile
+from metador_push.config import conf
+from metador_push.dataset import Dataset
+from metador_push.orcid import get_auth, init_auth
+from metador_push.orcid.mock import MOCK_TOKEN
+from metador_push.profile import Profile
 
 
 @pytest.fixture
@@ -18,7 +18,9 @@ def auth_cookie(test_config):
         get_auth()
     except RuntimeError:
         init_auth(
-            test_config.metador.site, test_config.orcid, test_config.metador.data_dir
+            test_config.metador_push.site,
+            test_config.orcid,
+            test_config.metador_push.data_dir,
         )
 
     cookies = {}
@@ -35,10 +37,10 @@ async def test_backend_sanity_check(auth_cookie, async_client, test_config):
 
     # this is important for frontend
     res = await async_client.get("/site-base")
-    assert res.json() == test_config.metador.site
+    assert res.json() == test_config.metador_push.site
 
     res = await async_client.get("/tusd-endpoint")
-    assert res.json() == test_config.metador.tusd_endpoint
+    assert res.json() == test_config.metador_push.tusd_endpoint
 
     # invalid -> should return SPA
     res = await async_client.get("/invalid/route")
@@ -230,7 +232,7 @@ async def test_file_routes(
     assert res.status_code == 404
 
     # enable postprocessing hook (to see that it is called)
-    conf().metador.completion_hook = mock_http_postproc[0]
+    conf().metador_push.completion_hook = mock_http_postproc[0]
 
     # try to complete dataset (root metadata is missing)
     res = await async_client.put(f"/datasets/{ds_id}")

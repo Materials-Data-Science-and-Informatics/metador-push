@@ -8,19 +8,19 @@ from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from httpx import URL, AsyncClient
 
-import metador.orcid
-import metador.orcid.mock
-from metador.orcid import get_auth, get_session, init_auth
-from metador.orcid.api import AuthStatus
-from metador.orcid.auth import OrcidBearerToken, SessionID
-from metador.orcid.mock import MOCK_TOKEN
-from metador.orcid.util import (
+import metador_push.orcid
+import metador_push.orcid.mock
+from metador_push.orcid import get_auth, get_session, init_auth
+from metador_push.orcid.api import AuthStatus
+from metador_push.orcid.auth import OrcidBearerToken, SessionID
+from metador_push.orcid.mock import MOCK_TOKEN
+from metador_push.orcid.util import (
     AUTH_PREF,
     MOCK_ORCID_PREF,
     ORCID_ENDPOINT,
     orcid_server_pref,
 )
-from metador.server import app
+from metador_push.server import app
 
 from .testutil import UvicornTestServer
 
@@ -29,7 +29,7 @@ from .testutil import UvicornTestServer
 async def mock_orcid_server(test_config):
     """Start server as test fixture and tear down after test."""
     app = FastAPI()
-    app.include_router(metador.orcid.mock.routes)
+    app.include_router(metador_push.orcid.mock.routes)
     server = UvicornTestServer(
         app, host=test_config.uvicorn.host, port=test_config.uvicorn.port
     )
@@ -50,7 +50,7 @@ def query_params(url: URL):
 
 def test_orcid_server_pref(test_config):
     """Test the helper function returning the ORCID server to use."""
-    site = test_config.metador.site
+    site = test_config.metador_push.site
     assert orcid_server_pref(True, site) == site + MOCK_ORCID_PREF
     assert orcid_server_pref(False, site) == site + MOCK_ORCID_PREF
     assert orcid_server_pref(True) == "https://sandbox.orcid.org/oauth"
@@ -60,7 +60,7 @@ def test_orcid_server_pref(test_config):
 @pytest.mark.asyncio
 async def test_mock_auth(test_config):
     """Test the mock routes imitating the ORCID servers."""
-    pref = test_config.metador.site + MOCK_ORCID_PREF
+    pref = test_config.metador_push.site + MOCK_ORCID_PREF
     async with AsyncClient(app=app, base_url=pref) as ac:
 
         req = "/authorize?redirect_uri=" + MOCK_ORCID_PREF + "/dummy"
@@ -103,7 +103,7 @@ async def test_mock_auth(test_config):
 async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
     """Test the ORCID flow (using the mock server)."""
     # no auth configured yet -> exception
-    metador.orcid._auth = None
+    metador_push.orcid._auth = None
     with pytest.raises(RuntimeError):
         get_auth()
 
@@ -118,17 +118,17 @@ async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
     # test with invalid allowlist -> should crash
     test_config.orcid.allowlist_file = bad_allowlistfile
     with pytest.raises(SystemExit):
-        init_auth(test_config.metador.site, test_config.orcid)
+        init_auth(test_config.metador_push.site, test_config.orcid)
 
     # restore good allowlist
     test_config.orcid.allowlist_file = allowlist
 
     # configure auth with serialization
     conf = test_config
-    init_auth(conf.metador.site, conf.orcid, conf.metador.data_dir)
+    init_auth(conf.metador_push.site, conf.orcid, conf.metador_push.data_dir)
     assert get_auth().allow_list == [MOCK_TOKEN.orcid]
 
-    pref = test_config.metador.site + AUTH_PREF
+    pref = test_config.metador_push.site + AUTH_PREF
     async with AsyncClient(app=app, base_url=pref) as ac:
         # try invalid route
         res = await ac.get("invalid/route")
@@ -158,7 +158,7 @@ async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
         # the session creation must have been successful.
         # now serialize + re-init (test persistence)
         get_auth().dump_sessions()
-        init_auth(conf.metador.site, conf.orcid, conf.metador.data_dir)
+        init_auth(conf.metador_push.site, conf.orcid, conf.metador_push.data_dir)
 
         # get session status (session should still be there)
         cookies = {"session_id": res.history[-1].cookies["session_id"]}
@@ -172,11 +172,11 @@ async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
         # signout should redirect back to homepage
         res = await ac.get("/signout", cookies=cookies)
         assert res.history[0].status_code == 307
-        assert res.url == conf.metador.site + "/"
+        assert res.url == conf.metador_push.site + "/"
 
         ########
         # restore the session again from file (it was not updated)
-        init_auth(conf.metador.site, conf.orcid, conf.metador.data_dir)
+        init_auth(conf.metador_push.site, conf.orcid, conf.metador_push.data_dir)
 
         # try with invalid sessionid
         res = await ac.get("/status", cookies={"session_id": "invalid"})
@@ -190,7 +190,7 @@ async def test_orcid_flow(test_config, tmp_path, mock_orcid_server):
 
         ########
         # restore the session again from file again
-        init_auth(conf.metador.site, conf.orcid, conf.metador.data_dir)
+        init_auth(conf.metador_push.site, conf.orcid, conf.metador_push.data_dir)
 
         # try getting the current session info, first with auth disabled
         get_auth().orcid_conf.enabled = False
