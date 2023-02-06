@@ -7,7 +7,7 @@ license = "MIT"
 include = ["*.toml", "*.json", "profiles/*", "frontend/public/**/*"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 typer = "^0.6.1"
 fastapi = {version = "0.70.1", extras = ["all"]}
 python-multipart = "^0.0.5"
@@ -18,15 +18,15 @@ jsonschema = {extras = ["format"], version = "^4.14.0"}
 typing-extensions = "^4.3.0"
 pydantic = "^1.9.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pdoc = "^7.1.1"
 pre-commit = "^2.13.0"
-pytest = "^6.2.4"
-pytest-cov = "^2.12.1"
 pytest-asyncio = "^0.15.1"
 aiotus = "^0.1.8"
 importlib-metadata = "^4.6.1"
 aiohttp = "^3.8.1"
+pytest = "^7.2.1"
+pytest-cov = "^4.0.0"
 
 [tool.poetry.scripts]
 metador-push = 'metador_push.cli:app'
@@ -44,4 +44,4 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ['metador']
+source = ['metador_push']

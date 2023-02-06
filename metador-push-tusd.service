@@ -5,8 +5,8 @@
 Description=Metador Push Tusd
 
 [Service]
-User=metador
-WorkingDirectory=/metador
+User=metador-push
+WorkingDirectory=/metador-push
 ExecStart=/usr/bin/tusd -behind-proxy -hooks-http https://metador-push.MYSITE.COM/tusd-events
 
 [Install]

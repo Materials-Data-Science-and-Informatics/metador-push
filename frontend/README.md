@@ -1,6 +1,6 @@
-# Metador Frontend
+# Metador Push Frontend
 
-The Metador frontend is implemented in [Svelte](https://svelte.dev)
+The Metador Push frontend is implemented in [Svelte](https://svelte.dev)
 and is based on [this](https://github.com/sveltejs/template) template.
 
 The most heavy lifting is done by Uppy, JSONEditor and react-jsonschema-form, which are

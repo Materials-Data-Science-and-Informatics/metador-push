@@ -10,9 +10,13 @@
 [
 ![Docs](https://img.shields.io/badge/read-docs-success)
 ](https://materials-data-science-and-informatics.github.io/metador-push/)
-<!-- TODO: dockerhub badge or something like that, if we ever offer prebuilt containers -->
 
 <img style="center-align: middle;" alt="Metador Logo" src="https://github.com/Materials-Data-Science-and-Informatics/Logos/raw/main/Metador/Metador_Logo_Text.png" width=70% height=70% /> **Push**
+
+| Are you looking for :arrow_right: [the `metador` framework](https://github.com/Materials-Data-Science-and-Informatics/metador-core)? |
+| --- |
+| :exclamation: In the next update `metador-push` will be integrated into the `metador` ecosystem :exclamation: |
+
 
 ## TL;DR
 

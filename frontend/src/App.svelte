@@ -29,7 +29,7 @@
                     to="/"
                     class="brand"
                     data-tooltip="Metadata Enrichment and Transmission Assistance for Digital Objects in Research">
-                    Metador
+                    Metador Push!
                 </Link>
 
                 <span style="position: relative; top: 25%;">
